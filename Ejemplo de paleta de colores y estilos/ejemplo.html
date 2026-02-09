@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Juárez Modern Maintenance Table</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#6366F1","primary-dark": "#4F46E5",
+                        "accent": "#EC4899","background-light": "#F3F4F6","background-dark": "#1F2937",
+                        "surface": "#FFFFFF",
+                    },
+                    fontFamily: {
+                        "display": ["Nunito", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "1rem", "full": "9999px"},},
+            },
+        }
+    </script>
+<style>::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light text-slate-800 min-h-screen flex items-stretch">
+<div class="w-full lg:w-1/2 flex flex-col justify-between p-8 lg:p-12 xl:p-16 bg-white relative z-10 transition-colors duration-300 rounded-r-[16px] shadow-xl">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-[16px] bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-icons text-2xl">local_shipping</span>
+</div>
+<div>
+<h2 class="text-2xl font-bold tracking-tight text-slate-900 leading-none">Plan Juárez</h2>
+<p class="text-xs text-primary font-bold uppercase tracking-wider mt-1">Fleet Management</p>
+</div>
+</div>
+<div class="w-full max-w-md mx-auto space-y-8">
+<div class="space-y-2 text-left">
+<h1 class="text-4xl font-extrabold tracking-tight text-slate-900">Bienvenido</h1>
+<p class="text-slate-500 font-medium text-lg">Acceso al panel de mantenimiento.</p>
+</div>
+<form action="#" class="space-y-6" method="POST">
+<div class="space-y-2">
+<label class="block text-sm font-bold text-slate-700" for="email">Correo Institucional</label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-primary text-slate-400">
+<span class="material-icons text-xl">mail_outline</span>
+</div>
+<input class="block w-full pl-11 pr-4 py-3.5 border-slate-200 rounded-[16px] bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:text-base font-medium transition-all duration-200 shadow-sm" id="email" name="email" placeholder="usuario@juarez.gob.mx" required="" type="email"/>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex items-center justify-between">
+<label class="block text-sm font-bold text-slate-700" for="password">Contraseña</label>
+<a class="text-sm font-bold text-primary hover:text-accent transition-colors" href="#">¿Olvidó su contraseña?</a>
+</div>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-primary text-slate-400">
+<span class="material-icons text-xl">lock_outline</span>
+</div>
+<input class="block w-full pl-11 pr-4 py-3.5 border-slate-200 rounded-[16px] bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:text-base font-medium transition-all duration-200 shadow-sm" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+</div>
+</div>
+<div class="flex items-center">
+<input class="h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded-[6px] cursor-pointer" id="remember-me" name="remember-me" type="checkbox"/>
+<label class="ml-3 block text-sm font-semibold text-slate-600" for="remember-me">
+                        Mantener sesión iniciada
+                    </label>
+</div>
+<button class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-[16px] shadow-lg shadow-primary/30 text-base font-bold text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 transform hover:-translate-y-0.5" type="submit">
+                    Ingresar al Sistema
+                </button>
+<div class="relative py-2">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-slate-200"></div>
+</div>
+<div class="relative flex justify-center text-sm">
+<span class="px-4 bg-white text-slate-400 font-medium">Acceso alternativo</span>
+</div>
+</div>
+<button class="w-full flex justify-center items-center gap-3 py-3.5 px-4 border border-slate-200 rounded-[16px] shadow-sm bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-primary hover:border-primary/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200" type="button">
+<svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24">
+<path d="M12.0003 20.45c4.656 0 8.556-3.21 9.97-7.66h-9.97v-4.22h14.4c.144.75.22 1.54.22 2.34 0 7.39-5.36 12.66-12.62 12.66-6.99 0-12.66-5.67-12.66-12.66s5.67-12.66 12.66-12.66c3.39 0 6.47 1.25 8.87 3.49l-3.32 3.32c-1.39-1.34-3.36-2.18-5.55-2.18-4.57 0-8.28 3.71-8.28 8.28s3.71 8.28 8.28 8.28z" fill="currentColor"></path>
+</svg>
+                    Google Workspace
+                </button>
+</form>
+<p class="text-center text-sm text-slate-500">
+                ¿Problemas de acceso técnico?
+                <a class="font-bold text-accent hover:text-pink-700 transition-colors" href="#">Soporte IT</a>
+</p>
+</div>
+<div class="text-xs text-slate-400 font-semibold flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+             Sistema Operativo v3.1 | Juárez Modern
+        </div>
+</div>
+<div class="hidden lg:block lg:w-1/2 relative bg-background-light overflow-hidden">
+<div class="absolute inset-0 w-full h-full">
+<img alt="Abstract logistics network" class="w-full h-full object-cover opacity-80 mix-blend-multiply filter grayscale contrast-125" data-alt="Abstract logistics network" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmFW7s7oNAP0X2OISx02OvjufFyoJqPk2ERFcHP8f2RWStYi_bttSocuSgEmyu1M15gApuZBzbvwqnUlfeJ8uYAzTooMtadwIUN2hnGTmks3OBY8DKpni21I_uTr2xrhIvhaY8gBatPaRrizUdhix2GlqUsrnIK_pyYampuj8Xi00wpYyFWJtAoEQeWfyIyufV8n6WtdadolVhqgAReIQ9ttEVmkTBrLoWNriBA6PqJ59T8DfCnuGwhODTXAjSEHDGZPdvEuP9bB0K"/>
+<div class="absolute inset-0 bg-gradient-to-br from-primary/80 to-indigo-900/90 mix-blend-multiply"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-indigo-900/50 via-transparent to-white/20 opacity-60"></div>
+</div>
+<div class="relative z-10 h-full flex flex-col justify-center px-16 text-white max-w-2xl mx-auto">
+<div class="bg-white/10 backdrop-blur-md rounded-[24px] p-10 border border-white/20 shadow-2xl relative overflow-hidden group">
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-accent/40 rounded-full blur-[40px] group-hover:bg-accent/60 transition-all duration-500"></div>
+<div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 border border-white/30 text-xs font-bold uppercase tracking-wider mb-6 text-white backdrop-blur-sm">
+<span class="material-icons text-sm">security</span>
+                    Zona Segura
+                </div>
+<h2 class="text-4xl font-extrabold mb-4 font-display leading-tight tracking-tight">Modernización de Mantenimiento Urbano</h2>
+<p class="text-lg text-indigo-50 mb-8 leading-relaxed font-normal opacity-90">
+                    Plataforma centralizada para la gestión eficiente de recursos municipales. Supervise el estado de la flota y programe mantenimientos preventivos.
+                </p>
+<div class="flex gap-8 border-t border-white/20 pt-8">
+<div>
+<p class="text-3xl font-extrabold text-white">142</p>
+<p class="text-sm text-indigo-100 font-semibold mt-1">Unidades Activas</p>
+</div>
+<div>
+<p class="text-3xl font-extrabold text-white text-accent">98%</p>
+<p class="text-sm text-indigo-100 font-semibold mt-1">Disponibilidad</p>
+</div>
+<div>
+<p class="text-3xl font-extrabold text-white">24h</p>
+<p class="text-sm text-indigo-100 font-semibold mt-1">Tiempo Respuesta</p>
+</div>
+</div>
+</div>
+</div>
+<div class="absolute top-20 right-20 w-48 h-48 bg-primary rounded-full blur-[100px] opacity-50 mix-blend-screen"></div>
+<div class="absolute bottom-10 left-10 w-72 h-72 bg-accent rounded-full blur-[120px] opacity-40 mix-blend-screen"></div>
+</div>
+
+</body></html>
