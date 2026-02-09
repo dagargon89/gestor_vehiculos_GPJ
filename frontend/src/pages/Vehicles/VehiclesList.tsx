@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 
 type Vehicle = {
   id: string;
@@ -200,6 +201,7 @@ function VehicleFormModal({
 
 export function VehiclesList() {
   const queryClient = useQueryClient();
+  const [view, setView] = useState<ViewMode>(() => getStoredView('vehiclesView'));
   const [modalOpen, setModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
 
@@ -235,65 +237,110 @@ export function VehiclesList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-4">
         <h2 className="text-2xl font-bold text-slate-900">Vehículos</h2>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium"
-        >
-          Nuevo vehículo
-        </button>
+        <div className="flex items-center gap-3">
+          <ViewToggle value={view} onChange={setView} storageKey="vehiclesView" />
+          <button
+            type="button"
+            onClick={openCreate}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium"
+          >
+            Nuevo vehículo
+          </button>
+        </div>
       </div>
-      <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Placa</th>
-              <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Marca</th>
-              <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Modelo</th>
-              <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Estado</th>
-              <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {vehicles.length === 0 ? (
+      {view === 'table' && (
+        <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No hay vehículos registrados.</td>
+                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Placa</th>
+                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Marca</th>
+                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Modelo</th>
+                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Estado</th>
+                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Acciones</th>
               </tr>
-            ) : (
-              vehicles.map((v: Vehicle) => (
-                <tr key={v.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="px-6 py-4 font-medium text-slate-900">{v.plate}</td>
-                  <td className="px-6 py-4 text-slate-600">{v.brand}</td>
-                  <td className="px-6 py-4 text-slate-600">{v.model}</td>
-                  <td className="px-6 py-4">
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
-                      {STATUS_OPTIONS.find((o) => o.value === v.status)?.label ?? v.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(v)}
-                      className="text-primary font-medium hover:underline mr-3"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(v)}
-                      className="text-red-600 font-medium hover:underline"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
+            </thead>
+            <tbody>
+              {vehicles.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No hay vehículos registrados.</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                vehicles.map((v: Vehicle) => (
+                  <tr key={v.id} className="border-b border-slate-100 hover:bg-slate-50">
+                    <td className="px-6 py-4 font-medium text-slate-900">{v.plate}</td>
+                    <td className="px-6 py-4 text-slate-600">{v.brand}</td>
+                    <td className="px-6 py-4 text-slate-600">{v.model}</td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                        {STATUS_OPTIONS.find((o) => o.value === v.status)?.label ?? v.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(v)}
+                        className="text-primary font-medium hover:underline mr-3"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(v)}
+                        className="text-red-600 font-medium hover:underline"
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {view === 'cards' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {vehicles.length === 0 ? (
+            <div className="col-span-full bg-white rounded-[16px] shadow-sm border border-slate-200 px-6 py-12 text-center text-slate-500">
+              No hay vehículos registrados.
+            </div>
+          ) : (
+            vehicles.map((v: Vehicle) => (
+              <div
+                key={v.id}
+                className="bg-white rounded-[16px] shadow-sm border border-slate-200 p-5 flex flex-col"
+              >
+                <div className="font-medium text-slate-900 text-lg">{v.plate}</div>
+                <div className="text-slate-600 text-sm mt-1">{v.brand} {v.model}</div>
+                <div className="mt-3">
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                    {STATUS_OPTIONS.find((o) => o.value === v.status)?.label ?? v.status}
+                  </span>
+                </div>
+                <div className="mt-4 pt-4 border-t border-slate-100 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(v)}
+                    className="text-primary font-medium hover:underline text-sm"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(v)}
+                    className="text-red-600 font-medium hover:underline text-sm"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
       {modalOpen && (
         <VehicleFormModal
           vehicle={editingVehicle}

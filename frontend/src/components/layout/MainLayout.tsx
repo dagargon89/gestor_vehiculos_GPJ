@@ -35,6 +35,8 @@ export function MainLayout() {
             <NavLink to="/" end className={navClass}>Resumen</NavLink>
             <NavLink to="/vehicles" className={navClass}>Vehículos</NavLink>
             <NavLink to="/reservations" className={navClass}>Reservas</NavLink>
+            <NavLink to="/users" className={navClass}>Usuarios</NavLink>
+            <NavLink to="/providers" className={navClass}>Proveedores</NavLink>
             <NavLink to="/reports" className={navClass}>Reportes</NavLink>
           </div>
 
