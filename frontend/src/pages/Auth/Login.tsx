@@ -48,7 +48,7 @@ export function Login() {
     try {
       if (auth) await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
       await signInWithEmail(email, password);
-      navigate(from, { replace: true });
+      // No navegar aquí: el useEffect redirige cuando currentUser y authLoading estén actualizados en el contexto
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code ?? '';
       setError(getFirebaseErrorMessage(code));
@@ -63,7 +63,7 @@ export function Login() {
     try {
       if (auth) await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
       await signInWithGoogle();
-      navigate(from, { replace: true });
+      // No navegar aquí: el useEffect redirige cuando currentUser y authLoading estén actualizados en el contexto
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code ?? '';
       setError(getFirebaseErrorMessage(code));
