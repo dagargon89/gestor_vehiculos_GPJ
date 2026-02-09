@@ -1,7 +1,208 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 
+type Vehicle = {
+  id: string;
+  plate: string;
+  brand: string;
+  model: string;
+  year?: number;
+  color?: string;
+  vin?: string;
+  status: string;
+  currentOdometer?: number;
+};
+
+const STATUS_OPTIONS = [
+  { value: 'available', label: 'Disponible' },
+  { value: 'in_use', label: 'En uso' },
+  { value: 'maintenance', label: 'Mantenimiento' },
+];
+
+function VehicleFormModal({
+  vehicle,
+  onClose,
+  onSuccess,
+}: {
+  vehicle: Vehicle | null;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [form, setForm] = useState({
+    plate: vehicle?.plate ?? '',
+    brand: vehicle?.brand ?? '',
+    model: vehicle?.model ?? '',
+    year: vehicle?.year ?? '',
+    color: vehicle?.color ?? '',
+    vin: vehicle?.vin ?? '',
+    status: vehicle?.status ?? 'available',
+    currentOdometer: vehicle?.currentOdometer ?? '',
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      const payload = {
+        plate: form.plate.trim(),
+        brand: form.brand.trim(),
+        model: form.model.trim(),
+        year: form.year === '' ? undefined : Number(form.year),
+        color: form.color.trim() || undefined,
+        vin: form.vin.trim() || undefined,
+        status: form.status,
+        currentOdometer: form.currentOdometer === '' ? undefined : Number(form.currentOdometer),
+      };
+      if (vehicle) {
+        await apiClient.put(`/vehicles/${vehicle.id}`, payload);
+      } else {
+        await apiClient.post('/vehicles', payload);
+      }
+      onSuccess();
+      onClose();
+    } catch (err: unknown) {
+      const message = err && typeof err === 'object' && 'response' in err
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        : 'Error al guardar';
+      setError(String(message));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-6 py-4 border-b border-slate-200">
+          <h3 className="text-lg font-bold text-slate-900">
+            {vehicle ? 'Editar vehículo' : 'Nuevo vehículo'}
+          </h3>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Placa *</label>
+            <input
+              type="text"
+              required
+              value={form.plate}
+              onChange={(e) => setForm((f) => ({ ...f, plate: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Marca *</label>
+              <input
+                type="text"
+                required
+                value={form.brand}
+                onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Modelo *</label>
+              <input
+                type="text"
+                required
+                value={form.model}
+                onChange={(e) => setForm((f) => ({ ...f, model: e.target.value }))}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Año</label>
+              <input
+                type="number"
+                min="1990"
+                max="2030"
+                value={form.year}
+                onChange={(e) => setForm((f) => ({ ...f, year: e.target.value }))}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Color</label>
+              <input
+                type="text"
+                value={form.color}
+                onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">VIN</label>
+            <input
+              type="text"
+              value={form.vin}
+              onChange={(e) => setForm((f) => ({ ...f, vin: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Estado</label>
+              <select
+                value={form.status}
+                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              >
+                {STATUS_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Odómetro (km)</label>
+              <input
+                type="number"
+                min="0"
+                value={form.currentOdometer}
+                onChange={(e) => setForm((f) => ({ ...f, currentOdometer: e.target.value }))}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              />
+            </div>
+          </div>
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
+            >
+              {submitting ? 'Guardando...' : vehicle ? 'Guardar cambios' : 'Crear vehículo'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export function VehiclesList() {
+  const queryClient = useQueryClient();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+
   const { data: vehicles = [], isLoading } = useQuery({
     queryKey: ['vehicles'],
     queryFn: async () => {
@@ -10,11 +211,40 @@ export function VehiclesList() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/vehicles/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vehicles'] }),
+  });
+
+  const openCreate = () => {
+    setEditingVehicle(null);
+    setModalOpen(true);
+  };
+
+  const openEdit = (v: Vehicle) => {
+    setEditingVehicle(v);
+    setModalOpen(true);
+  };
+
+  const handleDelete = (v: Vehicle) => {
+    if (!window.confirm(`¿Eliminar el vehículo ${v.plate} (${v.brand} ${v.model})?`)) return;
+    deleteMutation.mutate(v.id);
+  };
+
   if (isLoading) return <div className="text-primary font-bold">Cargando vehículos...</div>;
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-slate-900">Vehículos</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-slate-900">Vehículos</h2>
+        <button
+          type="button"
+          onClick={openCreate}
+          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium"
+        >
+          Nuevo vehículo
+        </button>
+      </div>
       <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
         <table className="w-full">
           <thead className="bg-slate-50 border-b border-slate-200">
@@ -23,21 +253,40 @@ export function VehiclesList() {
               <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Marca</th>
               <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Modelo</th>
               <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Estado</th>
+              <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {vehicles.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-8 text-center text-slate-500">No hay vehículos registrados.</td>
+                <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No hay vehículos registrados.</td>
               </tr>
             ) : (
-              vehicles.map((v: { id: string; plate: string; brand: string; model: string; status: string }) => (
+              vehicles.map((v: Vehicle) => (
                 <tr key={v.id} className="border-b border-slate-100 hover:bg-slate-50">
                   <td className="px-6 py-4 font-medium text-slate-900">{v.plate}</td>
                   <td className="px-6 py-4 text-slate-600">{v.brand}</td>
                   <td className="px-6 py-4 text-slate-600">{v.model}</td>
                   <td className="px-6 py-4">
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">{v.status}</span>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                      {STATUS_OPTIONS.find((o) => o.value === v.status)?.label ?? v.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      type="button"
+                      onClick={() => openEdit(v)}
+                      className="text-primary font-medium hover:underline mr-3"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(v)}
+                      className="text-red-600 font-medium hover:underline"
+                    >
+                      Eliminar
+                    </button>
                   </td>
                 </tr>
               ))
@@ -45,6 +294,13 @@ export function VehiclesList() {
           </tbody>
         </table>
       </div>
+      {modalOpen && (
+        <VehicleFormModal
+          vehicle={editingVehicle}
+          onClose={() => setModalOpen(false)}
+          onSuccess={() => queryClient.invalidateQueries({ queryKey: ['vehicles'] })}
+        />
+      )}
     </div>
   );
 }
