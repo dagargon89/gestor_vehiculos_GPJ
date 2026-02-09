@@ -5,6 +5,7 @@ import {
   GoogleAuthProvider,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
+  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
   onAuthStateChanged,
   onIdTokenChanged,
 } from 'firebase/auth';
@@ -26,6 +27,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  sendPasswordResetEmail: (email: string) => Promise<void>;
   getIdToken: () => Promise<string>;
 }
 
@@ -90,6 +92,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signInWithEmailAndPassword(auth, email, password);
   };
 
+  const sendPasswordResetEmail = async (email: string) => {
+    if (!auth) throw new Error('Firebase no configurado. Configure VITE_FIREBASE_* en .env');
+    await firebaseSendPasswordResetEmail(auth, email);
+  };
+
   const signOut = async () => {
     if (auth) await firebaseSignOut(auth);
     delete apiClient.defaults.headers.common['Authorization'];
@@ -107,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithGoogle,
     signInWithEmail,
     signOut,
+    sendPasswordResetEmail,
     getIdToken,
   };
 

@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Sistema de diseño Plan Juárez - tokens del ejemplo */
+/* Sistema de diseño - tokens del ejemplo */
 @theme {
   --color-primary: #6366f1;
   --color-primary-dark: #4f46e5;

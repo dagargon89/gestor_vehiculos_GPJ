@@ -19,7 +19,7 @@ export function MainLayout() {
               <span className="material-icons">local_shipping</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">Plan Juárez</h1>
+              <h1 className="text-xl font-bold text-slate-900">Gestión de Flota</h1>
               <p className="text-xs text-primary font-bold uppercase tracking-wider">Fleet Management</p>
             </div>
           </div>
