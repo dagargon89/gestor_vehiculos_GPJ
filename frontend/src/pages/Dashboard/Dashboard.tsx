@@ -35,7 +35,7 @@ export function Dashboard() {
     <>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Dashboard Overview</h2>
+          <h2 className="text-2xl font-bold text-slate-900">Resumen del panel</h2>
           <p className="text-slate-500 mt-1">Métricas de la flota en tiempo real.</p>
         </div>
         <div className="flex items-center gap-3">

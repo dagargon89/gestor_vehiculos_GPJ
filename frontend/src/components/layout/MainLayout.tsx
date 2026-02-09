@@ -27,12 +27,12 @@ export function MainLayout() {
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight text-slate-900">Gestión de Flota</h1>
-              <p className="text-xs font-medium text-slate-500">Fleet Management System</p>
+              <p className="text-xs font-medium text-slate-500">Sistema de Gestión de Flota</p>
             </div>
           </div>
 
           <div className="hidden md:flex items-center gap-8">
-            <NavLink to="/" end className={navClass}>Overview</NavLink>
+            <NavLink to="/" end className={navClass}>Resumen</NavLink>
             <NavLink to="/vehicles" className={navClass}>Vehículos</NavLink>
             <NavLink to="/reservations" className={navClass}>Reservas</NavLink>
             <NavLink to="/reports" className={navClass}>Reportes</NavLink>

@@ -110,7 +110,7 @@ export function Login() {
           </div>
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">Gestión de Flota</h2>
-            <p className="text-xs text-primary font-bold uppercase tracking-wider mt-1">Fleet Management</p>
+            <p className="text-xs text-primary font-bold uppercase tracking-wider mt-1">Gestión de Flota</p>
           </div>
         </div>
 
