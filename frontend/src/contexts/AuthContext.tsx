@@ -16,6 +16,7 @@ interface UserData {
   id: string;
   email: string;
   displayName?: string;
+  photoUrl?: string | null;
   role?: { name: string };
   permissions?: { resource: string; action: string }[];
 }

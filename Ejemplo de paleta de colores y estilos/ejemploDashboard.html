@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Juárez Modern Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#059467",
+              "background-light": "#f5f8f7",
+              "background-dark": "#0f231d",
+            },
+            fontFamily: {
+              "display": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .chart-gradient {
+            background: linear-gradient(180deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0) 100%);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display transition-colors duration-200">
+<!-- Top Navigation -->
+<nav class="sticky top-0 z-50 bg-white/80 dark:bg-[#162e26]/90 backdrop-blur-md border-b border-slate-200 dark:border-primary/20 px-6 py-4">
+<div class="max-w-7xl mx-auto flex justify-between items-center">
+<!-- Logo Section -->
+<div class="flex items-center gap-3">
+<div class="bg-primary/10 p-2 rounded-lg">
+<span class="material-icons text-primary text-2xl">local_shipping</span>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Plan Juárez</h1>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400">Fleet Management System</p>
+</div>
+</div>
+<!-- Navigation Links (Desktop) -->
+<div class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium text-primary border-b-2 border-primary pb-1" href="#">Overview</a>
+<a class="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Fleet Map</a>
+<a class="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Drivers</a>
+<a class="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Maintenance</a>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center gap-4">
+<!-- Search -->
+<div class="hidden lg:flex items-center bg-slate-100 dark:bg-white/5 rounded-full px-4 py-2 border border-transparent focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+<span class="material-icons text-slate-400 text-sm">search</span>
+<input class="bg-transparent border-none text-sm ml-2 focus:ring-0 w-48 text-slate-700 dark:text-slate-200 placeholder-slate-400" placeholder="Search vehicle or driver ID..." type="text"/>
+</div>
+<!-- Notifications -->
+<button class="relative p-2 text-slate-500 hover:text-primary transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-white/5">
+<span class="material-icons">notifications_none</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#162e26]"></span>
+</button>
+<!-- Profile -->
+<div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-white/10">
+<div class="text-right hidden sm:block">
+<p class="text-sm font-semibold text-slate-900 dark:text-white">Alejandra R.</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">Admin Municipal</p>
+</div>
+<img alt="Administrator profile photo" class="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-primary shadow-sm" data-alt="Close up portrait of a smiling woman with long hair" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMhDGxXA45mUB_CeUI0hbrtIFm2RBmqS9pUT-suCmeNeVkr2qRyioMy8wz-_P3NLavGa037UTpIibbjTn2QsK1fld_iJVNqIKzn7mvVyPGMFw9MghIDacIy3NtAhFfsrHBMldMa5KrSQDQ56vmsw488weVRSfF32zByak_Gp3BHJeQcPWlc4DTNX7BaidRdfPMPipUZABeI3cGxeHmSjVxE7SPnrz6FJ3w5mzILpNGMDc_mv7kLSWUZcSWKTcBTym3CAjBBkYnK7xb"/>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="max-w-7xl mx-auto px-6 py-8">
+<!-- Header & Date Filter -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+<div>
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white">Dashboard Overview</h2>
+<p class="text-slate-500 dark:text-slate-400 mt-1">Real-time municipal fleet performance metrics.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#162e26] border border-slate-200 dark:border-white/10 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 shadow-sm hover:border-primary transition-colors">
+<span class="material-icons text-base">calendar_today</span>
+<span>Last 30 Days</span>
+<span class="material-icons text-base">expand_more</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium shadow-md shadow-primary/30 hover:bg-primary/90 transition-all">
+<span class="material-icons text-base">add</span>
+<span>New Report</span>
+</button>
+</div>
+</div>
+<!-- Key Metrics Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<!-- Card 1: Total Fleet -->
+<div class="bg-white dark:bg-[#162e26] rounded-xl p-6 shadow-sm border border-slate-100 dark:border-white/5 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-icons text-6xl text-primary">directions_bus</span>
+</div>
+<div class="flex flex-col h-full justify-between relative z-10">
+<div>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Total Fleet Size</p>
+<h3 class="text-3xl font-bold text-slate-900 dark:text-white">142</h3>
+</div>
+<div class="flex items-center gap-2 mt-4">
+<span class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold px-2 py-1 rounded-full flex items-center">
+<span class="material-icons text-xs mr-1">trending_up</span> +5%
+                        </span>
+<span class="text-xs text-slate-400">vs last month</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Fuel Efficiency -->
+<div class="bg-white dark:bg-[#162e26] rounded-xl p-6 shadow-sm border border-slate-100 dark:border-white/5 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-icons text-6xl text-blue-500">local_gas_station</span>
+</div>
+<div class="flex flex-col h-full justify-between relative z-10">
+<div>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Fuel Efficiency</p>
+<h3 class="text-3xl font-bold text-slate-900 dark:text-white">12.4 <span class="text-lg font-normal text-slate-500">km/L</span></h3>
+</div>
+<div class="flex items-center gap-2 mt-4">
+<span class="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-semibold px-2 py-1 rounded-full flex items-center">
+                            Stable
+                        </span>
+<span class="text-xs text-slate-400">Target: 12.0 km/L</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Active Routes -->
+<div class="bg-white dark:bg-[#162e26] rounded-xl p-6 shadow-sm border border-slate-100 dark:border-white/5 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-icons text-6xl text-indigo-500">map</span>
+</div>
+<div class="flex flex-col h-full justify-between relative z-10">
+<div>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Active Routes</p>
+<h3 class="text-3xl font-bold text-slate-900 dark:text-white">38</h3>
+</div>
+<div class="flex items-center gap-2 mt-4">
+<div class="flex -space-x-2 overflow-hidden">
+<img alt="" class="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-[#162e26] object-cover" data-alt="User avatar 1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdjOlOpAdffm2ePWAv1YxOzwIkCmJYVQWFb2gzP6b_dGVwyQGqGgGvIxwR65mAHokuWaWAF8KaYl61rstA3T8hsG9RsJxtIofmghHRLfl2nrqLetf1xmqPw5eEd4JZtZtSqcPy7_kRoD-OzuuSZcQoceWVQctkhRBm9_JxqR0fgvmpKJh3Kqul7ZnF6bMRCXloTmSjYvENOIBJWjJx6QXlg4LHdQ86L8oO0fsb-AzTFL4wOo1oJHmO3mUnqveRwRZrA0nOcWmLzAYp"/>
+<img alt="" class="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-[#162e26] object-cover" data-alt="User avatar 2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBj73sQKElyBQTPPA538JlOrPf-Z36qSt2ulgzPhEc9If5lN_f1lj-t2Ltt9wyAD7v9ATDpUAgkolaZm0e7Fu8dwz7MMqLiufDlmr-c7NEovFRvkjHfrXsJb1z_i235qzQ9O3BHERkmulEos6TDsAODSpWHS83cDL58Tti9BcfexNZTvNri88D_n3Atmh_DCczHiYZEJOQC7srj0znwca1kzArdgDE-VAcEo-vBikKtQRbxgYczje2SIrWs9mrIEo1Aj4IF1HJ0GfWJ"/>
+<img alt="" class="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-[#162e26] object-cover" data-alt="User avatar 3" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUbv-Lo_DUvNyli35q1BG4RN3Bi8YAEqm975UN0Z4Wt7fwlC5PJmchcaeTLpdVTeb3X_HCwqGpi-xETGYezFTyJ3CuO0xN74rKj_eG2jpu-z3PDSyOcdKqt0R-kgD0kJH7uIA91j0gdt0Ra0Ya2v-iiwNsNVXmwwS9dTY9kwKcajg7my7srbM-X1wS6SRAP48ge84UL7xWJHDAPR0Bbmpj65WYfzXYrLNqpOQVD2_Wy9JeN-2AseFxbMKfWQjEDwdlLzao6vBzg0kW"/>
+</div>
+<span class="text-xs text-slate-400">+12 drivers active</span>
+</div>
+</div>
+</div>
+<!-- Card 4: Critical Alerts -->
+<div class="bg-white dark:bg-[#162e26] rounded-xl p-6 shadow-sm border border-slate-100 dark:border-white/5 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-icons text-6xl text-rose-500">warning</span>
+</div>
+<div class="flex flex-col h-full justify-between relative z-10">
+<div>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Maintenance Alerts</p>
+<h3 class="text-3xl font-bold text-slate-900 dark:text-white">3</h3>
+</div>
+<div class="flex items-center gap-2 mt-4">
+<span class="bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 text-xs font-semibold px-2 py-1 rounded-full flex items-center">
+                            Action Required
+                        </span>
+<a class="text-xs text-primary hover:underline" href="#">View details</a>
+</div>
+</div>
+</div>
+</div>
+<!-- Charts Row -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+<!-- Fuel Consumption Chart (Wide) -->
+<div class="lg:col-span-2 bg-white dark:bg-[#162e26] rounded-xl shadow-sm border border-slate-100 dark:border-white/5 p-6">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Fuel Consumption Trends</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400">Monthly breakdown across all municipal districts</p>
+</div>
+<div class="flex gap-2">
+<button class="p-1 rounded hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400 hover:text-primary transition-colors">
+<span class="material-icons">download</span>
+</button>
+<button class="p-1 rounded hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400 hover:text-primary transition-colors">
+<span class="material-icons">more_horiz</span>
+</button>
+</div>
+</div>
+<!-- Chart Visualization (Using CSS/SVG) -->
+<div class="relative h-64 w-full">
+<!-- Y Axis Labels -->
+<div class="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-slate-400 pr-2">
+<span>4k L</span>
+<span>3k L</span>
+<span>2k L</span>
+<span>1k L</span>
+<span>0 L</span>
+</div>
+<!-- Chart Area -->
+<div class="absolute left-10 right-0 top-2 bottom-6">
+<!-- Grid Lines -->
+<div class="w-full h-full flex flex-col justify-between">
+<div class="border-b border-dashed border-slate-200 dark:border-white/5 w-full h-0"></div>
+<div class="border-b border-dashed border-slate-200 dark:border-white/5 w-full h-0"></div>
+<div class="border-b border-dashed border-slate-200 dark:border-white/5 w-full h-0"></div>
+<div class="border-b border-dashed border-slate-200 dark:border-white/5 w-full h-0"></div>
+<div class="border-b border-slate-200 dark:border-white/10 w-full h-0"></div>
+</div>
+<!-- The Curve (SVG) -->
+<svg class="absolute inset-0 w-full h-full overflow-visible" preserveaspectratio="none">
+<defs>
+<lineargradient id="purpleGradient" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:0.3"></stop>
+<stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+<path d="M0,80 Q40,90 80,60 T160,50 T240,80 T320,40 T400,60 T480,30 T560,50 T640,20 L640,150 L0,150 Z" fill="url(#purpleGradient)"></path>
+<path d="M0,80 Q40,90 80,60 T160,50 T240,80 T320,40 T400,60 T480,30 T560,50 T640,20" fill="none" stroke="#8b5cf6" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+<!-- Interactive Point -->
+<circle class="cursor-pointer hover:scale-125 transition-transform" cx="480" cy="30" fill="white" r="5" stroke="#8b5cf6" stroke-width="3"></circle>
+<!-- Tooltip for point (static for demo) -->
+<g transform="translate(480, -10)">
+<rect fill="#1e293b" height="24" rx="4" width="70" x="-35" y="-30"></rect>
+<text fill="white" font-family="Inter" font-size="10" text-anchor="middle" x="0" y="-14">3,240 L</text>
+</g>
+</svg>
+</div>
+<!-- X Axis Labels -->
+<div class="absolute left-10 right-0 bottom-0 flex justify-between text-xs text-slate-400 pt-2">
+<span>Mon</span>
+<span>Tue</span>
+<span>Wed</span>
+<span>Thu</span>
+<span>Fri</span>
+<span>Sat</span>
+<span>Sun</span>
+</div>
+</div>
+</div>
+<!-- Fleet Status Donut Chart (Narrow) -->
+<div class="bg-white dark:bg-[#162e26] rounded-xl shadow-sm border border-slate-100 dark:border-white/5 p-6 flex flex-col">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Fleet Status</h3>
+<div class="relative flex-1 flex items-center justify-center min-h-[200px]">
+<!-- Donut Chart SVG -->
+<svg class="w-48 h-48 transform -rotate-90" viewbox="0 0 100 100">
+<!-- Background Circle -->
+<circle class="dark:stroke-white/5" cx="50" cy="50" fill="transparent" r="40" stroke="#f1f5f9" stroke-width="12"></circle>
+<!-- Active Segment (85%) - Indigo -->
+<circle cx="50" cy="50" fill="transparent" r="40" stroke="#6366f1" stroke-dasharray="213.6 251.2" stroke-dashoffset="0" stroke-linecap="round" stroke-width="12"></circle>
+<!-- Maintenance Segment (15%) - Magenta -->
+<circle cx="50" cy="50" fill="transparent" r="40" stroke="#d946ef" stroke-dasharray="37.6 251.2" stroke-dashoffset="-220" stroke-linecap="round" stroke-width="12"></circle>
+</svg>
+<!-- Center Label -->
+<div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+<span class="text-3xl font-bold text-slate-800 dark:text-white">85%</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">Operational</span>
+</div>
+</div>
+<!-- Legend -->
+<div class="mt-6 space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-indigo-500"></span>
+<span class="text-sm text-slate-600 dark:text-slate-300">Active</span>
+</div>
+<span class="text-sm font-semibold text-slate-900 dark:text-white">121</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-magenta-500" style="background-color: #d946ef;"></span>
+<span class="text-sm text-slate-600 dark:text-slate-300">Maintenance</span>
+</div>
+<span class="text-sm font-semibold text-slate-900 dark:text-white">21</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Activity Feed -->
+<div class="bg-white dark:bg-[#162e26] rounded-xl shadow-sm border border-slate-100 dark:border-white/5 p-6">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Recent Activities</h3>
+<a class="text-sm font-medium text-primary hover:text-primary/80" href="#">View all logs</a>
+</div>
+<div class="space-y-6">
+<!-- Activity Item 1 -->
+<div class="flex gap-4 group">
+<div class="relative">
+<img alt="User profile picture" class="w-10 h-10 rounded-full object-cover border border-slate-100 dark:border-white/10" data-alt="Portrait of a woman with short hair smiling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBk4MtLpxmOFFv3JFkygy1aBSJdbV57I-4l8mtzui04K1nQ8jnFlem8BHzwENeJHUocTSyp_tJV3r9gkBqxYJumQm6YY-UmriA0spV4o_xdMBuPB6nKv8ST6ij133pcW00RcgRYFiCou3WKME6LnbqvEWOWAz7i38-QmryjSD-aA2cKMrQtdYUarX1DmNwxAgRLAgU1MU-noLxyX1jRs94drISlv2mCeim7XyCNoVGbDmTKI3ZtvDLVAjW4jx_FRwG4-brsmSTFI3E8"/>
+<span class="absolute -bottom-1 -right-1 bg-green-500 w-3 h-3 rounded-full border-2 border-white dark:border-[#162e26]"></span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-sm text-slate-800 dark:text-slate-200 font-medium">Maria Gonzalez <span class="text-slate-500 dark:text-slate-400 font-normal">completed inspection on</span> <span class="font-semibold text-primary">Unit 55</span></p>
+<p class="text-xs text-slate-500 mt-1">Routine maintenance check - All systems nominal</p>
+</div>
+<span class="text-xs text-slate-400 whitespace-nowrap">2m ago</span>
+</div>
+</div>
+</div>
+<!-- Activity Item 2 -->
+<div class="flex gap-4 group">
+<div class="relative">
+<img alt="User profile picture" class="w-10 h-10 rounded-full object-cover border border-slate-100 dark:border-white/10" data-alt="Portrait of a man with glasses smiling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2uRHYbxT2C0_lUJLvvOIrgH0qAl0v39FrAE8Nji6PvAZsSdX2ilmsathIOQKo1nCPC2IdbDAedPvm8ZhKZ5931y82UUx16dCEwKuHnUB9d4Y2okl8Cy7qMRY_N_9PzCFkDcPg69NEQG_iWSTfbvHJ1qGWws6foasp2Y9qDeac23khoyoA_hnk860LuJjjNyJKYG8h2aPIZqwnof0YK5RCKC_NcryJK9EPjQBP7pgHdBMYmGrFnKaJYfZTkYyK5djWVGoT4Z1Xor4F"/>
+<span class="absolute -bottom-1 -right-1 bg-blue-500 w-3 h-3 rounded-full border-2 border-white dark:border-[#162e26]"></span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-sm text-slate-800 dark:text-slate-200 font-medium">Jorge Lopez <span class="text-slate-500 dark:text-slate-400 font-normal">refueled</span> <span class="font-semibold text-primary">Unit 102</span></p>
+<p class="text-xs text-slate-500 mt-1">Station: Central Depot - 45 Liters</p>
+</div>
+<span class="text-xs text-slate-400 whitespace-nowrap">15m ago</span>
+</div>
+</div>
+</div>
+<!-- Activity Item 3 -->
+<div class="flex gap-4 group">
+<div class="relative">
+<div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 dark:text-slate-300 border border-slate-100 dark:border-white/5">
+<span class="material-icons text-lg">system_update</span>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-sm text-slate-800 dark:text-slate-200 font-medium">System Alert <span class="text-slate-500 dark:text-slate-400 font-normal">triggered for</span> <span class="font-semibold text-rose-500">Unit 89</span></p>
+<p class="text-xs text-slate-500 mt-1">Tire pressure warning - Driver notified</p>
+</div>
+<span class="text-xs text-slate-400 whitespace-nowrap">1h ago</span>
+</div>
+</div>
+</div>
+<!-- Activity Item 4 -->
+<div class="flex gap-4 group">
+<div class="relative">
+<img alt="User profile picture" class="w-10 h-10 rounded-full object-cover border border-slate-100 dark:border-white/10" data-alt="Portrait of a man looking away thoughtfully" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH8YRbIPkwa3SXu0AQNJSEY0YiPPgEUOLK6qkgWFtSGj_X3uGGcSywrSatKQJD-f-bqC_R3GFPIZxqoGC0qjYmV_jDf4AL1SMT6PVSympBHTm_DemKysgm7NJB6quBmB-08asoMa5NMv7vQUIYfrtsJ9sj9cF1tRlvMHqtRuFvkhSqFbr9qwNBkB-IMkcZ96h8_As00oJTQfI3Pih5d7rpPJyhVs10aVVoMRqJTYKmkgqldbMLyuxXsMxrFM1Y0D1dXSGqV9Ti1-Xy"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-sm text-slate-800 dark:text-slate-200 font-medium">Carlos Ruiz <span class="text-slate-500 dark:text-slate-400 font-normal">started route</span> <span class="font-semibold text-primary">Route #4B</span></p>
+<p class="text-xs text-slate-500 mt-1">On schedule</p>
+</div>
+<span class="text-xs text-slate-400 whitespace-nowrap">2h ago</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="max-w-7xl mx-auto px-6 py-8 border-t border-slate-200 dark:border-white/10 mt-8">
+<div class="flex flex-col md:flex-row justify-between items-center text-xs text-slate-400">
+<p>© 2023 Plan Juárez Administration. All rights reserved.</p>
+<div class="flex gap-4 mt-4 md:mt-0">
+<a class="hover:text-primary" href="#">Privacy Policy</a>
+<a class="hover:text-primary" href="#">Terms of Service</a>
+<a class="hover:text-primary" href="#">Help Center</a>
+</div>
+</div>
+</footer>
+</body></html>

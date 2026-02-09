@@ -1,4 +1,4 @@
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 export function MainLayout() {
@@ -10,69 +10,94 @@ export function MainLayout() {
     navigate('/login');
   };
 
+  const navClass = ({ isActive }: { isActive: boolean }) =>
+    `text-sm font-medium pb-1 border-b-2 transition-colors ${
+      isActive
+        ? 'text-primary border-primary'
+        : 'text-slate-500 hover:text-primary border-transparent'
+    }`;
+
   return (
     <div className="min-h-screen bg-background-light font-display text-slate-800">
-      <header className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-20">
-        <div className="flex items-center justify-between px-6 py-4">
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-[16px] bg-primary/10 flex items-center justify-center text-primary">
-              <span className="material-icons">local_shipping</span>
+            <div className="bg-primary/10 p-2 rounded-lg">
+              <span className="material-icons text-primary text-2xl">local_shipping</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">Gestión de Flota</h1>
-              <p className="text-xs text-primary font-bold uppercase tracking-wider">Fleet Management</p>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900">Gestión de Flota</h1>
+              <p className="text-xs font-medium text-slate-500">Fleet Management System</p>
             </div>
           </div>
+
+          <div className="hidden md:flex items-center gap-8">
+            <NavLink to="/" end className={navClass}>Overview</NavLink>
+            <NavLink to="/vehicles" className={navClass}>Vehículos</NavLink>
+            <NavLink to="/reservations" className={navClass}>Reservas</NavLink>
+            <NavLink to="/reports" className={navClass}>Reportes</NavLink>
+          </div>
+
           <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-slate-600">{userData?.email}</span>
+            <div className="hidden lg:flex items-center bg-slate-100 rounded-full px-4 py-2 border border-transparent focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all w-48">
+              <span className="material-icons text-slate-400 text-sm">search</span>
+              <input
+                type="text"
+                placeholder="Buscar vehículo o conductor..."
+                className="bg-transparent border-none text-sm ml-2 focus:ring-0 w-full text-slate-700 placeholder-slate-400"
+              />
+            </div>
             <button
-              onClick={handleSignOut}
-              className="px-4 py-2 rounded-[16px] border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors"
+              type="button"
+              className="relative p-2 text-slate-500 hover:text-primary transition-colors rounded-full hover:bg-slate-100"
+              aria-label="Notificaciones"
             >
-              Cerrar sesión
+              <span className="material-icons">notifications_none</span>
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
             </button>
+            <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-semibold text-slate-900">
+                  {userData?.displayName?.split(' ').slice(0, 2).join(' ') || userData?.email?.split('@')[0] || 'Usuario'}
+                </p>
+                <p className="text-xs text-slate-500">{userData?.role?.name || 'Usuario'}</p>
+              </div>
+              {userData?.photoUrl ? (
+                <img
+                  src={userData.photoUrl}
+                  alt=""
+                  className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary border-2 border-white">
+                  <span className="material-icons">person</span>
+                </div>
+              )}
+              <button
+                onClick={handleSignOut}
+                className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+              >
+                Salir
+              </button>
+            </div>
           </div>
         </div>
-      </header>
+      </nav>
 
-      <div className="flex">
-        <aside className="w-56 min-h-[calc(100vh-65px)] bg-white border-r border-slate-200 p-4">
-          <nav className="space-y-1">
-            <Link
-              to="/"
-              className="flex items-center gap-3 px-4 py-3 rounded-[16px] text-slate-700 font-medium hover:bg-primary/10 hover:text-primary transition-colors"
-            >
-              <span className="material-icons text-xl">dashboard</span>
-              Dashboard
-            </Link>
-            <Link
-              to="/vehicles"
-              className="flex items-center gap-3 px-4 py-3 rounded-[16px] text-slate-700 font-medium hover:bg-primary/10 hover:text-primary transition-colors"
-            >
-              <span className="material-icons text-xl">directions_car</span>
-              Vehículos
-            </Link>
-            <Link
-              to="/reservations"
-              className="flex items-center gap-3 px-4 py-3 rounded-[16px] text-slate-700 font-medium hover:bg-primary/10 hover:text-primary transition-colors"
-            >
-              <span className="material-icons text-xl">event</span>
-              Reservas
-            </Link>
-            <Link
-              to="/reports"
-              className="flex items-center gap-3 px-4 py-3 rounded-[16px] text-slate-700 font-medium hover:bg-primary/10 hover:text-primary transition-colors"
-            >
-              <span className="material-icons text-xl">assessment</span>
-              Reportes
-            </Link>
-          </nav>
-        </aside>
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <Outlet />
+      </main>
 
-        <main className="flex-1 p-6">
-          <Outlet />
-        </main>
-      </div>
+      <footer className="max-w-7xl mx-auto px-6 py-8 border-t border-slate-200 mt-8">
+        <div className="flex flex-col md:flex-row justify-between items-center text-xs text-slate-400">
+          <p>© {new Date().getFullYear()} Gestión de Flota. Todos los derechos reservados.</p>
+          <div className="flex gap-4 mt-4 md:mt-0">
+            <a className="hover:text-primary transition-colors" href="#">Privacidad</a>
+            <a className="hover:text-primary transition-colors" href="#">Términos</a>
+            <a className="hover:text-primary transition-colors" href="#">Ayuda</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
