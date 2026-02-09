@@ -16,6 +16,8 @@ import { VehiclesService } from './vehicles.service';
 import { StorageService } from '../storage/storage.service';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '../../common/decorators/current-user.decorator';
+import { CreateVehicleDto } from './dto/create-vehicle.dto';
+import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 
 @Controller('vehicles')
 @UseGuards(FirebaseAuthGuard)
@@ -36,13 +38,13 @@ export class VehiclesController {
   }
 
   @Post()
-  create(@Body() body: Record<string, unknown>) {
-    return this.vehiclesService.create(body as Parameters<typeof this.vehiclesService.create>[0]);
+  create(@Body() body: CreateVehicleDto) {
+    return this.vehiclesService.create(body);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return this.vehiclesService.update(id, body as Parameters<typeof this.vehiclesService.update>[1]);
+  update(@Param('id') id: string, @Body() body: UpdateVehicleDto) {
+    return this.vehiclesService.update(id, body);
   }
 
   @Delete(':id')

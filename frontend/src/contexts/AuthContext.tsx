@@ -9,6 +9,7 @@ import {
   onAuthStateChanged,
   onIdTokenChanged,
 } from 'firebase/auth';
+import { useQueryClient } from '@tanstack/react-query';
 import { auth } from '../config/firebase.config';
 import apiClient from '../services/api.service';
 
@@ -41,6 +42,7 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,6 +61,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             headers: { Authorization: `Bearer ${token}` },
           });
           setUserData(response.data);
+          // El backend crea/sincroniza el usuario en BD en esta petición; forzar recarga de la lista de usuarios
+          queryClient.invalidateQueries({ queryKey: ['users'] });
         } catch (err) {
           console.error('Error obteniendo datos del usuario:', err);
           setUserData(null);
@@ -80,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       unsubscribe();
       unsubscribeToken();
     };
-  }, []);
+  }, [queryClient]);
 
   const signInWithGoogle = async () => {
     if (!auth) throw new Error('Firebase no configurado. Configure VITE_FIREBASE_* en .env');

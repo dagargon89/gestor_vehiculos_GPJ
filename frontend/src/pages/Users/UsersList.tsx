@@ -150,7 +150,7 @@ export function UsersList() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
-  const { data: users = [], isLoading } = useQuery({
+  const { data: users = [], isLoading, isError, error } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
       const res = await apiClient.get('/users');
@@ -182,6 +182,22 @@ export function UsersList() {
   };
 
   if (isLoading) return <div className="text-primary font-bold">Cargando usuarios...</div>;
+
+  if (isError) {
+    const message = error && typeof error === 'object' && 'message' in error ? String((error as { message: string }).message) : 'Error desconocido';
+    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-slate-900">Usuarios</h2>
+        <div className="bg-red-50 border border-red-200 rounded-[16px] px-6 py-4 text-red-700">
+          <p className="font-medium">Error al cargar la lista de usuarios.</p>
+          <p className="text-sm mt-1">{message}</p>
+          <p className="text-sm mt-2">Comprobando: <code className="bg-red-100 px-1 rounded">{baseURL}</code></p>
+          <p className="text-sm mt-2">El usuario con el que iniciaste sesión se crea o sincroniza en la base de datos al entrar; si ves este error, revisa que el backend esté en marcha y que la sesión sea válida.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

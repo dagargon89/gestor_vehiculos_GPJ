@@ -66,10 +66,13 @@ function VehicleFormModal({
       onSuccess();
       onClose();
     } catch (err: unknown) {
-      const message = err && typeof err === 'object' && 'response' in err
-        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-        : 'Error al guardar';
-      setError(String(message));
+      const ax = err as { response?: { data?: { message?: string } }; message?: string };
+      const isNetworkError = !ax?.response;
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      const message = isNetworkError
+        ? `Error de red (${ax?.message ?? 'sin conexión'}). Comprueba que el backend esté en marcha y que la URL del API sea correcta. Comprobando: ${baseURL}`
+        : (ax.response?.data?.message ?? 'Error al guardar');
+      setError(message);
     } finally {
       setSubmitting(false);
     }
