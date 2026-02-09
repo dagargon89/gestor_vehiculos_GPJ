@@ -39,14 +39,6 @@ export function MainLayout() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="hidden lg:flex items-center bg-slate-100 rounded-full px-4 py-2 border border-transparent focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all w-48">
-              <span className="material-icons text-slate-400 text-sm">search</span>
-              <input
-                type="text"
-                placeholder="Buscar vehículo o conductor..."
-                className="bg-transparent border-none text-sm ml-2 focus:ring-0 w-full text-slate-700 placeholder-slate-400"
-              />
-            </div>
             <button
               type="button"
               className="relative p-2 text-slate-500 hover:text-primary transition-colors rounded-full hover:bg-slate-100"
