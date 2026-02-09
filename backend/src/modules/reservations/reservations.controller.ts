@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
@@ -17,8 +18,14 @@ export class ReservationsController {
   constructor(private reservationsService: ReservationsService) {}
 
   @Get()
-  findAll() {
-    return this.reservationsService.findAll();
+  findAll(
+    @Query('status') status?: string,
+    @Query('vehicleId') vehicleId?: string,
+    @Query('userId') userId?: string,
+  ) {
+    return this.reservationsService.findAll(
+      status || vehicleId || userId ? { status, vehicleId, userId } : undefined,
+    );
   }
 
   @Get(':id')

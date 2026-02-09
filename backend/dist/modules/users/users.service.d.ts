@@ -12,6 +12,7 @@ export declare class UsersService {
     private roleRepo;
     constructor(userRepo: Repository<User>, roleRepo: Repository<Role>);
     findByFirebaseUid(firebaseUid: string): Promise<User | null>;
+    findAll(): Promise<User[]>;
     findOne(id: string): Promise<User>;
     findOneWithPermissions(id: string): Promise<User & {
         permissions?: {
@@ -22,4 +23,6 @@ export declare class UsersService {
     createFromFirebase(dto: CreateFromFirebaseDto): Promise<User>;
     updateLastLogin(id: string): Promise<void>;
     updateUserData(id: string, data: Partial<User>): Promise<User>;
+    update(id: string, data: Partial<User>): Promise<User>;
+    remove(id: string): Promise<void>;
 }

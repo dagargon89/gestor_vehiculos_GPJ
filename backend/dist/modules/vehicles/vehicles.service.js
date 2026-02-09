@@ -21,9 +21,9 @@ let VehiclesService = class VehiclesService {
     constructor(vehicleRepo) {
         this.vehicleRepo = vehicleRepo;
     }
-    async findAll() {
+    async findAll(status) {
         return this.vehicleRepo.find({
-            where: {},
+            where: status ? { status } : {},
             order: { plate: 'ASC' },
         });
     }

@@ -83,6 +83,15 @@ let StorageService = class StorageService {
             order: { uploadedAt: 'DESC' },
         });
     }
+    async findOne(id) {
+        const file = await this.storageFileRepo.findOne({
+            where: { id },
+            relations: ['uploader'],
+        });
+        if (!file)
+            throw new common_1.NotFoundException('Archivo no encontrado');
+        return file;
+    }
 };
 exports.StorageService = StorageService;
 exports.StorageService = StorageService = __decorate([

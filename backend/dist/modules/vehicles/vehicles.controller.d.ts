@@ -5,7 +5,7 @@ export declare class VehiclesController {
     private vehiclesService;
     private storageService;
     constructor(vehiclesService: VehiclesService, storageService: StorageService);
-    findAll(): Promise<import("../../database/entities/vehicle.entity").Vehicle[]>;
+    findAll(status?: string): Promise<import("../../database/entities/vehicle.entity").Vehicle[]>;
     findOne(id: string): Promise<import("../../database/entities/vehicle.entity").Vehicle>;
     create(body: Record<string, unknown>): Promise<import("../../database/entities/vehicle.entity").Vehicle>;
     update(id: string, body: Record<string, unknown>): Promise<import("../../database/entities/vehicle.entity").Vehicle>;

@@ -3,7 +3,7 @@ import { Vehicle } from '../../database/entities/vehicle.entity';
 export declare class VehiclesService {
     private vehicleRepo;
     constructor(vehicleRepo: Repository<Vehicle>);
-    findAll(): Promise<Vehicle[]>;
+    findAll(status?: string): Promise<Vehicle[]>;
     findOne(id: string): Promise<Vehicle>;
     create(data: Partial<Vehicle>): Promise<Vehicle>;
     update(id: string, data: Partial<Vehicle>): Promise<Vehicle>;

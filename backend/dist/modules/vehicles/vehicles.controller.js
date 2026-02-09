@@ -24,8 +24,8 @@ let VehiclesController = class VehiclesController {
         this.vehiclesService = vehiclesService;
         this.storageService = storageService;
     }
-    findAll() {
-        return this.vehiclesService.findAll();
+    findAll(status) {
+        return this.vehiclesService.findAll(status);
     }
     findOne(id) {
         return this.vehiclesService.findOne(id);
@@ -53,8 +53,9 @@ let VehiclesController = class VehiclesController {
 exports.VehiclesController = VehiclesController;
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('status')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], VehiclesController.prototype, "findAll", null);
 __decorate([

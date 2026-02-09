@@ -26,6 +26,12 @@ let UsersService = class UsersService {
     async findByFirebaseUid(firebaseUid) {
         return this.userRepo.findOne({ where: { firebaseUid }, relations: ['role'] });
     }
+    async findAll() {
+        return this.userRepo.find({
+            relations: ['role'],
+            order: { email: 'ASC' },
+        });
+    }
     async findOne(id) {
         const user = await this.userRepo.findOne({ where: { id }, relations: ['role'] });
         if (!user)
@@ -58,6 +64,13 @@ let UsersService = class UsersService {
     async updateUserData(id, data) {
         await this.userRepo.update(id, data);
         return this.findOne(id);
+    }
+    async update(id, data) {
+        await this.userRepo.update(id, data);
+        return this.findOne(id);
+    }
+    async remove(id) {
+        await this.userRepo.softDelete(id);
     }
 };
 exports.UsersService = UsersService;

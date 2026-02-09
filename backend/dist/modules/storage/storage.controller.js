@@ -30,6 +30,9 @@ let StorageController = class StorageController {
         const result = await this.storageService.uploadFile(file, entityType, entityId, user.id);
         return { firebaseUrl: result.firebaseUrl, id: result.id };
     }
+    getOne(id) {
+        return this.storageService.findOne(id);
+    }
     getByEntity(entityType, entityId) {
         return this.storageService.getFilesByEntity(entityType, entityId);
     }
@@ -48,6 +51,13 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], StorageController.prototype, "upload", null);
+__decorate([
+    (0, common_1.Get)('record/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], StorageController.prototype, "getOne", null);
 __decorate([
     (0, common_1.Get)(':entityType/:entityId'),
     __param(0, (0, common_1.Param)('entityType')),

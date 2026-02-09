@@ -10,11 +10,20 @@ export class ReservationsService {
     private repo: Repository<Reservation>,
   ) {}
 
-  async findAll(): Promise<Reservation[]> {
-    return this.repo.find({
-      relations: ['vehicle', 'user'],
-      order: { startDatetime: 'DESC' },
-    });
+  async findAll(filters?: {
+    status?: string;
+    vehicleId?: string;
+    userId?: string;
+  }): Promise<Reservation[]> {
+    const qb = this.repo
+      .createQueryBuilder('r')
+      .leftJoinAndSelect('r.vehicle', 'v')
+      .leftJoinAndSelect('r.user', 'u')
+      .orderBy('r.startDatetime', 'DESC');
+    if (filters?.status) qb.andWhere('r.status = :status', { status: filters.status });
+    if (filters?.vehicleId) qb.andWhere('r.vehicleId = :vehicleId', { vehicleId: filters.vehicleId });
+    if (filters?.userId) qb.andWhere('r.userId = :userId', { userId: filters.userId });
+    return qb.getMany();
   }
 
   async findOne(id: string): Promise<Reservation> {

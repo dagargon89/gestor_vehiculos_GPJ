@@ -10,9 +10,9 @@ export class VehiclesService {
     private vehicleRepo: Repository<Vehicle>,
   ) {}
 
-  async findAll(): Promise<Vehicle[]> {
+  async findAll(status?: string): Promise<Vehicle[]> {
     return this.vehicleRepo.find({
-      where: {},
+      where: status ? { status } : {},
       order: { plate: 'ASC' },
     });
   }

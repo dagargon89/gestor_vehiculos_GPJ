@@ -6,4 +6,5 @@ export declare class StorageService {
     uploadFile(file: Express.Multer.File, entityType: string, entityId: string, userId: string): Promise<StorageFile>;
     deleteFile(fileId: string): Promise<void>;
     getFilesByEntity(entityType: string, entityId: string): Promise<StorageFile[]>;
+    findOne(id: string): Promise<StorageFile>;
 }

@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { StorageFile } from '../../database/entities/storage-file.entity';
@@ -78,5 +78,14 @@ export class StorageService {
       where: { entityType, entityId, deletedAt: IsNull() },
       order: { uploadedAt: 'DESC' },
     });
+  }
+
+  async findOne(id: string): Promise<StorageFile> {
+    const file = await this.storageFileRepo.findOne({
+      where: { id },
+      relations: ['uploader'],
+    });
+    if (!file) throw new NotFoundException('Archivo no encontrado');
+    return file;
   }
 }

@@ -21,11 +21,19 @@ let ReservationsService = class ReservationsService {
     constructor(repo) {
         this.repo = repo;
     }
-    async findAll() {
-        return this.repo.find({
-            relations: ['vehicle', 'user'],
-            order: { startDatetime: 'DESC' },
-        });
+    async findAll(filters) {
+        const qb = this.repo
+            .createQueryBuilder('r')
+            .leftJoinAndSelect('r.vehicle', 'v')
+            .leftJoinAndSelect('r.user', 'u')
+            .orderBy('r.startDatetime', 'DESC');
+        if (filters?.status)
+            qb.andWhere('r.status = :status', { status: filters.status });
+        if (filters?.vehicleId)
+            qb.andWhere('r.vehicleId = :vehicleId', { vehicleId: filters.vehicleId });
+        if (filters?.userId)
+            qb.andWhere('r.userId = :userId', { userId: filters.userId });
+        return qb.getMany();
     }
     async findOne(id) {
         const r = await this.repo.findOne({

@@ -10,6 +10,7 @@ export declare class StorageController {
         firebaseUrl: string;
         id: string;
     }>;
+    getOne(id: string): Promise<import("../../database/entities/storage-file.entity").StorageFile>;
     getByEntity(entityType: string, entityId: string): Promise<import("../../database/entities/storage-file.entity").StorageFile[]>;
     delete(id: string): Promise<void>;
 }

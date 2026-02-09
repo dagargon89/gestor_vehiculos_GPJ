@@ -20,8 +20,8 @@ let ReservationsController = class ReservationsController {
     constructor(reservationsService) {
         this.reservationsService = reservationsService;
     }
-    findAll() {
-        return this.reservationsService.findAll();
+    findAll(status, vehicleId, userId) {
+        return this.reservationsService.findAll(status || vehicleId || userId ? { status, vehicleId, userId } : undefined);
     }
     findOne(id) {
         return this.reservationsService.findOne(id);
@@ -39,8 +39,11 @@ let ReservationsController = class ReservationsController {
 exports.ReservationsController = ReservationsController;
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('status')),
+    __param(1, (0, common_1.Query)('vehicleId')),
+    __param(2, (0, common_1.Query)('userId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], ReservationsController.prototype, "findAll", null);
 __decorate([

@@ -39,6 +39,11 @@ export class StorageController {
     return { firebaseUrl: result.firebaseUrl, id: result.id };
   }
 
+  @Get('record/:id')
+  getOne(@Param('id') id: string) {
+    return this.storageService.findOne(id);
+  }
+
   @Get(':entityType/:entityId')
   getByEntity(
     @Param('entityType') entityType: string,

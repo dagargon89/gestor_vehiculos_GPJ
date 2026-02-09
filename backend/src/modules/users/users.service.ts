@@ -24,6 +24,13 @@ export class UsersService {
     return this.userRepo.findOne({ where: { firebaseUid }, relations: ['role'] });
   }
 
+  async findAll(): Promise<User[]> {
+    return this.userRepo.find({
+      relations: ['role'],
+      order: { email: 'ASC' },
+    });
+  }
+
   async findOne(id: string): Promise<User> {
     const user = await this.userRepo.findOne({ where: { id }, relations: ['role'] });
     if (!user) throw new NotFoundException('Usuario no encontrado');
@@ -59,5 +66,14 @@ export class UsersService {
   async updateUserData(id: string, data: Partial<User>): Promise<User> {
     await this.userRepo.update(id, data as Partial<User>);
     return this.findOne(id);
+  }
+
+  async update(id: string, data: Partial<User>): Promise<User> {
+    await this.userRepo.update(id, data as Partial<User>);
+    return this.findOne(id);
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.userRepo.softDelete(id);
   }
 }

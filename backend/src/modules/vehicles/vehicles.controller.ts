@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
   UseInterceptors,
   UploadedFile,
@@ -25,8 +26,8 @@ export class VehiclesController {
   ) {}
 
   @Get()
-  findAll() {
-    return this.vehiclesService.findAll();
+  findAll(@Query('status') status?: string) {
+    return this.vehiclesService.findAll(status);
   }
 
   @Get(':id')
