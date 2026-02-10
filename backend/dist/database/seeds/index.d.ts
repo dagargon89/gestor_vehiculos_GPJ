@@ -1,0 +1,15 @@
+import { DataSource } from 'typeorm';
+export declare function seedRolesAndPermissions(dataSource: DataSource): Promise<void>;
+export declare function seedVehicles(dataSource: DataSource): Promise<void>;
+export declare function seedProviders(dataSource: DataSource): Promise<void>;
+export declare function seedSystemSettings(dataSource: DataSource): Promise<void>;
+export declare function seedMaintenance(dataSource: DataSource): Promise<void>;
+export declare function seedFuelRecords(dataSource: DataSource): Promise<void>;
+export declare function seedCosts(dataSource: DataSource): Promise<void>;
+export declare function seedIncidents(dataSource: DataSource): Promise<void>;
+export declare function seedReservations(dataSource: DataSource): Promise<void>;
+export declare function seedSanctions(dataSource: DataSource): Promise<void>;
+export declare function seedNotifications(dataSource: DataSource): Promise<void>;
+export declare function seedAuditLogs(dataSource: DataSource): Promise<void>;
+export declare function seedStorageFiles(dataSource: DataSource): Promise<void>;
+export declare function runAllSeeds(dataSource: DataSource): Promise<void>;

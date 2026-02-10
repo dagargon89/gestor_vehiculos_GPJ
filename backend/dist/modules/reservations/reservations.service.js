@@ -17,9 +17,13 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const reservation_entity_1 = require("../../database/entities/reservation.entity");
+const vehicle_entity_1 = require("../../database/entities/vehicle.entity");
+const notifications_service_1 = require("../notifications/notifications.service");
 let ReservationsService = class ReservationsService {
-    constructor(repo) {
+    constructor(repo, vehicleRepo, notificationsService) {
         this.repo = repo;
+        this.vehicleRepo = vehicleRepo;
+        this.notificationsService = notificationsService;
     }
     async findAll(filters) {
         const qb = this.repo
@@ -33,6 +37,12 @@ let ReservationsService = class ReservationsService {
             qb.andWhere('r.vehicleId = :vehicleId', { vehicleId: filters.vehicleId });
         if (filters?.userId)
             qb.andWhere('r.userId = :userId', { userId: filters.userId });
+        if (filters?.start) {
+            qb.andWhere('r.endDatetime > :start', { start: filters.start });
+        }
+        if (filters?.end) {
+            qb.andWhere('r.startDatetime < :end', { end: filters.end });
+        }
         return qb.getMany();
     }
     async findOne(id) {
@@ -45,12 +55,84 @@ let ReservationsService = class ReservationsService {
         return r;
     }
     async create(data) {
-        const r = this.repo.create(data);
+        const allowedKeys = [
+            'vehicleId',
+            'userId',
+            'startDatetime',
+            'endDatetime',
+            'status',
+            'eventName',
+            'description',
+            'destination',
+            'checkinOdometer',
+            'checkoutOdometer',
+        ];
+        const payload = {};
+        for (const key of allowedKeys) {
+            const value = data[key];
+            if (value !== undefined && value !== null) {
+                payload[key] = value;
+            }
+        }
+        if (payload.startDatetime && typeof payload.startDatetime === 'string') {
+            payload.startDatetime = new Date(payload.startDatetime);
+        }
+        if (payload.endDatetime && typeof payload.endDatetime === 'string') {
+            payload.endDatetime = new Date(payload.endDatetime);
+        }
+        const r = this.repo.create(payload);
         return this.repo.save(r);
     }
     async update(id, data) {
-        await this.repo.update(id, data);
-        return this.findOne(id);
+        const previous = await this.findOne(id);
+        const allowedKeys = [
+            'vehicleId',
+            'userId',
+            'startDatetime',
+            'endDatetime',
+            'status',
+            'eventName',
+            'description',
+            'destination',
+            'checkinOdometer',
+            'checkinFuelPhotoUrl',
+            'checkinConditionPhotoUrls',
+            'checkoutOdometer',
+            'checkoutFuelPhotoUrl',
+            'checkoutConditionPhotoUrls',
+        ];
+        const payload = {};
+        for (const key of allowedKeys) {
+            const value = data[key];
+            if (value !== undefined && value !== null) {
+                payload[key] = value;
+            }
+        }
+        if (payload.startDatetime && typeof payload.startDatetime === 'string') {
+            payload.startDatetime = new Date(payload.startDatetime);
+        }
+        if (payload.endDatetime && typeof payload.endDatetime === 'string') {
+            payload.endDatetime = new Date(payload.endDatetime);
+        }
+        if (Object.keys(payload).length === 0) {
+            return previous;
+        }
+        await this.repo.update(id, payload);
+        const updated = await this.findOne(id);
+        const vehicleLabel = previous.vehicle
+            ? `${previous.vehicle.plate} – ${previous.vehicle.brand} ${previous.vehicle.model}`
+            : 'vehículo';
+        const newStatus = payload.status ?? previous.status;
+        if (newStatus === 'cancelled') {
+            await this.notificationsService.notifyUser(previous.userId, 'reservation_cancelled', 'Reserva cancelada', `Tu reserva de ${vehicleLabel} ha sido cancelada.`, '/mis-solicitudes');
+        }
+        else if (previous.status === 'pending' && newStatus === 'active') {
+            await this.notificationsService.notifyUser(previous.userId, 'reservation_approved', 'Reserva aprobada', `Tu solicitud de ${vehicleLabel} ha sido aprobada. Ya puedes hacer check-in cuando retires el vehículo.`, '/mis-solicitudes');
+        }
+        else {
+            await this.notificationsService.notifyUser(previous.userId, 'reservation_updated', 'Reserva modificada', `Tu reserva de ${vehicleLabel} ha sido modificada. Revisa los detalles en Mis solicitudes.`, '/mis-solicitudes');
+        }
+        return updated;
     }
     async findOverdue() {
         return this.repo
@@ -62,13 +144,76 @@ let ReservationsService = class ReservationsService {
             .getMany();
     }
     async remove(id) {
+        const reservation = await this.findOne(id);
         await this.repo.softDelete(id);
+        const vehicleLabel = reservation.vehicle
+            ? `${reservation.vehicle.plate} – ${reservation.vehicle.brand} ${reservation.vehicle.model}`
+            : 'vehículo';
+        await this.notificationsService.notifyUser(reservation.userId, 'reservation_cancelled', 'Reserva cancelada', `Tu reserva de ${vehicleLabel} ha sido cancelada o eliminada.`, '/mis-solicitudes');
+    }
+    async checkIn(id, userId, odometer, fuelPhotoUrl, conditionPhotoUrls) {
+        const reservation = await this.findOne(id);
+        if (reservation.userId !== userId) {
+            throw new common_1.ForbiddenException('Solo el titular de la reserva puede hacer check-in');
+        }
+        if (reservation.status !== 'active') {
+            throw new common_1.BadRequestException('Solo se puede hacer check-in en una reserva activa');
+        }
+        if (reservation.checkinOdometer != null) {
+            throw new common_1.BadRequestException('Ya registraste el check-in para esta reserva');
+        }
+        const odometerNum = Number(odometer);
+        if (!Number.isInteger(odometerNum) || odometerNum < 0) {
+            throw new common_1.BadRequestException('El odómetro debe ser un número entero mayor o igual a 0');
+        }
+        const payload = { checkinOdometer: odometerNum };
+        if (fuelPhotoUrl != null && fuelPhotoUrl !== '')
+            payload.checkinFuelPhotoUrl = fuelPhotoUrl;
+        if (conditionPhotoUrls != null && conditionPhotoUrls.length > 0) {
+            payload.checkinConditionPhotoUrls = JSON.stringify(conditionPhotoUrls);
+        }
+        await this.repo.update(id, payload);
+        return this.findOne(id);
+    }
+    async checkOut(id, userId, odometer, fuelPhotoUrl, conditionPhotoUrls) {
+        const reservation = await this.findOne(id);
+        if (reservation.userId !== userId) {
+            throw new common_1.ForbiddenException('Solo el titular de la reserva puede hacer check-out');
+        }
+        if (reservation.checkinOdometer == null) {
+            throw new common_1.BadRequestException('Debes hacer check-in antes del check-out');
+        }
+        if (reservation.checkoutOdometer != null) {
+            throw new common_1.BadRequestException('Ya registraste el check-out para esta reserva');
+        }
+        const odometerNum = Number(odometer);
+        if (!Number.isInteger(odometerNum) || odometerNum < 0) {
+            throw new common_1.BadRequestException('El odómetro debe ser un número entero mayor o igual a 0');
+        }
+        if (odometerNum < reservation.checkinOdometer) {
+            throw new common_1.BadRequestException('El odómetro de devolución no puede ser menor que el de salida');
+        }
+        const payload = {
+            checkoutOdometer: odometerNum,
+            status: 'completed',
+        };
+        if (fuelPhotoUrl != null && fuelPhotoUrl !== '')
+            payload.checkoutFuelPhotoUrl = fuelPhotoUrl;
+        if (conditionPhotoUrls != null && conditionPhotoUrls.length > 0) {
+            payload.checkoutConditionPhotoUrls = JSON.stringify(conditionPhotoUrls);
+        }
+        await this.repo.update(id, payload);
+        await this.vehicleRepo.update(reservation.vehicleId, { currentOdometer: odometerNum });
+        return this.findOne(id);
     }
 };
 exports.ReservationsService = ReservationsService;
 exports.ReservationsService = ReservationsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(reservation_entity_1.Reservation)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(vehicle_entity_1.Vehicle)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
+        notifications_service_1.NotificationsService])
 ], ReservationsService);
 //# sourceMappingURL=reservations.service.js.map

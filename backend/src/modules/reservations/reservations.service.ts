@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Reservation } from '../../database/entities/reservation.entity';
 import { Vehicle } from '../../database/entities/vehicle.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ReservationsService {
@@ -11,6 +12,7 @@ export class ReservationsService {
     private repo: Repository<Reservation>,
     @InjectRepository(Vehicle)
     private vehicleRepo: Repository<Vehicle>,
+    private notificationsService: NotificationsService,
   ) {}
 
   async findAll(filters?: {
@@ -77,6 +79,7 @@ export class ReservationsService {
   }
 
   async update(id: string, data: Partial<Reservation>): Promise<Reservation> {
+    const previous = await this.findOne(id);
     const allowedKeys = [
       'vehicleId',
       'userId',
@@ -107,10 +110,43 @@ export class ReservationsService {
       payload.endDatetime = new Date(payload.endDatetime as string);
     }
     if (Object.keys(payload).length === 0) {
-      return this.findOne(id);
+      return previous;
     }
     await this.repo.update(id, payload);
-    return this.findOne(id);
+    const updated = await this.findOne(id);
+
+    const vehicleLabel = previous.vehicle
+      ? `${previous.vehicle.plate} – ${previous.vehicle.brand} ${previous.vehicle.model}`
+      : 'vehículo';
+    const newStatus = (payload.status as string) ?? previous.status;
+
+    if (newStatus === 'cancelled') {
+      await this.notificationsService.notifyUser(
+        previous.userId,
+        'reservation_cancelled',
+        'Reserva cancelada',
+        `Tu reserva de ${vehicleLabel} ha sido cancelada.`,
+        '/mis-solicitudes',
+      );
+    } else if (previous.status === 'pending' && newStatus === 'active') {
+      await this.notificationsService.notifyUser(
+        previous.userId,
+        'reservation_approved',
+        'Reserva aprobada',
+        `Tu solicitud de ${vehicleLabel} ha sido aprobada. Ya puedes hacer check-in cuando retires el vehículo.`,
+        '/mis-solicitudes',
+      );
+    } else {
+      await this.notificationsService.notifyUser(
+        previous.userId,
+        'reservation_updated',
+        'Reserva modificada',
+        `Tu reserva de ${vehicleLabel} ha sido modificada. Revisa los detalles en Mis solicitudes.`,
+        '/mis-solicitudes',
+      );
+    }
+
+    return updated;
   }
 
   async findOverdue(): Promise<Reservation[]> {
@@ -124,7 +160,18 @@ export class ReservationsService {
   }
 
   async remove(id: string): Promise<void> {
+    const reservation = await this.findOne(id);
     await this.repo.softDelete(id);
+    const vehicleLabel = reservation.vehicle
+      ? `${reservation.vehicle.plate} – ${reservation.vehicle.brand} ${reservation.vehicle.model}`
+      : 'vehículo';
+    await this.notificationsService.notifyUser(
+      reservation.userId,
+      'reservation_cancelled',
+      'Reserva cancelada',
+      `Tu reserva de ${vehicleLabel} ha sido cancelada o eliminada.`,
+      '/mis-solicitudes',
+    );
   }
 
   async checkIn(

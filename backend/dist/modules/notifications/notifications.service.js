@@ -11,15 +11,41 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var NotificationsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationsService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const notification_entity_1 = require("../../database/entities/notification.entity");
-let NotificationsService = class NotificationsService {
-    constructor(repo) {
+const user_entity_1 = require("../../database/entities/user.entity");
+const mail_service_1 = require("../mail/mail.service");
+let NotificationsService = NotificationsService_1 = class NotificationsService {
+    constructor(repo, userRepo, mailService) {
         this.repo = repo;
+        this.userRepo = userRepo;
+        this.mailService = mailService;
+        this.logger = new common_1.Logger(NotificationsService_1.name);
+    }
+    async notifyUser(userId, type, title, message, actionUrl) {
+        const notification = this.repo.create({
+            userId,
+            type,
+            title,
+            message,
+            actionUrl,
+        });
+        const saved = await this.repo.save(notification);
+        this.userRepo.findOne({ where: { id: userId }, select: ['email', 'emailNotifications'] }).then((user) => {
+            if (!user?.email || user.emailNotifications !== true)
+                return;
+            this.mailService.send(user.email, title, message).catch((err) => {
+                this.logger.warn(`Email send failed for ${userId}: ${err instanceof Error ? err.message : err}`);
+            });
+        }).catch((err) => {
+            this.logger.warn(`Could not load user ${userId} for email: ${err instanceof Error ? err.message : err}`);
+        });
+        return saved;
     }
     async findAll(userId, read) {
         const qb = this.repo
@@ -58,9 +84,12 @@ let NotificationsService = class NotificationsService {
     }
 };
 exports.NotificationsService = NotificationsService;
-exports.NotificationsService = NotificationsService = __decorate([
+exports.NotificationsService = NotificationsService = NotificationsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(notification_entity_1.Notification)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
+        mail_service_1.MailService])
 ], NotificationsService);
 //# sourceMappingURL=notifications.service.js.map

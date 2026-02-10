@@ -18,6 +18,7 @@ import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { FuelRecordsModule } from './modules/fuel-records/fuel-records.module';
 import { CostsModule } from './modules/costs/costs.module';
 import { SanctionsModule } from './modules/sanctions/sanctions.module';
+import { MailModule } from './modules/mail/mail.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { IncidentsModule } from './modules/incidents/incidents.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
@@ -41,6 +42,7 @@ import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
     FuelRecordsModule,
     CostsModule,
     SanctionsModule,
+    MailModule,
     NotificationsModule,
     IncidentsModule,
     AuditLogsModule,

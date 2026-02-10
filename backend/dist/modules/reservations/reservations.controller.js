@@ -16,12 +16,20 @@ exports.ReservationsController = void 0;
 const common_1 = require("@nestjs/common");
 const reservations_service_1 = require("./reservations.service");
 const firebase_auth_guard_1 = require("../../common/guards/firebase-auth.guard");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 let ReservationsController = class ReservationsController {
     constructor(reservationsService) {
         this.reservationsService = reservationsService;
     }
-    findAll(status, vehicleId, userId) {
-        return this.reservationsService.findAll(status || vehicleId || userId ? { status, vehicleId, userId } : undefined);
+    findAll(status, vehicleId, userId, start, end) {
+        const hasFilters = status || vehicleId || userId || start || end;
+        return this.reservationsService.findAll(hasFilters ? { status, vehicleId, userId, start, end } : undefined);
+    }
+    checkIn(id, user, body) {
+        return this.reservationsService.checkIn(id, user.id, body.odometer, body.fuelPhotoUrl, body.conditionPhotoUrls);
+    }
+    checkOut(id, user, body) {
+        return this.reservationsService.checkOut(id, user.id, body.odometer, body.fuelPhotoUrl, body.conditionPhotoUrls);
     }
     findOne(id) {
         return this.reservationsService.findOne(id);
@@ -29,8 +37,14 @@ let ReservationsController = class ReservationsController {
     create(body) {
         return this.reservationsService.create(body);
     }
-    update(id, body) {
-        return this.reservationsService.update(id, body);
+    async update(id, body) {
+        try {
+            return await this.reservationsService.update(id, body);
+        }
+        catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            throw new common_1.InternalServerErrorException(message);
+        }
     }
     remove(id) {
         return this.reservationsService.remove(id);
@@ -42,10 +56,30 @@ __decorate([
     __param(0, (0, common_1.Query)('status')),
     __param(1, (0, common_1.Query)('vehicleId')),
     __param(2, (0, common_1.Query)('userId')),
+    __param(3, (0, common_1.Query)('start')),
+    __param(4, (0, common_1.Query)('end')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], ReservationsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Post)(':id/check-in'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", void 0)
+], ReservationsController.prototype, "checkIn", null);
+__decorate([
+    (0, common_1.Post)(':id/check-out'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", void 0)
+], ReservationsController.prototype, "checkOut", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
@@ -66,7 +100,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], ReservationsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),

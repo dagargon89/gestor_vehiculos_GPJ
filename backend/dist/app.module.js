@@ -27,6 +27,7 @@ const maintenance_module_1 = require("./modules/maintenance/maintenance.module")
 const fuel_records_module_1 = require("./modules/fuel-records/fuel-records.module");
 const costs_module_1 = require("./modules/costs/costs.module");
 const sanctions_module_1 = require("./modules/sanctions/sanctions.module");
+const mail_module_1 = require("./modules/mail/mail.module");
 const notifications_module_1 = require("./modules/notifications/notifications.module");
 const incidents_module_1 = require("./modules/incidents/incidents.module");
 const audit_logs_module_1 = require("./modules/audit-logs/audit-logs.module");
@@ -53,6 +54,7 @@ exports.AppModule = AppModule = __decorate([
             fuel_records_module_1.FuelRecordsModule,
             costs_module_1.CostsModule,
             sanctions_module_1.SanctionsModule,
+            mail_module_1.MailModule,
             notifications_module_1.NotificationsModule,
             incidents_module_1.IncidentsModule,
             audit_logs_module_1.AuditLogsModule,
