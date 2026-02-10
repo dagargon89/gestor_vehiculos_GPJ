@@ -11,6 +11,11 @@ import { ReportsPage } from './pages/Reports/ReportsPage';
 import { UsersList } from './pages/Users/UsersList';
 import { ProvidersList } from './pages/Providers/ProvidersList';
 import { ProfilePage } from './pages/Profile/ProfilePage';
+import { MaintenanceList } from './pages/Maintenance/MaintenanceList';
+import { IncidentList } from './pages/Incidents/IncidentList';
+import { SanctionList } from './pages/Sanctions/SanctionList';
+import { RolePermissionsPage } from './pages/RolePermissions/RolePermissionsPage';
+import { SystemSettingsPage } from './pages/SystemSettings/SystemSettingsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +44,11 @@ function App() {
               <Route path="users" element={<UsersList />} />
               <Route path="providers" element={<ProvidersList />} />
               <Route path="reports" element={<ReportsPage />} />
+              <Route path="maintenance" element={<MaintenanceList />} />
+              <Route path="incidents" element={<IncidentList />} />
+              <Route path="sanctions" element={<SanctionList />} />
+              <Route path="role-permissions" element={<RolePermissionsPage />} />
+              <Route path="system-settings" element={<SystemSettingsPage />} />
               <Route path="profile" element={<ProfilePage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

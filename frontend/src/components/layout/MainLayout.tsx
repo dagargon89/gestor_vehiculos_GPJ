@@ -1,13 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import apiClient from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 
 const ADMIN_ROUTES = [
   { to: '/vehicles', label: 'Gestión de Vehículos' },
   { to: '/reservations', label: 'Gestión de Reservas' },
+  { to: '/maintenance', label: 'Gestión de Mantenimientos' },
+  { to: '/incidents', label: 'Incidentes' },
+  { to: '/sanctions', label: 'Sanciones' },
   { to: '/users', label: 'Gestión de Usuarios' },
   { to: '/providers', label: 'Gestión de Proveedores' },
   { to: '/reports', label: 'Reportes y Estadísticas' },
+  { to: '/role-permissions', label: 'Permisos por rol' },
+  { to: '/system-settings', label: 'Configuración del sistema' },
 ];
 
 export function MainLayout() {
@@ -17,8 +24,27 @@ export function MainLayout() {
   const [syncBannerDismissed, setSyncBannerDismissed] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const adminMenuRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications', userData?.id],
+    queryFn: async () => {
+      const res = await apiClient.get('/notifications', { params: userData?.id ? { userId: userData.id } : {} });
+      return res.data;
+    },
+    enabled: !!userData?.id,
+  });
+
+  const markAsReadMutation = useMutation({
+    mutationFn: (id: string) => apiClient.put(`/notifications/${id}/read`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+
+  const unreadCount = notifications.filter((n: { read: boolean }) => !n.read).length;
 
   const isAdminRoute = ADMIN_ROUTES.some((r) => location.pathname === r.to || (r.to !== '/' && location.pathname.startsWith(r.to)));
 
@@ -30,6 +56,9 @@ export function MainLayout() {
       }
       if (adminMenuRef.current && !adminMenuRef.current.contains(target)) {
         setAdminMenuOpen(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(target)) {
+        setNotificationsOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -135,6 +164,57 @@ export function MainLayout() {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Notificaciones */}
+          <div className="relative flex items-center" ref={notificationsRef}>
+            <button
+              type="button"
+              onClick={() => setNotificationsOpen((prev) => !prev)}
+              className="relative p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+              aria-label="Notificaciones"
+            >
+              <span className="material-icons">notifications_none</span>
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </button>
+            {notificationsOpen && (
+              <div className="absolute right-0 top-full mt-1 w-80 max-h-[400px] overflow-auto bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
+                <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center">
+                  <span className="text-sm font-bold text-slate-900">Notificaciones</span>
+                  {unreadCount > 0 && (
+                    <span className="text-xs text-slate-500">{unreadCount} sin leer</span>
+                  )}
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {notifications.length === 0 ? (
+                    <div className="px-4 py-6 text-center text-slate-500 text-sm">No hay notificaciones.</div>
+                  ) : (
+                    notifications.map((n: { id: string; title: string; message: string; read: boolean; createdAt: string; actionUrl?: string }) => (
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={() => {
+                          if (!n.read) markAsReadMutation.mutate(n.id);
+                          if (n.actionUrl) navigate(n.actionUrl);
+                          setNotificationsOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
+                      >
+                        <p className="text-sm font-medium text-slate-900">{n.title}</p>
+                        <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">{n.message}</p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {new Date(n.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Usuario: "Hola, Nombre (rol)" + dropdown */}
