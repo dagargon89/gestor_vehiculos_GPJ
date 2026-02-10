@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '../../contexts/AuthContext';
 import apiClient from '../../services/api.service';
@@ -26,10 +26,12 @@ const LICENSE_TYPES = [
 ];
 
 export function ProfilePage() {
-  const { userData, currentUser } = useAuth();
+  const { userData, currentUser, refreshUserData } = useAuth();
   const [editing, setEditing] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
 
   const [form, setForm] = useState<ProfileData>({
     displayName: '',
@@ -65,8 +67,8 @@ export function ProfilePage() {
   }, [userData?.id]);
 
   const updateMutation = useMutation({
-    mutationFn: async (data: Partial<ProfileData>) => {
-      const res = await apiClient.put(`/auth/sync-user`, data);
+    mutationFn: async (data: Partial<ProfileData> & { photoUrl?: string }) => {
+      const res = await apiClient.post(`/auth/sync-user`, data);
       return res.data;
     },
     onSuccess: () => {
@@ -124,6 +126,44 @@ export function ProfilePage() {
 
   const update = (field: keyof ProfileData, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userData?.id) return;
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      setError('Formato no válido. Usa JPG, PNG, WebP o GIF.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('La imagen no debe superar 5 MB.');
+      return;
+    }
+    setError(null);
+    setPhotoUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('entityType', 'user');
+      formData.append('entityId', userData.id);
+      const uploadRes = await apiClient.post('/storage/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const firebaseUrl = uploadRes.data.firebaseUrl;
+      await apiClient.post('/auth/sync-user', { photoUrl: firebaseUrl });
+      await refreshUserData();
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Error al subir la foto.';
+      setError(String(msg));
+    } finally {
+      setPhotoUploading(false);
+      e.target.value = '';
+    }
+  };
 
   const inputClass = (disabled: boolean) =>
     `w-full px-4 py-2.5 border rounded-[12px] text-sm font-medium transition-colors ${
@@ -187,27 +227,56 @@ export function ProfilePage() {
 
       {/* Tarjeta de cabecera del perfil */}
       <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
-        <div className="h-28 bg-gradient-to-r from-primary to-indigo-500" />
-        <div className="px-6 pb-6 -mt-12">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-5">
-            {userData?.photoUrl || currentUser?.photoURL ? (
-              <img
-                src={userData?.photoUrl ?? currentUser?.photoURL ?? ''}
-                alt=""
-                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary border-4 border-white shadow-lg">
-                <span className="material-icons text-4xl">person</span>
-              </div>
-            )}
-            <div className="pb-1">
-              <h3 className="text-xl font-bold text-slate-900">
+        <div className="h-24 bg-gradient-to-r from-primary to-indigo-500" />
+        <div className="relative px-6 pb-6 pt-14 -mt-14">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-5">
+            {/* Avatar con opción de subir foto */}
+            <div className="relative flex-shrink-0">
+              {userData?.photoUrl || currentUser?.photoURL ? (
+                <img
+                  src={userData?.photoUrl ?? currentUser?.photoURL ?? ''}
+                  alt=""
+                  className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-xl bg-slate-100"
+                />
+              ) : (
+                <div className="w-28 h-28 rounded-full bg-slate-100 border-4 border-white shadow-xl flex items-center justify-center text-slate-400">
+                  <span className="material-icons text-5xl">person</span>
+                </div>
+              )}
+              {editing && (
+                <>
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={handlePhotoChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={photoUploading}
+                    className="absolute inset-0 flex flex-col items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/60 transition-colors disabled:opacity-70"
+                  >
+                    {photoUploading ? (
+                      <span className="material-icons text-3xl animate-spin">refresh</span>
+                    ) : (
+                      <>
+                        <span className="material-icons text-2xl">photo_camera</span>
+                        <span className="text-xs font-medium mt-1">Subir foto</span>
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="min-w-0 pb-1">
+              <h3 className="text-xl font-bold text-slate-900 truncate">
                 {userData?.displayName || currentUser?.displayName || 'Usuario'}
               </h3>
-              <p className="text-sm text-slate-500">{userData?.email || currentUser?.email}</p>
-              <div className="flex items-center gap-2 mt-1.5">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">
+              <p className="text-sm text-slate-500 truncate mt-0.5">{userData?.email || currentUser?.email}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
                   <span className="material-icons text-xs">badge</span>
                   {userData?.role?.name || 'Usuario'}
                 </span>

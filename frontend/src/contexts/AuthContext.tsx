@@ -28,6 +28,8 @@ interface AuthContextType {
   loading: boolean;
   /** Mensaje cuando falla la sincronización con el backend (ej. backend no está en marcha). */
   authSyncError: string | null;
+  /** Refresca los datos del usuario desde el backend (útil tras actualizar perfil o foto). */
+  refreshUserData: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -129,11 +131,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return currentUser.getIdToken();
   };
 
+  const refreshUserData = async () => {
+    if (!auth?.currentUser) return;
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const response = await apiClient.get('/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUserData(response.data);
+    } catch {
+      // Silenciar si falla; el usuario ya está logueado
+    }
+  };
+
   const value: AuthContextType = {
     currentUser,
     userData,
     loading,
     authSyncError,
+    refreshUserData,
     signInWithGoogle,
     signInWithEmail,
     signOut,
