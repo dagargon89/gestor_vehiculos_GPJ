@@ -26,6 +26,8 @@ interface AuthContextType {
   currentUser: User | null;
   userData: UserData | null;
   loading: boolean;
+  /** Mensaje cuando falla la sincronización con el backend (ej. backend no está en marcha). */
+  authSyncError: string | null;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -46,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authSyncError, setAuthSyncError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!auth) {
@@ -54,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      setAuthSyncError(null);
       if (user) {
         try {
           const token = await user.getIdToken();
@@ -61,14 +65,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             headers: { Authorization: `Bearer ${token}` },
           });
           setUserData(response.data);
+          setAuthSyncError(null);
           // El backend crea/sincroniza el usuario en BD en esta petición; forzar recarga de la lista de usuarios
           queryClient.invalidateQueries({ queryKey: ['users'] });
         } catch (err) {
           console.error('Error obteniendo datos del usuario:', err);
           setUserData(null);
+          const status = (err as { response?: { status?: number } })?.response?.status;
+          const isNetwork = !(err as { response?: unknown }).response;
+          const message = isNetwork
+            ? 'No se pudo conectar con el servidor. Para que tu usuario se guarde en la base de datos, el backend debe estar en marcha (puerto 3000). ¿Lo tienes levantado?'
+            : status === 401
+              ? 'El servidor rechazó la sesión. Comprueba que el backend use el mismo proyecto de Firebase que el frontend.'
+              : status === 500
+                ? 'Error en el servidor al crear o obtener tu usuario. Revisa los logs del backend.'
+                : 'No se pudo sincronizar con el servidor. Comprueba que el backend esté en marcha en http://localhost:3000.';
+          setAuthSyncError(message);
         }
       } else {
         setUserData(null);
+        setAuthSyncError(null);
       }
       setLoading(false);
     });
@@ -104,6 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     if (auth) await firebaseSignOut(auth);
+    setAuthSyncError(null);
     delete apiClient.defaults.headers.common['Authorization'];
   };
 
@@ -116,6 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     currentUser,
     userData,
     loading,
+    authSyncError,
     signInWithGoogle,
     signInWithEmail,
     signOut,

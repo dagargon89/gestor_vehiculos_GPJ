@@ -49,9 +49,11 @@ export class UsersService {
   }
 
   async createFromFirebase(dto: CreateFromFirebaseDto): Promise<User> {
+    const rawEmail = typeof dto.email === 'string' ? dto.email.trim() : '';
+    const emailForDb = rawEmail || `firebase_${dto.firebaseUid}@local`;
     const user = this.userRepo.create({
       firebaseUid: dto.firebaseUid,
-      email: dto.email,
+      email: emailForDb,
       displayName: dto.displayName ?? null,
       photoUrl: dto.photoURL ?? null,
       status: 'active',

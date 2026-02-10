@@ -3,12 +3,16 @@ import {
   CanActivate,
   ExecutionContext,
   UnauthorizedException,
+  InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { firebaseAuth } from '../../config/firebase-admin.config';
 import { UsersService } from '../../modules/users/users.service';
 
 @Injectable()
 export class FirebaseAuthGuard implements CanActivate {
+  private readonly logger = new Logger(FirebaseAuthGuard.name);
+
   constructor(private readonly usersService: UsersService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -32,6 +36,7 @@ export class FirebaseAuthGuard implements CanActivate {
       let user = await this.usersService.findByFirebaseUid(firebaseUid);
 
       if (!user) {
+        this.logger.log('Creando usuario en BD desde Firebase');
         user = await this.usersService.createFromFirebase({
           firebaseUid,
           email: decodedToken.email || '',
@@ -51,11 +56,21 @@ export class FirebaseAuthGuard implements CanActivate {
       request.firebaseToken = decodedToken;
       return true;
     } catch (err: unknown) {
-      const error = err as { code?: string };
+      if (err instanceof UnauthorizedException) {
+        throw err;
+      }
+      const error = err as { code?: string; message?: string; stack?: string };
       if (error.code === 'auth/id-token-expired') {
         throw new UnauthorizedException('Token expirado');
       }
-      throw new UnauthorizedException('Token inválido');
+      if (error.code && String(error.code).startsWith('auth/')) {
+        throw new UnauthorizedException('Token inválido');
+      }
+      this.logger.error(
+        `Error en autenticación/creación de usuario: ${error.message ?? err}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException('Error al crear o obtener usuario');
     }
   }
 }

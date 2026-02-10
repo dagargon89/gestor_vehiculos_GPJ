@@ -31,9 +31,10 @@ cd frontend && npm run dev
 
 ## URL del API y comprobación
 
-El frontend llama al backend usando la variable **`VITE_API_URL`** en `frontend/.env`. Por defecto (si no la defines) se usa:
+El frontend llama al backend usando la variable **`VITE_API_URL`** en `frontend/.env`. En desarrollo se recomienda:
 
-- `http://localhost:3000/api`
+- **`VITE_API_URL=/api`** — Las peticiones pasan por el proxy de Vite (evita errores CORS). El backend debe estar en `http://localhost:3000`.
+- Si no usas proxy (ej. frontend en otra máquina): **`VITE_API_URL=http://localhost:3000/api`** (o la URL completa del backend).
 
 **Antes de usar la app**, comprueba que el backend responde:
 
@@ -69,3 +70,5 @@ Los seeders son idempotentes: si una tabla ya tiene datos, se omite. Las tablas 
 ## Login en el frontend
 
 El login requiere tener configuradas las variables **`VITE_FIREBASE_*`** en `frontend/.env` (proyecto Firebase con Auth y, opcionalmente, Storage). Copia `frontend/.env.example` a `frontend/.env` y rellena los valores.
+
+**Importante:** Para que el usuario se cree en la tabla `users` de Postgres al hacer login (Google o email), el **backend debe estar en marcha** cuando inicies sesión. El frontend llama a `GET /api/auth/me` con el token de Firebase; en esa petición el backend crea o actualiza el usuario en la BD. Si el backend no está corriendo, el usuario existirá solo en Firebase y no en Postgres. Si ves el aviso amarillo en la app indicando que no se pudo conectar con el servidor, levanta el backend (`cd backend && npm run start:dev`) y vuelve a iniciar sesión.

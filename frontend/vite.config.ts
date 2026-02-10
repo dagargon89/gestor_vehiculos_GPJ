@@ -8,4 +8,13 @@ export default defineConfig({
   resolve: {
     alias: { '@': '/src' },
   },
+  server: {
+    proxy: {
+      // En desarrollo, las peticiones a /api se reenvían al backend (evita CORS).
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
 })

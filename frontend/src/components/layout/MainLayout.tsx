@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 export function MainLayout() {
-  const { userData, signOut } = useAuth();
+  const { userData, signOut, authSyncError } = useAuth();
   const navigate = useNavigate();
+  const [syncBannerDismissed, setSyncBannerDismissed] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -17,8 +19,24 @@ export function MainLayout() {
         : 'text-slate-500 hover:text-primary border-transparent'
     }`;
 
+  const showSyncBanner = authSyncError && !syncBannerDismissed;
+
   return (
     <div className="min-h-screen bg-background-light font-display text-slate-800">
+      {showSyncBanner && (
+        <div className="sticky top-0 z-[60] bg-amber-50 border-b border-amber-200 px-4 py-3 flex items-start gap-3">
+          <span className="material-icons text-amber-600 shrink-0">warning</span>
+          <p className="flex-1 text-sm text-amber-900 font-medium">{authSyncError}</p>
+          <button
+            type="button"
+            onClick={() => setSyncBannerDismissed(true)}
+            className="shrink-0 p-1 text-amber-600 hover:text-amber-800 rounded"
+            aria-label="Cerrar aviso"
+          >
+            <span className="material-icons">close</span>
+          </button>
+        </div>
+      )}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
