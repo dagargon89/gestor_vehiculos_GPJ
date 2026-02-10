@@ -14,6 +14,8 @@ export class ReservationsService {
     status?: string;
     vehicleId?: string;
     userId?: string;
+    start?: string;
+    end?: string;
   }): Promise<Reservation[]> {
     const qb = this.repo
       .createQueryBuilder('r')
@@ -23,6 +25,12 @@ export class ReservationsService {
     if (filters?.status) qb.andWhere('r.status = :status', { status: filters.status });
     if (filters?.vehicleId) qb.andWhere('r.vehicleId = :vehicleId', { vehicleId: filters.vehicleId });
     if (filters?.userId) qb.andWhere('r.userId = :userId', { userId: filters.userId });
+    if (filters?.start) {
+      qb.andWhere('r.endDatetime > :start', { start: filters.start });
+    }
+    if (filters?.end) {
+      qb.andWhere('r.startDatetime < :end', { end: filters.end });
+    }
     return qb.getMany();
   }
 

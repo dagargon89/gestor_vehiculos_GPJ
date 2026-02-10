@@ -146,7 +146,7 @@ export function RolePermissionsPage() {
                 </div>
               </div>
               <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                {Object.entries(groupedByResource).map(([resource, perms]) => (
+                {(Object.entries(groupedByResource) as [string, Permission[]][]).map(([resource, perms]) => (
                   <div key={resource} className="border border-slate-200 rounded-lg p-3">
                     <p className="text-sm font-bold text-slate-700 mb-2 capitalize">{resource}</p>
                     <div className="flex flex-wrap gap-3">

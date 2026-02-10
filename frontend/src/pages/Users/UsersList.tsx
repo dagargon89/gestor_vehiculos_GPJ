@@ -225,7 +225,7 @@ export function UsersList() {
                 </tr>
               ) : (
                 users.map((u: User) => {
-                  const roleName = u.role?.name ?? (u.roleId && roles.find((r) => r.id === u.roleId)?.name) ?? '—';
+                  const roleName = u.role?.name ?? (u.roleId && roles.find((r: Role) => r.id === u.roleId)?.name) ?? '—';
                   return (
                   <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-6 py-4 font-medium text-slate-900">{u.email}</td>
@@ -269,7 +269,7 @@ export function UsersList() {
             </div>
           ) : (
             users.map((u: User) => {
-              const roleName = u.role?.name ?? (u.roleId && roles.find((r) => r.id === u.roleId)?.name) ?? 'Sin rol';
+              const roleName = u.role?.name ?? (u.roleId && roles.find((r: Role) => r.id === u.roleId)?.name) ?? 'Sin rol';
               return (
               <div
                 key={u.id}

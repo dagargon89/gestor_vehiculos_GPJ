@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 
 export function Dashboard() {
-  const [dateRange, setDateRange] = useState('last30');
+  const [dateRange] = useState('last30');
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles'],

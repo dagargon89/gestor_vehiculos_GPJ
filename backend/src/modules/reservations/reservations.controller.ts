@@ -22,9 +22,12 @@ export class ReservationsController {
     @Query('status') status?: string,
     @Query('vehicleId') vehicleId?: string,
     @Query('userId') userId?: string,
+    @Query('start') start?: string,
+    @Query('end') end?: string,
   ) {
+    const hasFilters = status || vehicleId || userId || start || end;
     return this.reservationsService.findAll(
-      status || vehicleId || userId ? { status, vehicleId, userId } : undefined,
+      hasFilters ? { status, vehicleId, userId, start, end } : undefined,
     );
   }
 
