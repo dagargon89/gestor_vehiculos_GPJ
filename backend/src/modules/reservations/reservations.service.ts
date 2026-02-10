@@ -1,13 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Reservation } from '../../database/entities/reservation.entity';
+import { Vehicle } from '../../database/entities/vehicle.entity';
 
 @Injectable()
 export class ReservationsService {
   constructor(
     @InjectRepository(Reservation)
     private repo: Repository<Reservation>,
+    @InjectRepository(Vehicle)
+    private vehicleRepo: Repository<Vehicle>,
   ) {}
 
   async findAll(filters?: {
@@ -84,7 +87,11 @@ export class ReservationsService {
       'description',
       'destination',
       'checkinOdometer',
+      'checkinFuelPhotoUrl',
+      'checkinConditionPhotoUrls',
       'checkoutOdometer',
+      'checkoutFuelPhotoUrl',
+      'checkoutConditionPhotoUrls',
     ] as const;
     const payload: Record<string, unknown> = {};
     for (const key of allowedKeys) {
@@ -118,5 +125,72 @@ export class ReservationsService {
 
   async remove(id: string): Promise<void> {
     await this.repo.softDelete(id);
+  }
+
+  async checkIn(
+    id: string,
+    userId: string,
+    odometer: number,
+    fuelPhotoUrl?: string,
+    conditionPhotoUrls?: string[],
+  ): Promise<Reservation> {
+    const reservation = await this.findOne(id);
+    if (reservation.userId !== userId) {
+      throw new ForbiddenException('Solo el titular de la reserva puede hacer check-in');
+    }
+    if (reservation.status !== 'active') {
+      throw new BadRequestException('Solo se puede hacer check-in en una reserva activa');
+    }
+    if (reservation.checkinOdometer != null) {
+      throw new BadRequestException('Ya registraste el check-in para esta reserva');
+    }
+    const odometerNum = Number(odometer);
+    if (!Number.isInteger(odometerNum) || odometerNum < 0) {
+      throw new BadRequestException('El odómetro debe ser un número entero mayor o igual a 0');
+    }
+    const payload: Record<string, unknown> = { checkinOdometer: odometerNum };
+    if (fuelPhotoUrl != null && fuelPhotoUrl !== '') payload.checkinFuelPhotoUrl = fuelPhotoUrl;
+    if (conditionPhotoUrls != null && conditionPhotoUrls.length > 0) {
+      payload.checkinConditionPhotoUrls = JSON.stringify(conditionPhotoUrls);
+    }
+    await this.repo.update(id, payload);
+    return this.findOne(id);
+  }
+
+  async checkOut(
+    id: string,
+    userId: string,
+    odometer: number,
+    fuelPhotoUrl?: string,
+    conditionPhotoUrls?: string[],
+  ): Promise<Reservation> {
+    const reservation = await this.findOne(id);
+    if (reservation.userId !== userId) {
+      throw new ForbiddenException('Solo el titular de la reserva puede hacer check-out');
+    }
+    if (reservation.checkinOdometer == null) {
+      throw new BadRequestException('Debes hacer check-in antes del check-out');
+    }
+    if (reservation.checkoutOdometer != null) {
+      throw new BadRequestException('Ya registraste el check-out para esta reserva');
+    }
+    const odometerNum = Number(odometer);
+    if (!Number.isInteger(odometerNum) || odometerNum < 0) {
+      throw new BadRequestException('El odómetro debe ser un número entero mayor o igual a 0');
+    }
+    if (odometerNum < reservation.checkinOdometer) {
+      throw new BadRequestException('El odómetro de devolución no puede ser menor que el de salida');
+    }
+    const payload: Record<string, unknown> = {
+      checkoutOdometer: odometerNum,
+      status: 'completed',
+    };
+    if (fuelPhotoUrl != null && fuelPhotoUrl !== '') payload.checkoutFuelPhotoUrl = fuelPhotoUrl;
+    if (conditionPhotoUrls != null && conditionPhotoUrls.length > 0) {
+      payload.checkoutConditionPhotoUrls = JSON.stringify(conditionPhotoUrls);
+    }
+    await this.repo.update(id, payload);
+    await this.vehicleRepo.update(reservation.vehicleId, { currentOdometer: odometerNum });
+    return this.findOne(id);
   }
 }

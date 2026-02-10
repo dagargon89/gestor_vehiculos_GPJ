@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
+import { CurrentUser, CurrentUserPayload } from '../../common/decorators/current-user.decorator';
 
 @Controller('reservations')
 @UseGuards(FirebaseAuthGuard)
@@ -29,6 +30,36 @@ export class ReservationsController {
     const hasFilters = status || vehicleId || userId || start || end;
     return this.reservationsService.findAll(
       hasFilters ? { status, vehicleId, userId, start, end } : undefined,
+    );
+  }
+
+  @Post(':id/check-in')
+  checkIn(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserPayload,
+    @Body() body: { odometer: number; fuelPhotoUrl?: string; conditionPhotoUrls?: string[] },
+  ) {
+    return this.reservationsService.checkIn(
+      id,
+      user.id,
+      body.odometer,
+      body.fuelPhotoUrl,
+      body.conditionPhotoUrls,
+    );
+  }
+
+  @Post(':id/check-out')
+  checkOut(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserPayload,
+    @Body() body: { odometer: number; fuelPhotoUrl?: string; conditionPhotoUrls?: string[] },
+  ) {
+    return this.reservationsService.checkOut(
+      id,
+      user.id,
+      body.odometer,
+      body.fuelPhotoUrl,
+      body.conditionPhotoUrls,
     );
   }
 

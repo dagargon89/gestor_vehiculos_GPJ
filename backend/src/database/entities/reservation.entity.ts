@@ -51,8 +51,20 @@ export class Reservation {
   @Column({ type: 'int', nullable: true })
   checkinOdometer: number;
 
+  @Column({ type: 'text', nullable: true })
+  checkinFuelPhotoUrl: string;
+
+  @Column({ type: 'text', nullable: true })
+  checkinConditionPhotoUrls: string; // JSON array of URLs
+
   @Column({ type: 'int', nullable: true })
   checkoutOdometer: number;
+
+  @Column({ type: 'text', nullable: true })
+  checkoutFuelPhotoUrl: string;
+
+  @Column({ type: 'text', nullable: true })
+  checkoutConditionPhotoUrls: string; // JSON array of URLs
 
   @CreateDateColumn()
   createdAt: Date;
