@@ -11,9 +11,21 @@ type Vehicle = {
   year?: number;
   color?: string;
   vin?: string;
+  photoUrls?: string | null;
   status: string;
   currentOdometer?: number;
 };
+
+function getFirstPhotoUrl(photoUrls: string | null | undefined): string | null {
+  if (!photoUrls || !photoUrls.trim()) return null;
+  try {
+    const parsed = JSON.parse(photoUrls) as string[];
+    return Array.isArray(parsed) && parsed[0] ? parsed[0] : null;
+  } catch {
+    const first = photoUrls.split(',')[0]?.trim();
+    return first || null;
+  }
+}
 
 const STATUS_OPTIONS = [
   { value: 'available', label: 'Disponible' },
@@ -37,6 +49,7 @@ function VehicleFormModal({
     year: vehicle?.year ?? '',
     color: vehicle?.color ?? '',
     vin: vehicle?.vin ?? '',
+    photoUrls: vehicle?.photoUrls ?? '',
     status: vehicle?.status ?? 'available',
     currentOdometer: vehicle?.currentOdometer ?? '',
   });
@@ -55,6 +68,7 @@ function VehicleFormModal({
         year: form.year === '' ? undefined : Number(form.year),
         color: form.color.trim() || undefined,
         vin: form.vin.trim() || undefined,
+        photoUrls: form.photoUrls.trim() || undefined,
         status: form.status,
         currentOdometer: form.currentOdometer === '' ? undefined : Number(form.currentOdometer),
       };
@@ -153,6 +167,16 @@ function VehicleFormModal({
               type="text"
               value={form.vin}
               onChange={(e) => setForm((f) => ({ ...f, vin: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">URL(s) de foto</label>
+            <input
+              type="text"
+              placeholder="https://... (varias separadas por coma)"
+              value={form.photoUrls}
+              onChange={(e) => setForm((f) => ({ ...f, photoUrls: e.target.value }))}
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
             />
           </div>
@@ -311,36 +335,72 @@ export function VehiclesList() {
               No hay vehículos registrados.
             </div>
           ) : (
-            vehicles.map((v: Vehicle) => (
-              <div
-                key={v.id}
-                className="bg-white rounded-[16px] shadow-sm border border-slate-200 p-5 flex flex-col"
-              >
-                <div className="font-medium text-slate-900 text-lg">{v.plate}</div>
-                <div className="text-slate-600 text-sm mt-1">{v.brand} {v.model}</div>
-                <div className="mt-3">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
-                    {STATUS_OPTIONS.find((o) => o.value === v.status)?.label ?? v.status}
-                  </span>
+            vehicles.map((v: Vehicle) => {
+              const photoUrl = getFirstPhotoUrl(v.photoUrls);
+              const statusLabel = STATUS_OPTIONS.find((o) => o.value === v.status)?.label ?? v.status;
+              const statusBadgeClass =
+                v.status === 'available'
+                  ? 'bg-green-100 text-green-800'
+                  : v.status === 'in_use'
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-slate-100 text-slate-700';
+              return (
+                <div
+                  key={v.id}
+                  className="bg-slate-50 rounded-[16px] shadow-sm border border-slate-200 overflow-hidden flex flex-col"
+                >
+                  <div className="aspect-[4/3] bg-slate-200 relative">
+                    {photoUrl ? (
+                      <img
+                        src={photoUrl}
+                        alt={`${v.plate} ${v.brand} ${v.model}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        <span className="material-icons text-6xl">directions_car</span>
+                      </div>
+                    )}
+                    <span
+                      className={`absolute top-2 right-2 px-2 py-1 rounded-lg text-xs font-medium ${statusBadgeClass}`}
+                    >
+                      {statusLabel}
+                    </span>
+                  </div>
+                  <div className="p-4 flex-1 flex flex-col">
+                    <div className="font-bold text-slate-900 text-xl">{v.plate}</div>
+                    <div className="text-slate-600 text-sm mt-0.5">
+                      {v.brand} {v.model}
+                      {v.year != null && ` (${v.year})`}
+                    </div>
+                    {v.color && (
+                      <div className="text-slate-600 text-sm">{v.color}</div>
+                    )}
+                    {v.currentOdometer != null && (
+                      <div className="text-slate-600 text-sm">
+                        Odómetro: {v.currentOdometer.toLocaleString()} km
+                      </div>
+                    )}
+                    <div className="mt-4 flex flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(v)}
+                        className="w-full px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium text-sm"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(v)}
+                        className="text-red-600 font-medium hover:underline text-sm"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-4 pt-4 border-t border-slate-100 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(v)}
-                    className="text-primary font-medium hover:underline text-sm"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(v)}
-                    className="text-red-600 font-medium hover:underline text-sm"
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}

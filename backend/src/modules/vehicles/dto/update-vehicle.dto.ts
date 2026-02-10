@@ -31,6 +31,10 @@ export class UpdateVehicleDto {
 
   @IsOptional()
   @IsString()
+  photoUrls?: string;
+
+  @IsOptional()
+  @IsString()
   status?: string;
 
   @IsOptional()

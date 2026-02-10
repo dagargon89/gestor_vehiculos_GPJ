@@ -28,6 +28,10 @@ export class CreateVehicleDto {
 
   @IsOptional()
   @IsString()
+  photoUrls?: string;
+
+  @IsOptional()
+  @IsString()
   status?: string;
 
   @IsOptional()
