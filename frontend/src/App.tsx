@@ -12,6 +12,7 @@ import { ReportsPage } from './pages/Reports/ReportsPage';
 import { UsersList } from './pages/Users/UsersList';
 import { ProvidersList } from './pages/Providers/ProvidersList';
 import { ProfilePage } from './pages/Profile/ProfilePage';
+import { MyRequestsPage } from './pages/MyRequests/MyRequestsPage';
 import { MaintenanceList } from './pages/Maintenance/MaintenanceList';
 import { IncidentList } from './pages/Incidents/IncidentList';
 import { SanctionList } from './pages/Sanctions/SanctionList';
@@ -52,6 +53,7 @@ function App() {
               <Route path="role-permissions" element={<RolePermissionsPage />} />
               <Route path="system-settings" element={<SystemSettingsPage />} />
               <Route path="profile" element={<ProfilePage />} />
+              <Route path="mis-solicitudes" element={<MyRequestsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

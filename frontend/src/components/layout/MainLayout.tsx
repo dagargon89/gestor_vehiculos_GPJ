@@ -76,6 +76,11 @@ export function MainLayout() {
     navigate('/profile');
   };
 
+  const handleGoToMyRequests = () => {
+    setUserMenuOpen(false);
+    navigate('/mis-solicitudes');
+  };
+
   const handleAdminLink = (to: string) => {
     setAdminMenuOpen(false);
     navigate(to);
@@ -247,6 +252,14 @@ export function MainLayout() {
                   <p className="text-xs text-slate-500 truncate">{userData?.email}</p>
                 </div>
                 <div className="py-1">
+                  <button
+                    type="button"
+                    onClick={handleGoToMyRequests}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-primary/5 hover:text-primary transition-colors"
+                  >
+                    <span className="material-icons text-lg">assignment</span>
+                    Mis solicitudes
+                  </button>
                   <button
                     type="button"
                     onClick={handleGoToProfile}
