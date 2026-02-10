@@ -7,6 +7,7 @@ import { Login } from './pages/Auth/Login';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { VehiclesList } from './pages/Vehicles/VehiclesList';
 import { ReservationsList } from './pages/Reservations/ReservationsList';
+import { VehicleRequestPage } from './pages/VehicleRequest/VehicleRequestPage';
 import { ReportsPage } from './pages/Reports/ReportsPage';
 import { UsersList } from './pages/Users/UsersList';
 import { ProvidersList } from './pages/Providers/ProvidersList';
@@ -40,6 +41,7 @@ function App() {
             >
               <Route index element={<Dashboard />} />
               <Route path="vehicles" element={<VehiclesList />} />
+              <Route path="solicitud-vehiculos" element={<VehicleRequestPage />} />
               <Route path="reservations" element={<ReservationsList />} />
               <Route path="users" element={<UsersList />} />
               <Route path="providers" element={<ProvidersList />} />

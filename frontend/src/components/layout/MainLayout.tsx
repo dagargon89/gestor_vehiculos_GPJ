@@ -125,14 +125,14 @@ export function MainLayout() {
               Dashboard
             </NavLink>
             <NavLink
-              to="/reservations"
+              to="/solicitud-vehiculos"
               className={({ isActive }) =>
                 `px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors ${
                   isActive ? 'bg-white/20' : 'hover:bg-white/10'
                 }`
               }
             >
-              Reservas
+              Solicitud de vehículos
             </NavLink>
 
             {/* Dropdown Administración */}
