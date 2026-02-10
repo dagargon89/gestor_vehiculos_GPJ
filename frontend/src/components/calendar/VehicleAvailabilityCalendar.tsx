@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import { format, startOfWeek, getDay } from 'date-fns';
+import { format, startOfWeek, getDay, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useQuery } from '@tanstack/react-query';
@@ -44,8 +44,13 @@ function EventWithTooltip({
   const reservedBy = event.reservedBy;
   const hasAny = eventTitle || description || destination || reservedBy;
 
-  const handleMouseEnter = (e: React.MouseEvent) => {
-    if (!hasAny) return;
+  const timeFmt = isSameDay(event.start, event.end)
+    ? (d: Date) => format(d, 'HH:mm', { locale: es })
+    : (d: Date) => format(d, "dd MMM yyyy, HH:mm", { locale: es });
+  const startTimeStr = timeFmt(event.start);
+  const endTimeStr = timeFmt(event.end);
+
+  const handleMouseEnter = () => {
     const rect = ref.current?.getBoundingClientRect();
     if (rect) {
       setCoords({ x: rect.left, y: rect.bottom + 6 });
@@ -55,35 +60,40 @@ function EventWithTooltip({
 
   const handleMouseLeave = () => setShow(false);
 
-  const tooltipContent = hasAny && (
+  const tooltipContent = (
     <div
-      className="fixed z-[9999] px-3 py-2 w-72 max-w-[90vw] rounded-lg bg-slate-800 text-white text-xs shadow-xl"
+      className="fixed z-[9999] w-80 max-w-[90vw] overflow-hidden rounded-xl border border-slate-600/50 bg-slate-800 text-white shadow-2xl shadow-black/40"
       style={{ left: coords.x, top: coords.y }}
       role="tooltip"
     >
-      <div className="space-y-1.5">
-        <div>
-          <span className="font-semibold text-slate-200">Evento:</span>
-          <p className="mt-0.5">{eventTitle || '—'}</p>
-        </div>
-        {description != null && description !== '' && (
-          <div>
-            <span className="font-semibold text-slate-200">Descripción:</span>
-            <p className="mt-0.5 whitespace-pre-wrap break-words">{description}</p>
+      <div className="border-b border-slate-600/60 bg-slate-700/80 px-4 py-2">
+        <p className="truncate text-sm font-semibold text-white">{eventTitle || 'Reserva'}</p>
+      </div>
+      <div className="px-4 py-3">
+        <dl className="space-y-3 text-xs">
+          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
+            <dt className="min-w-0 font-medium text-slate-400">Hora de salida</dt>
+            <dd className="text-slate-100">{startTimeStr}</dd>
+            <dt className="min-w-0 font-medium text-slate-400">Hora de regreso</dt>
+            <dd className="text-slate-100">{endTimeStr}</dd>
           </div>
-        )}
-        {destination != null && destination !== '' && (
-          <div>
-            <span className="font-semibold text-slate-200">Ruta / Destino:</span>
-            <p className="mt-0.5">{destination}</p>
+          {(description != null && description !== '') && (
+            <div className="border-t border-slate-600/50 pt-2">
+              <dt className="mb-0.5 font-medium text-slate-400">Descripción</dt>
+              <dd className="whitespace-pre-wrap break-words text-slate-100">{description}</dd>
+            </div>
+          )}
+          {(destination != null && destination !== '') && (
+            <div className="border-t border-slate-600/50 pt-2">
+              <dt className="mb-0.5 font-medium text-slate-400">Ruta / Destino</dt>
+              <dd className="text-slate-100">{destination}</dd>
+            </div>
+          )}
+          <div className="border-t border-slate-600/50 pt-2">
+            <dt className="mb-0.5 font-medium text-slate-400">Quien reservó</dt>
+            <dd className="text-slate-100">{reservedBy || '—'}</dd>
           </div>
-        )}
-        {reservedBy != null && reservedBy !== '' && (
-          <div>
-            <span className="font-semibold text-slate-200">Reservado por:</span>
-            <p className="mt-0.5">{reservedBy}</p>
-          </div>
-        )}
+        </dl>
       </div>
     </div>
   );
