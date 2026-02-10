@@ -74,13 +74,29 @@ function ReserveVehicleModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    const start = new Date(startDatetime);
+    const end = new Date(endDatetime);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      setError('Las fechas no son válidas. Revisa hora de salida y de regreso.');
+      return;
+    }
+    const yearMin = 2020;
+    const yearMax = 2035;
+    if (start.getFullYear() < yearMin || start.getFullYear() > yearMax || end.getFullYear() < yearMin || end.getFullYear() > yearMax) {
+      setError(`El año debe estar entre ${yearMin} y ${yearMax}. Revisa las fechas.`);
+      return;
+    }
+    if (end.getTime() <= start.getTime()) {
+      setError('La hora de regreso debe ser posterior a la hora de salida.');
+      return;
+    }
     setSubmitting(true);
     try {
       await apiClient.post('/reservations', {
         vehicleId: vehicle.id,
         userId,
-        startDatetime: new Date(startDatetime).toISOString(),
-        endDatetime: new Date(endDatetime).toISOString(),
+        startDatetime: start.toISOString(),
+        endDatetime: end.toISOString(),
         status: 'pending',
         eventName: eventName.trim() || undefined,
         description: description.trim() || undefined,
@@ -90,10 +106,14 @@ function ReserveVehicleModal({
       onSuccess();
       onClose();
     } catch (err: unknown) {
-      const msg = err && typeof err === 'object' && 'response' in err
-        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-        : 'Error al enviar la solicitud';
-      setError(String(msg));
+      let msg = 'Error al enviar la solicitud';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const res = (err as { response?: { data?: { message?: string | string[] } } }).response?.data;
+        const m = res?.message;
+        if (Array.isArray(m)) msg = m.join('. ');
+        else if (typeof m === 'string') msg = m;
+      }
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
