@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, startOfWeek, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -21,7 +22,86 @@ type ReservationEvent = {
   end: Date;
   status: string;
   resource?: { status: string };
+  description?: string;
+  destination?: string;
+  reservedBy?: string;
 };
+
+function EventWithTooltip({
+  event,
+  title,
+}: {
+  event: ReservationEvent;
+  title: string;
+}) {
+  const [show, setShow] = useState(false);
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
+  const ref = useRef<HTMLSpanElement>(null);
+
+  const eventTitle = event.title || title;
+  const description = event.description;
+  const destination = event.destination;
+  const reservedBy = event.reservedBy;
+  const hasAny = eventTitle || description || destination || reservedBy;
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    if (!hasAny) return;
+    const rect = ref.current?.getBoundingClientRect();
+    if (rect) {
+      setCoords({ x: rect.left, y: rect.bottom + 6 });
+      setShow(true);
+    }
+  };
+
+  const handleMouseLeave = () => setShow(false);
+
+  const tooltipContent = hasAny && (
+    <div
+      className="fixed z-[9999] px-3 py-2 w-72 max-w-[90vw] rounded-lg bg-slate-800 text-white text-xs shadow-xl"
+      style={{ left: coords.x, top: coords.y }}
+      role="tooltip"
+    >
+      <div className="space-y-1.5">
+        <div>
+          <span className="font-semibold text-slate-200">Evento:</span>
+          <p className="mt-0.5">{eventTitle || '—'}</p>
+        </div>
+        {description != null && description !== '' && (
+          <div>
+            <span className="font-semibold text-slate-200">Descripción:</span>
+            <p className="mt-0.5 whitespace-pre-wrap break-words">{description}</p>
+          </div>
+        )}
+        {destination != null && destination !== '' && (
+          <div>
+            <span className="font-semibold text-slate-200">Ruta / Destino:</span>
+            <p className="mt-0.5">{destination}</p>
+          </div>
+        )}
+        {reservedBy != null && reservedBy !== '' && (
+          <div>
+            <span className="font-semibold text-slate-200">Reservado por:</span>
+            <p className="mt-0.5">{reservedBy}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <span
+        ref={ref}
+        className="inline-block w-full cursor-pointer"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <span className="truncate block">{title}</span>
+      </span>
+      {show && typeof document !== 'undefined' && createPortal(tooltipContent, document.body)}
+    </>
+  );
+}
 
 type VehicleAvailabilityCalendarProps = {
   vehicleId: string | null;
@@ -73,14 +153,26 @@ export function VehicleAvailabilityCalendar({
       const rangeEnd = new Date(monthEnd).getTime();
       return end >= rangeStart && start <= rangeEnd;
     });
-    return inMonth.map((r: { id: string; eventName?: string; startDatetime: string; endDatetime: string; status: string }) => ({
-      id: r.id,
-      title: r.eventName || 'Reserva',
-      start: new Date(r.startDatetime),
-      end: new Date(r.endDatetime),
-      status: r.status,
-      resource: { status: r.status },
-    }));
+    return inMonth.map((r: Record<string, unknown>) => {
+      const startDt = (r.startDatetime ?? r.start_datetime) as string;
+      const endDt = (r.endDatetime ?? r.end_datetime) as string;
+      const eventName = (r.eventName ?? r.event_name ?? 'Reserva') as string;
+      const desc = (r.description as string) ?? '';
+      const dest = (r.destination as string) ?? '';
+      const user = r.user as { displayName?: string; email?: string } | undefined;
+      const reservedBy = user ? (user.displayName || user.email) : '';
+      return {
+        id: r.id as string,
+        title: eventName,
+        start: new Date(startDt),
+        end: new Date(endDt),
+        status: (r.status as string) ?? 'pending',
+        resource: { status: r.status },
+        description: desc || undefined,
+        destination: dest || undefined,
+        reservedBy: reservedBy || undefined,
+      };
+    });
   }, [reservations, monthStart, monthEnd]);
 
   const eventStyleGetter = (event: ReservationEvent) => {
@@ -137,6 +229,7 @@ export function VehicleAvailabilityCalendar({
           startAccessor="start"
           endAccessor="end"
           titleAccessor="title"
+          tooltipAccessor={() => ''}
           view="month"
           date={currentDate}
           onNavigate={onNavigate}
@@ -145,6 +238,9 @@ export function VehicleAvailabilityCalendar({
           eventPropGetter={eventStyleGetter}
           messages={messages}
           culture="es"
+          components={{
+            event: EventWithTooltip,
+          }}
         />
       </div>
     </div>

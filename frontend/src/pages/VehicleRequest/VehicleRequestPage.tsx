@@ -102,7 +102,7 @@ function ReserveVehicleModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto" onClick={onClose}>
       <div
-        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-6xl min-h-[85vh] max-h-[95vh] overflow-y-auto my-4 flex flex-col"
+        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-[90rem] min-h-[90vh] max-h-[98vh] overflow-y-auto my-2 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
@@ -119,20 +119,20 @@ function ReserveVehicleModal({
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 flex-1 flex flex-col min-h-0">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
-            <div className="space-y-4 flex flex-col min-h-0">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+            <div className="lg:col-span-2 space-y-4 flex flex-col min-h-0">
               <h4 className="text-sm font-bold text-slate-700">Calendario de disponibilidad</h4>
               <p className="text-xs text-slate-500">
                 Los días en naranja/rojo tienen reservas. Selecciona un hueco para elegir fecha y hora.
               </p>
-              <div className="flex-1 min-h-[420px]">
+              <div className="flex-1 min-h-[480px]">
                 <VehicleAvailabilityCalendar
                   vehicleId={vehicle.id}
                   currentDate={calendarDate}
                   onNavigate={(d) => setCalendarDate(d)}
                   onSelectSlot={handleSelectSlot}
                   className="h-full"
-                  minHeight={380}
+                  minHeight={440}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -158,7 +158,7 @@ function ReserveVehicleModal({
                 </div>
               </div>
             </div>
-            <div className="space-y-4">
+            <div className="lg:col-span-1 space-y-4">
               <h4 className="text-sm font-bold text-slate-700">Datos de la solicitud</h4>
               {error && (
                 <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
