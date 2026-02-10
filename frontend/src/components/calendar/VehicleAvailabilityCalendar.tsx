@@ -29,6 +29,8 @@ type VehicleAvailabilityCalendarProps = {
   onNavigate?: (date: Date) => void;
   onSelectSlot?: (slot: { start: Date; end: Date }) => void;
   className?: string;
+  /** Altura mínima del calendario en px para que la vista mes se vea completa */
+  minHeight?: number;
 };
 
 export function VehicleAvailabilityCalendar({
@@ -37,6 +39,7 @@ export function VehicleAvailabilityCalendar({
   onNavigate,
   onSelectSlot,
   className = '',
+  minHeight = 400,
 }: VehicleAvailabilityCalendarProps) {
   const monthStart = useMemo(() => {
     const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -49,10 +52,10 @@ export function VehicleAvailabilityCalendar({
   }, [currentDate.getFullYear(), currentDate.getMonth()]);
 
   const { data: reservations = [] } = useQuery({
-    queryKey: ['reservations', vehicleId, monthStart, monthEnd],
+    queryKey: ['reservations', vehicleId],
     queryFn: async () => {
       const res = await apiClient.get('/reservations', {
-        params: { vehicleId, start: monthStart, end: monthEnd },
+        params: { vehicleId },
       });
       return res.data;
     },
@@ -63,7 +66,14 @@ export function VehicleAvailabilityCalendar({
     const blocking = reservations.filter(
       (r: { status: string }) => r.status === 'pending' || r.status === 'active',
     );
-    return blocking.map((r: { id: string; eventName?: string; startDatetime: string; endDatetime: string; status: string }) => ({
+    const inMonth = blocking.filter((r: { startDatetime: string; endDatetime: string }) => {
+      const start = new Date(r.startDatetime).getTime();
+      const end = new Date(r.endDatetime).getTime();
+      const rangeStart = new Date(monthStart).getTime();
+      const rangeEnd = new Date(monthEnd).getTime();
+      return end >= rangeStart && start <= rangeEnd;
+    });
+    return inMonth.map((r: { id: string; eventName?: string; startDatetime: string; endDatetime: string; status: string }) => ({
       id: r.id,
       title: r.eventName || 'Reserva',
       start: new Date(r.startDatetime),
@@ -71,7 +81,7 @@ export function VehicleAvailabilityCalendar({
       status: r.status,
       resource: { status: r.status },
     }));
-  }, [reservations]);
+  }, [reservations, monthStart, monthEnd]);
 
   const eventStyleGetter = (event: ReservationEvent) => {
     const isPending = event.status === 'pending';
@@ -120,7 +130,7 @@ export function VehicleAvailabilityCalendar({
           <span className="inline-block w-3 h-3 rounded bg-red-600 ml-3 mr-1" /> Activa
         </p>
       </div>
-      <div className="p-4 min-h-[400px] rbc-calendar-wrapper">
+      <div className="p-4 rbc-calendar-wrapper" style={{ minHeight: `${minHeight}px`, height: `${minHeight}px` }}>
         <Calendar
           localizer={localizer}
           events={events}
