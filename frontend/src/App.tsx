@@ -10,6 +10,7 @@ import { ReservationsList } from './pages/Reservations/ReservationsList';
 import { ReportsPage } from './pages/Reports/ReportsPage';
 import { UsersList } from './pages/Users/UsersList';
 import { ProvidersList } from './pages/Providers/ProvidersList';
+import { ProfilePage } from './pages/Profile/ProfilePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +39,7 @@ function App() {
               <Route path="users" element={<UsersList />} />
               <Route path="providers" element={<ProvidersList />} />
               <Route path="reports" element={<ReportsPage />} />
+              <Route path="profile" element={<ProfilePage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -6,10 +6,31 @@ export function MainLayout() {
   const { userData, signOut, authSyncError } = useAuth();
   const navigate = useNavigate();
   const [syncBannerDismissed, setSyncBannerDismissed] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Cerrar dropdown al hacer click fuera
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [userMenuOpen]);
 
   const handleSignOut = async () => {
+    setUserMenuOpen(false);
     await signOut();
     navigate('/login');
+  };
+
+  const handleGoToProfile = () => {
+    setUserMenuOpen(false);
+    navigate('/profile');
   };
 
   const navClass = ({ isActive }: { isActive: boolean }) =>
@@ -67,30 +88,67 @@ export function MainLayout() {
               <span className="material-icons">notifications_none</span>
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
             </button>
-            <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-semibold text-slate-900">
-                  {userData?.displayName?.split(' ').slice(0, 2).join(' ') || userData?.email?.split('@')[0] || 'Usuario'}
-                </p>
-                <p className="text-xs text-slate-500">{userData?.role?.name || 'Usuario'}</p>
-              </div>
-              {userData?.photoUrl ? (
-                <img
-                  src={userData.photoUrl}
-                  alt=""
-                  className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary border-2 border-white">
-                  <span className="material-icons">person</span>
+
+            {/* Dropdown de usuario */}
+            <div className="relative" ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((prev) => !prev)}
+                className="flex items-center gap-3 pl-4 border-l border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
+              >
+                <div className="text-right hidden sm:block">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {userData?.displayName?.split(' ').slice(0, 2).join(' ') || userData?.email?.split('@')[0] || 'Usuario'}
+                  </p>
+                  <p className="text-xs text-slate-500">{userData?.role?.name || 'Usuario'}</p>
+                </div>
+                {userData?.photoUrl ? (
+                  <img
+                    src={userData.photoUrl}
+                    alt=""
+                    className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary border-2 border-white">
+                    <span className="material-icons">person</span>
+                  </div>
+                )}
+                <span className="material-icons text-slate-400 text-lg">
+                  {userMenuOpen ? 'expand_less' : 'expand_more'}
+                </span>
+              </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-[16px] shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in slide-in-from-top-1">
+                  {/* Encabezado del dropdown */}
+                  <div className="px-4 py-3 border-b border-slate-100">
+                    <p className="text-sm font-bold text-slate-900 truncate">
+                      {userData?.displayName || 'Usuario'}
+                    </p>
+                    <p className="text-xs text-slate-500 truncate">{userData?.email}</p>
+                  </div>
+
+                  {/* Opciones */}
+                  <div className="py-1">
+                    <button
+                      type="button"
+                      onClick={handleGoToProfile}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-primary/5 hover:text-primary transition-colors"
+                    >
+                      <span className="material-icons text-lg">person_outline</span>
+                      Mi perfil
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <span className="material-icons text-lg">logout</span>
+                      Cerrar sesión
+                    </button>
+                  </div>
                 </div>
               )}
-              <button
-                onClick={handleSignOut}
-                className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-              >
-                Salir
-              </button>
             </div>
           </div>
         </div>
