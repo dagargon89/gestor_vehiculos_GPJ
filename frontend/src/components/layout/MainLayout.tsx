@@ -1,26 +1,40 @@
 import { useState, useRef, useEffect } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+
+const ADMIN_ROUTES = [
+  { to: '/vehicles', label: 'Gestión de Vehículos' },
+  { to: '/reservations', label: 'Gestión de Reservas' },
+  { to: '/users', label: 'Gestión de Usuarios' },
+  { to: '/providers', label: 'Gestión de Proveedores' },
+  { to: '/reports', label: 'Reportes y Estadísticas' },
+];
 
 export function MainLayout() {
   const { userData, signOut, authSyncError } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [syncBannerDismissed, setSyncBannerDismissed] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const adminMenuRef = useRef<HTMLDivElement>(null);
 
-  // Cerrar dropdown al hacer click fuera
+  const isAdminRoute = ADMIN_ROUTES.some((r) => location.pathname === r.to || (r.to !== '/' && location.pathname.startsWith(r.to)));
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
         setUserMenuOpen(false);
       }
+      if (adminMenuRef.current && !adminMenuRef.current.contains(target)) {
+        setAdminMenuOpen(false);
+      }
     }
-    if (userMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+    document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [userMenuOpen]);
+  }, []);
 
   const handleSignOut = async () => {
     setUserMenuOpen(false);
@@ -33,14 +47,14 @@ export function MainLayout() {
     navigate('/profile');
   };
 
-  const navClass = ({ isActive }: { isActive: boolean }) =>
-    `text-sm font-medium pb-1 border-b-2 transition-colors ${
-      isActive
-        ? 'text-primary border-primary'
-        : 'text-slate-500 hover:text-primary border-transparent'
-    }`;
+  const handleAdminLink = (to: string) => {
+    setAdminMenuOpen(false);
+    navigate(to);
+  };
 
   const showSyncBanner = authSyncError && !syncBannerDismissed;
+  const userName = userData?.displayName?.split(' ').slice(0, 2).join(' ') || userData?.email?.split('@')[0] || 'Usuario';
+  const roleName = (userData?.role?.name || 'Usuario').toLowerCase();
 
   return (
     <div className="min-h-screen bg-background-light font-display text-slate-800">
@@ -58,98 +72,120 @@ export function MainLayout() {
           </button>
         </div>
       )}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary/10 p-2 rounded-lg">
-              <span className="material-icons text-primary text-2xl">local_shipping</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900">Gestión de Flota</h1>
-              <p className="text-xs font-medium text-slate-500">Sistema de Gestión de Flota</p>
-            </div>
-          </div>
 
-          <div className="hidden md:flex items-center gap-8">
-            <NavLink to="/" end className={navClass}>Resumen</NavLink>
-            <NavLink to="/vehicles" className={navClass}>Vehículos</NavLink>
-            <NavLink to="/reservations" className={navClass}>Reservas</NavLink>
-            <NavLink to="/users" className={navClass}>Usuarios</NavLink>
-            <NavLink to="/providers" className={navClass}>Proveedores</NavLink>
-            <NavLink to="/reports" className={navClass}>Reportes</NavLink>
-          </div>
+      {/* Barra superior oscura (estilo Flotilla) */}
+      <nav className="sticky top-0 z-50 bg-primary-dark shadow-md">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+          {/* Título / Logo */}
+          <NavLink to="/" className="flex items-center gap-2 text-white font-bold text-lg tracking-tight hover:opacity-90">
+            <span className="material-icons text-2xl">local_shipping</span>
+            Gestión de Flota
+          </NavLink>
 
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              className="relative p-2 text-slate-500 hover:text-primary transition-colors rounded-full hover:bg-slate-100"
-              aria-label="Notificaciones"
+          {/* Enlaces principales + Administración */}
+          <div className="hidden md:flex items-center gap-1">
+            <NavLink
+              to="/"
+              end
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors ${
+                  isActive ? 'bg-white/20' : 'hover:bg-white/10'
+                }`
+              }
             >
-              <span className="material-icons">notifications_none</span>
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
-            </button>
+              Dashboard
+            </NavLink>
+            <NavLink
+              to="/reservations"
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors ${
+                  isActive ? 'bg-white/20' : 'hover:bg-white/10'
+                }`
+              }
+            >
+              Reservas
+            </NavLink>
 
-            {/* Dropdown de usuario */}
-            <div className="relative" ref={menuRef}>
+            {/* Dropdown Administración */}
+            <div className="relative" ref={adminMenuRef}>
               <button
                 type="button"
-                onClick={() => setUserMenuOpen((prev) => !prev)}
-                className="flex items-center gap-3 pl-4 border-l border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setAdminMenuOpen((prev) => !prev)}
+                className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors ${
+                  isAdminRoute ? 'bg-white/20' : 'hover:bg-white/10'
+                }`}
               >
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-semibold text-slate-900">
-                    {userData?.displayName?.split(' ').slice(0, 2).join(' ') || userData?.email?.split('@')[0] || 'Usuario'}
-                  </p>
-                  <p className="text-xs text-slate-500">{userData?.role?.name || 'Usuario'}</p>
-                </div>
-                {userData?.photoUrl ? (
-                  <img
-                    src={userData.photoUrl}
-                    alt=""
-                    className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary border-2 border-white">
-                    <span className="material-icons">person</span>
-                  </div>
-                )}
-                <span className="material-icons text-slate-400 text-lg">
-                  {userMenuOpen ? 'expand_less' : 'expand_more'}
-                </span>
+                Administración
+                <span className="material-icons text-lg">{adminMenuOpen ? 'expand_less' : 'expand_more'}</span>
               </button>
-
-              {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-[16px] shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in slide-in-from-top-1">
-                  {/* Encabezado del dropdown */}
-                  <div className="px-4 py-3 border-b border-slate-100">
-                    <p className="text-sm font-bold text-slate-900 truncate">
-                      {userData?.displayName || 'Usuario'}
-                    </p>
-                    <p className="text-xs text-slate-500 truncate">{userData?.email}</p>
-                  </div>
-
-                  {/* Opciones */}
-                  <div className="py-1">
+              {adminMenuOpen && (
+                <div className="absolute left-0 top-full mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
+                  {ADMIN_ROUTES.map(({ to, label }) => (
                     <button
+                      key={to}
                       type="button"
-                      onClick={handleGoToProfile}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-primary/5 hover:text-primary transition-colors"
+                      onClick={() => handleAdminLink(to)}
+                      className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
+                        location.pathname === to ? 'text-primary bg-primary/5' : 'text-slate-700 hover:bg-slate-50'
+                      }`}
                     >
-                      <span className="material-icons text-lg">person_outline</span>
-                      Mi perfil
+                      {label}
                     </button>
-                    <button
-                      type="button"
-                      onClick={handleSignOut}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <span className="material-icons text-lg">logout</span>
-                      Cerrar sesión
-                    </button>
-                  </div>
+                  ))}
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Usuario: "Hola, Nombre (rol)" + dropdown */}
+          <div className="relative flex items-center gap-2" ref={userMenuRef}>
+            <button
+              type="button"
+              onClick={() => setUserMenuOpen((prev) => !prev)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+            >
+              <span className="hidden sm:inline text-sm font-medium">
+                Hola, {userName} ({roleName})
+              </span>
+              {userData?.photoUrl ? (
+                <img
+                  src={userData.photoUrl}
+                  alt=""
+                  className="w-9 h-9 rounded-full object-cover border-2 border-white/50"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+                  <span className="material-icons text-white text-xl">person</span>
+                </div>
+              )}
+              <span className="material-icons text-white/90">{userMenuOpen ? 'expand_less' : 'expand_more'}</span>
+            </button>
+            {userMenuOpen && (
+              <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
+                <div className="px-4 py-3 border-b border-slate-100">
+                  <p className="text-sm font-bold text-slate-900 truncate">{userData?.displayName || 'Usuario'}</p>
+                  <p className="text-xs text-slate-500 truncate">{userData?.email}</p>
+                </div>
+                <div className="py-1">
+                  <button
+                    type="button"
+                    onClick={handleGoToProfile}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-primary/5 hover:text-primary transition-colors"
+                  >
+                    <span className="material-icons text-lg">person_outline</span>
+                    Mi perfil
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <span className="material-icons text-lg">logout</span>
+                    Cerrar sesión
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </nav>
