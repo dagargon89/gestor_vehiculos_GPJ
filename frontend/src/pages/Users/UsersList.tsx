@@ -224,12 +224,14 @@ export function UsersList() {
                   <td colSpan={6} className="px-6 py-8 text-center text-slate-500">No hay usuarios registrados.</td>
                 </tr>
               ) : (
-                users.map((u: User) => (
+                users.map((u: User) => {
+                  const roleName = u.role?.name ?? (u.roleId && roles.find((r) => r.id === u.roleId)?.name) ?? '—';
+                  return (
                   <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-6 py-4 font-medium text-slate-900">{u.email}</td>
                     <td className="px-6 py-4 text-slate-600">{u.displayName ?? '—'}</td>
                     <td className="px-6 py-4 text-slate-600">{u.department ?? '—'}</td>
-                    <td className="px-6 py-4 text-slate-600">{u.role?.name ?? '—'}</td>
+                    <td className="px-6 py-4 text-slate-600">{roleName}</td>
                     <td className="px-6 py-4">
                       <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
                         {STATUS_OPTIONS.find((o) => o.value === u.status)?.label ?? u.status}
@@ -252,7 +254,8 @@ export function UsersList() {
                       </button>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -265,7 +268,9 @@ export function UsersList() {
               No hay usuarios registrados.
             </div>
           ) : (
-            users.map((u: User) => (
+            users.map((u: User) => {
+              const roleName = u.role?.name ?? (u.roleId && roles.find((r) => r.id === u.roleId)?.name) ?? 'Sin rol';
+              return (
               <div
                 key={u.id}
                 className="bg-white rounded-[16px] shadow-sm border border-slate-200 p-5 flex flex-col"
@@ -275,7 +280,7 @@ export function UsersList() {
                 <div className="text-slate-500 text-sm mt-1">{u.department ?? '—'}</div>
                 <div className="mt-2">
                   <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
-                    {u.role?.name ?? 'Sin rol'}
+                    {roleName}
                   </span>
                   <span className="ml-2 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
                     {STATUS_OPTIONS.find((o) => o.value === u.status)?.label ?? u.status}
@@ -298,7 +303,8 @@ export function UsersList() {
                   </button>
                 </div>
               </div>
-            ))
+              );
+            })
           )}
         </div>
       )}
