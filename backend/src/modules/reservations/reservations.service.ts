@@ -49,7 +49,35 @@ export class ReservationsService {
   }
 
   async update(id: string, data: Partial<Reservation>): Promise<Reservation> {
-    await this.repo.update(id, data);
+    const allowedKeys = [
+      'vehicleId',
+      'userId',
+      'startDatetime',
+      'endDatetime',
+      'status',
+      'eventName',
+      'description',
+      'destination',
+      'checkinOdometer',
+      'checkoutOdometer',
+    ] as const;
+    const payload: Record<string, unknown> = {};
+    for (const key of allowedKeys) {
+      const value = data[key];
+      if (value !== undefined && value !== null) {
+        payload[key] = value;
+      }
+    }
+    if (payload.startDatetime && typeof payload.startDatetime === 'string') {
+      payload.startDatetime = new Date(payload.startDatetime as string);
+    }
+    if (payload.endDatetime && typeof payload.endDatetime === 'string') {
+      payload.endDatetime = new Date(payload.endDatetime as string);
+    }
+    if (Object.keys(payload).length === 0) {
+      return this.findOne(id);
+    }
+    await this.repo.update(id, payload);
     return this.findOne(id);
   }
 

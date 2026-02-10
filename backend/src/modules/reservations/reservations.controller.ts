@@ -8,6 +8,7 @@ import {
   Body,
   Query,
   UseGuards,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
@@ -42,8 +43,13 @@ export class ReservationsController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return this.reservationsService.update(id, body as Parameters<typeof this.reservationsService.update>[1]);
+  async update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    try {
+      return await this.reservationsService.update(id, body as Parameters<typeof this.reservationsService.update>[1]);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new InternalServerErrorException(message);
+    }
   }
 
   @Delete(':id')
