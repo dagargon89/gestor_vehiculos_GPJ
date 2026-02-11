@@ -20,8 +20,6 @@ export function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [syncBannerDismissed, setSyncBannerDismissed] = useState(false);
-  const [claimAdminLoading, setClaimAdminLoading] = useState(false);
-  const [claimAdminError, setClaimAdminError] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -112,7 +110,6 @@ export function MainLayout() {
   };
 
   const showSyncBanner = authSyncError && !syncBannerDismissed;
-  const showClaimAdminBanner = !authSyncError && !!userData?.id && !userData?.role?.name;
   const userName = userData?.displayName?.split(' ').slice(0, 2).join(' ') || userData?.email?.split('@')[0] || 'Usuario';
   const roleName = (userData?.role?.name || 'Usuario').toLowerCase();
 
@@ -122,22 +119,6 @@ export function MainLayout() {
       await refreshUserData();
     } finally {
       setRetryingSync(false);
-    }
-  };
-
-  const handleClaimAdmin = async () => {
-    setClaimAdminError(null);
-    setClaimAdminLoading(true);
-    try {
-      await apiClient.post('/auth/claim-admin');
-      await refreshUserData();
-    } catch (err: unknown) {
-      const msg = err && typeof err === 'object' && 'response' in err
-        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-        : 'No se pudo asignar el rol.';
-      setClaimAdminError(typeof msg === 'string' ? msg : 'Error al reclamar administrador.');
-    } finally {
-      setClaimAdminLoading(false);
     }
   };
 
@@ -162,26 +143,6 @@ export function MainLayout() {
             aria-label="Cerrar aviso"
           >
             <span className="material-icons">close</span>
-          </button>
-        </div>
-      )}
-
-      {showClaimAdminBanner && (
-        <div className="sticky top-0 z-[60] bg-slate-100 border-b border-slate-200 px-4 py-3 flex flex-wrap items-center gap-3">
-          <span className="material-icons text-slate-600 shrink-0">admin_panel_settings</span>
-          <p className="flex-1 text-sm text-slate-800">
-            No tienes un rol asignado. Si eres el administrador del sistema, puedes reclamar el rol de administrador para acceder al menú.
-          </p>
-          {claimAdminError && (
-            <p className="w-full text-sm text-red-600">{claimAdminError}</p>
-          )}
-          <button
-            type="button"
-            onClick={handleClaimAdmin}
-            disabled={claimAdminLoading}
-            className="shrink-0 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50"
-          >
-            {claimAdminLoading ? 'Asignando…' : 'Reclamar rol de administrador'}
           </button>
         </div>
       )}

@@ -30,12 +30,6 @@ export class AuthController {
     return payload;
   }
 
-  @Post('claim-admin')
-  @UseGuards(FirebaseAuthGuard)
-  async claimAdmin(@CurrentUser() user: CurrentUserPayload) {
-    return this.authService.claimAdmin(user.id);
-  }
-
   @Post('sync-user')
   @UseGuards(FirebaseAuthGuard)
   syncUser(@CurrentUser() user: CurrentUserPayload, @Body() body: Record<string, unknown>) {

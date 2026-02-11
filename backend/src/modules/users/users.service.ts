@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
@@ -142,34 +142,5 @@ export class UsersService {
 
   async remove(id: string): Promise<void> {
     await this.userRepo.softDelete(id);
-  }
-
-  /**
-   * Permite al primer usuario sin rol asignarse el rol "admin" (solo si aún no hay ningún admin).
-   * Útil para desbloquear la app cuando nadie tiene acceso a Gestión de usuarios.
-   */
-  async claimAdmin(userId: string): Promise<{ success: true }> {
-    const raw = await this.userRepo.query(
-      'SELECT role_id FROM users WHERE id = $1 LIMIT 1',
-      [userId],
-    ) as { role_id: string | null }[];
-    const currentRoleId = raw?.[0]?.role_id?.trim() || null;
-    if (currentRoleId) {
-      throw new BadRequestException('Ya tienes un rol asignado.');
-    }
-    const adminRole = await this.roleRepo.findOne({ where: { name: 'admin' } });
-    if (!adminRole) {
-      throw new BadRequestException('No existe el rol admin en la base de datos. Ejecuta los seeds.');
-    }
-    const countResult = await this.userRepo.query(
-      'SELECT COUNT(*) AS count FROM users WHERE role_id = $1',
-      [adminRole.id],
-    ) as { count: string }[];
-    const adminCount = parseInt(countResult?.[0]?.count ?? '0', 10);
-    if (adminCount >= 1) {
-      throw new BadRequestException('Ya existe un administrador. Pide que te asignen un rol desde Gestión de usuarios.');
-    }
-    await this.userRepo.update(userId, { roleId: adminRole.id });
-    return { success: true };
   }
 }

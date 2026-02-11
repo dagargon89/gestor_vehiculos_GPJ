@@ -13,7 +13,4 @@ export class AuthService {
     await this.usersService.updateUserData(userId, { status: 'inactive' } as never);
   }
 
-  async claimAdmin(userId: string): Promise<{ success: true }> {
-    return this.usersService.claimAdmin(userId);
-  }
 }
