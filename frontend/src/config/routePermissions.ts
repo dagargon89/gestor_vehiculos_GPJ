@@ -16,6 +16,7 @@ export const ROUTE_PERMISSION: Record<
   '/reports': { resource: 'reports', action: 'read' },
   '/role-permissions': { resource: 'roles', action: 'read' },
   '/system-settings': { resource: 'system_settings', action: 'read' },
+  '/fuel-records': { resource: 'fuel_records', action: 'read' },
 };
 
 /**
@@ -25,6 +26,7 @@ export const ADMIN_ROUTE_ITEMS: { to: string; label: string; resource: string; a
   { to: '/vehicles', label: 'Gestión de Vehículos', resource: 'vehicles', action: 'read' },
   { to: '/reservations', label: 'Gestión de Reservas', resource: 'reservations', action: 'read' },
   { to: '/maintenance', label: 'Gestión de Mantenimientos', resource: 'maintenance', action: 'read' },
+  { to: '/fuel-records', label: 'Registros de combustible', resource: 'fuel_records', action: 'read' },
   { to: '/incidents', label: 'Incidentes', resource: 'incidents', action: 'read' },
   { to: '/sanctions', label: 'Sanciones', resource: 'sanctions', action: 'read' },
   { to: '/users', label: 'Gestión de Usuarios', resource: 'users', action: 'read' },

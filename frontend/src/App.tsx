@@ -19,6 +19,7 @@ import { IncidentList } from './pages/Incidents/IncidentList';
 import { SanctionList } from './pages/Sanctions/SanctionList';
 import { RolePermissionsPage } from './pages/RolePermissions/RolePermissionsPage';
 import { SystemSettingsPage } from './pages/SystemSettings/SystemSettingsPage';
+import { FuelRecordsList } from './pages/FuelRecords/FuelRecordsList';
 import { canAccessDashboard } from './config/routePermissions';
 import { useAuth } from './contexts/AuthContext';
 
@@ -58,6 +59,7 @@ function App() {
               <Route path="providers" element={<PermissionRoute resource="providers" action="read"><ProvidersList /></PermissionRoute>} />
               <Route path="reports" element={<PermissionRoute resource="reports" action="read"><ReportsPage /></PermissionRoute>} />
               <Route path="maintenance" element={<PermissionRoute resource="maintenance" action="read"><MaintenanceList /></PermissionRoute>} />
+              <Route path="fuel-records" element={<PermissionRoute resource="fuel_records" action="read"><FuelRecordsList /></PermissionRoute>} />
               <Route path="incidents" element={<PermissionRoute resource="incidents" action="read"><IncidentList /></PermissionRoute>} />
               <Route path="sanctions" element={<PermissionRoute resource="sanctions" action="read"><SanctionList /></PermissionRoute>} />
               <Route path="role-permissions" element={<PermissionRoute resource="roles" action="read"><RolePermissionsPage /></PermissionRoute>} />
