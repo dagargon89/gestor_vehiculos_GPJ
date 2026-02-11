@@ -188,6 +188,15 @@ export function SanctionList() {
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
 
+  const getUserLabel = (s: Sanction) => {
+    const fromList = s.userId?.trim() ? users.find((x: User) => x.id === s.userId) : null;
+    const u = s.user ?? fromList;
+    if (!u) return '—';
+    const name = (u as { displayName?: string; display_name?: string }).displayName
+      ?? (u as { displayName?: string; display_name?: string }).display_name;
+    return name || u.email || '—';
+  };
+
   if (isLoading) return <div className="text-primary font-bold">Cargando sanciones...</div>;
 
   return (
@@ -237,7 +246,7 @@ export function SanctionList() {
                 sanctionList.map((s: Sanction) => (
                   <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-6 py-4 font-medium text-slate-900">
-                      {s.user ? (s.user.displayName || s.user.email) : s.userId}
+                      {getUserLabel(s)}
                     </td>
                     <td className="px-6 py-4 text-slate-600 max-w-[280px] truncate">{s.reason}</td>
                     <td className="px-6 py-4 text-slate-600">{formatDate(s.effectiveDate)}</td>
@@ -264,7 +273,7 @@ export function SanctionList() {
             sanctionList.map((s: Sanction) => (
               <div key={s.id} className="bg-white rounded-[16px] shadow-sm border border-slate-200 p-5 flex flex-col">
                 <div className="font-medium text-slate-900">
-                  {s.user ? (s.user.displayName || s.user.email) : s.userId}
+                  {getUserLabel(s)}
                 </div>
                 <p className="text-slate-600 text-sm mt-1 line-clamp-3">{s.reason}</p>
                 <div className="text-slate-500 text-sm mt-2">

@@ -2,21 +2,32 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Sanction } from '../../database/entities/sanction.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class SanctionsService {
   constructor(
     @InjectRepository(Sanction)
     private repo: Repository<Sanction>,
+    private usersService: UsersService,
   ) {}
 
   async findAll(userId?: string): Promise<Sanction[]> {
-    const qb = this.repo
-      .createQueryBuilder('s')
-      .leftJoinAndSelect('s.user', 'u')
-      .orderBy('s.effectiveDate', 'DESC');
-    if (userId) qb.andWhere('s.userId = :userId', { userId });
-    return qb.getMany();
+    const list = await this.repo.find({
+      where: userId ? { userId } : undefined,
+      relations: ['user'],
+      order: { effectiveDate: 'DESC' },
+    });
+    for (const s of list) {
+      if (s.userId?.trim() && !s.user) {
+        try {
+          (s as Sanction & { user: Sanction['user'] }).user = await this.usersService.findOne(s.userId);
+        } catch {
+          (s as Sanction & { user: Sanction['user'] }).user = null;
+        }
+      }
+    }
+    return list;
   }
 
   async findOne(id: string): Promise<Sanction> {
