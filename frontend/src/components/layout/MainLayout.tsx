@@ -109,15 +109,18 @@ export function MainLayout() {
 
       {/* Barra superior oscura (estilo Flotilla) */}
       <nav className="sticky top-0 z-50 bg-primary-dark shadow-md">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
-          {/* Título / Logo */}
-          <NavLink to="/" className="flex items-center gap-2 text-white font-bold text-lg tracking-tight hover:opacity-90">
-            <span className="material-icons text-2xl">local_shipping</span>
-            Gestión de Flota
-          </NavLink>
+        <div className="w-full px-4 py-3 flex items-center">
+          {/* Logo: pegado a la izquierda */}
+          <div className="shrink-0">
+            <NavLink to="/" className="flex items-center gap-2 text-white font-bold text-lg tracking-tight hover:opacity-90">
+              <span className="material-icons text-2xl">local_shipping</span>
+              Gestión de Flota
+            </NavLink>
+          </div>
 
-          {/* Enlaces principales + Administración */}
-          <div className="hidden md:flex items-center gap-1">
+          {/* Menú central: Dashboard, Solicitud, Administración */}
+          <div className="hidden md:flex flex-1 justify-center">
+            <div className="flex items-center gap-1">
             <NavLink
               to="/"
               end
@@ -169,42 +172,45 @@ export function MainLayout() {
                 </div>
               )}
             </div>
+            </div>
           </div>
 
-          {/* Notificaciones */}
-          <div className="relative flex items-center" ref={notificationsRef}>
-            <button
-              type="button"
-              onClick={() => setNotificationsOpen((prev) => !prev)}
-              className="relative p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
-              aria-label="Notificaciones"
-            >
-              <span className="material-icons">notifications_none</span>
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </button>
-            {notificationsOpen && (
-              <div className="absolute right-0 top-full mt-1 w-80 max-h-[400px] overflow-auto bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
-                <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center">
-                  <span className="text-sm font-bold text-slate-900">Notificaciones</span>
-                  {unreadCount > 0 && (
-                    <span className="text-xs text-slate-500">{unreadCount} sin leer</span>
-                  )}
-                </div>
-                <div className="divide-y divide-slate-100">
-                  {notifications.length === 0 ? (
-                    <div className="px-4 py-6 text-center text-slate-500 text-sm">No hay notificaciones.</div>
-                  ) : (
-                    notifications.map((n: { id: string; title: string; message: string; read: boolean; createdAt: string; actionUrl?: string }) => (
-                      <button
-                        key={n.id}
-                        type="button"
-                        onClick={() => {
-                          if (!n.read) markAsReadMutation.mutate(n.id);
-                          if (n.actionUrl) navigate(n.actionUrl);
+          {/* Derecha: notificaciones + saludo + perfil (juntos); en móvil solo iconos */}
+          <div className="flex shrink-0 items-center gap-2 ml-auto md:ml-4">
+            {/* Notificaciones */}
+            <div className="relative" ref={notificationsRef}>
+              <button
+                type="button"
+                onClick={() => setNotificationsOpen((prev) => !prev)}
+                className="relative p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+                aria-label="Notificaciones"
+              >
+                <span className="material-icons">notifications_none</span>
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              {notificationsOpen && (
+                <div className="absolute right-0 top-full mt-1 w-80 max-h-[400px] overflow-auto bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
+                  <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center">
+                    <span className="text-sm font-bold text-slate-900">Notificaciones</span>
+                    {unreadCount > 0 && (
+                      <span className="text-xs text-slate-500">{unreadCount} sin leer</span>
+                    )}
+                  </div>
+                  <div className="divide-y divide-slate-100">
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-6 text-center text-slate-500 text-sm">No hay notificaciones.</div>
+                    ) : (
+                      notifications.map((n: { id: string; title: string; message: string; read: boolean; createdAt: string; actionUrl?: string }) => (
+                        <button
+                          key={n.id}
+                          type="button"
+                          onClick={() => {
+                            if (!n.read) markAsReadMutation.mutate(n.id);
+                            if (n.actionUrl) navigate(n.actionUrl);
                           setNotificationsOpen(false);
                         }}
                         className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
@@ -217,13 +223,13 @@ export function MainLayout() {
                       </button>
                     ))
                   )}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          {/* Usuario: "Hola, Nombre (rol)" + dropdown */}
-          <div className="relative flex items-center gap-2" ref={userMenuRef}>
+            {/* Usuario: "Hola, Nombre (rol)" + dropdown */}
+            <div className="relative" ref={userMenuRef}>
             <button
               type="button"
               onClick={() => setUserMenuOpen((prev) => !prev)}
@@ -279,6 +285,7 @@ export function MainLayout() {
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
       </nav>
