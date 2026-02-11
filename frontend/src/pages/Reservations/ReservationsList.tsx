@@ -281,8 +281,12 @@ export function ReservationsList() {
     return v ? v.plate : '—';
   };
   const getUserLabel = (r: Reservation) => {
-    const u = r.user ?? users.find((x: User) => x.id === r.userId);
-    return u ? (u.displayName || u.email) : '—';
+    const fromList = r.userId?.trim() ? users.find((x: User) => x.id === r.userId) : null;
+    const u = r.user ?? fromList;
+    if (!u) return '—';
+    const name = (u as { displayName?: string; display_name?: string }).displayName
+      ?? (u as { displayName?: string; display_name?: string }).display_name;
+    return name || u.email || '—';
   };
 
   const handleDelete = (r: Reservation) => {

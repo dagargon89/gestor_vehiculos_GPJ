@@ -229,6 +229,25 @@ export function IncidentList() {
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
 
+  const getVehicle = (i: Incident) => i.vehicle ?? vehicles.find((x: Vehicle) => x.id === i.vehicleId);
+  const getVehicleLabel = (i: Incident) => {
+    const v = getVehicle(i);
+    return v ? v.plate : '—';
+  };
+  const getVehicleFullLabel = (i: Incident) => {
+    const v = getVehicle(i);
+    return v ? `${v.plate} — ${v.brand} ${v.model}` : '—';
+  };
+  const getUserLabel = (i: Incident) => {
+    const fromRelation = i.user;
+    const fromList = i.userId?.trim() ? users.find((x: User) => x.id === i.userId) : null;
+    const u = fromRelation ?? fromList;
+    if (!u) return '—';
+    const name = (u as { displayName?: string; display_name?: string }).displayName
+      ?? (u as { displayName?: string; display_name?: string }).display_name;
+    return name || u.email || '—';
+  };
+
   if (isLoading) return <div className="text-primary font-bold">Cargando incidentes...</div>;
 
   return (
@@ -289,10 +308,10 @@ export function IncidentList() {
                 incidentList.map((i: Incident) => (
                   <tr key={i.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-6 py-4 font-medium text-slate-900">
-                      {i.vehicle ? `${i.vehicle.plate}` : i.vehicleId}
+                      {getVehicleLabel(i)}
                     </td>
                     <td className="px-6 py-4 text-slate-600">
-                      {i.user ? (i.user.displayName || i.user.email) : '—'}
+                      {getUserLabel(i)}
                     </td>
                     <td className="px-6 py-4 text-slate-600">{formatDate(i.date)}</td>
                     <td className="px-6 py-4">
@@ -323,9 +342,9 @@ export function IncidentList() {
             incidentList.map((i: Incident) => (
               <div key={i.id} className="bg-white rounded-[16px] shadow-sm border border-slate-200 p-5 flex flex-col">
                 <div className="font-medium text-slate-900">
-                  {i.vehicle ? `${i.vehicle.plate} — ${i.vehicle.brand} ${i.vehicle.model}` : i.vehicleId}
+                  {getVehicleFullLabel(i)}
                 </div>
-                <div className="text-slate-600 text-sm mt-1">{i.user ? (i.user.displayName || i.user.email) : '—'}</div>
+                <div className="text-slate-600 text-sm mt-1">{getUserLabel(i)}</div>
                 <div className="text-slate-500 text-sm mt-0.5">{formatDate(i.date)}</div>
                 <div className="mt-2">
                   <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">

@@ -2,12 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Incident } from '../../database/entities/incident.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class IncidentsService {
   constructor(
     @InjectRepository(Incident)
     private repo: Repository<Incident>,
+    private usersService: UsersService,
   ) {}
 
   async findAll(filters?: {
@@ -15,15 +17,25 @@ export class IncidentsService {
     userId?: string;
     status?: string;
   }): Promise<Incident[]> {
-    const qb = this.repo
-      .createQueryBuilder('i')
-      .leftJoinAndSelect('i.vehicle', 'v')
-      .leftJoinAndSelect('i.user', 'u')
-      .orderBy('i.date', 'DESC');
-    if (filters?.vehicleId) qb.andWhere('i.vehicleId = :vehicleId', { vehicleId: filters.vehicleId });
-    if (filters?.userId) qb.andWhere('i.userId = :userId', { userId: filters.userId });
-    if (filters?.status) qb.andWhere('i.status = :status', { status: filters.status });
-    return qb.getMany();
+    const where: Record<string, string> = {};
+    if (filters?.vehicleId) where.vehicleId = filters.vehicleId;
+    if (filters?.userId) where.userId = filters.userId;
+    if (filters?.status) where.status = filters.status;
+    const list = await this.repo.find({
+      where: Object.keys(where).length > 0 ? where : undefined,
+      relations: ['vehicle', 'user'],
+      order: { date: 'DESC' },
+    });
+    for (const i of list) {
+      if (i.userId?.trim() && !i.user) {
+        try {
+          (i as Incident & { user: Incident['user'] }).user = await this.usersService.findOne(i.userId);
+        } catch {
+          (i as Incident & { user: Incident['user'] }).user = null;
+        }
+      }
+    }
+    return list;
   }
 
   async findOne(id: string): Promise<Incident> {
