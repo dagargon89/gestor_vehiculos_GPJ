@@ -16,6 +16,8 @@ exports.SystemSettingsController = void 0;
 const common_1 = require("@nestjs/common");
 const system_settings_service_1 = require("./system-settings.service");
 const firebase_auth_guard_1 = require("../../common/guards/firebase-auth.guard");
+const permissions_guard_1 = require("../../common/guards/permissions.guard");
+const permissions_decorator_1 = require("../../common/decorators/permissions.decorator");
 let SystemSettingsController = class SystemSettingsController {
     constructor(systemSettingsService) {
         this.systemSettingsService = systemSettingsService;
@@ -39,12 +41,14 @@ let SystemSettingsController = class SystemSettingsController {
 exports.SystemSettingsController = SystemSettingsController;
 __decorate([
     (0, common_1.Get)(),
+    (0, permissions_decorator_1.RequirePermission)('system_settings', 'read'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], SystemSettingsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('system_settings', 'read'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -52,6 +56,7 @@ __decorate([
 ], SystemSettingsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
+    (0, permissions_decorator_1.RequirePermission)('system_settings', 'update'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -59,6 +64,7 @@ __decorate([
 ], SystemSettingsController.prototype, "create", null);
 __decorate([
     (0, common_1.Put)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('system_settings', 'update'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -67,6 +73,7 @@ __decorate([
 ], SystemSettingsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('system_settings', 'update'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -74,7 +81,7 @@ __decorate([
 ], SystemSettingsController.prototype, "remove", null);
 exports.SystemSettingsController = SystemSettingsController = __decorate([
     (0, common_1.Controller)('system-settings'),
-    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
+    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard, permissions_guard_1.PermissionsGuard),
     __metadata("design:paramtypes", [system_settings_service_1.SystemSettingsService])
 ], SystemSettingsController);
 //# sourceMappingURL=system-settings.controller.js.map

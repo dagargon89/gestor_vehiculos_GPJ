@@ -8,6 +8,7 @@ export interface CurrentUserPayload {
   roleId?: string;
   role?: { name: string };
   status: string;
+  permissions?: { resource: string; action: string }[];
 }
 
 export const CurrentUser = createParamDecorator(

@@ -1,8 +1,10 @@
 import { Repository } from 'typeorm';
 import { Incident } from '../../database/entities/incident.entity';
+import { UsersService } from '../users/users.service';
 export declare class IncidentsService {
     private repo;
-    constructor(repo: Repository<Incident>);
+    private usersService;
+    constructor(repo: Repository<Incident>, usersService: UsersService);
     findAll(filters?: {
         vehicleId?: string;
         userId?: string;

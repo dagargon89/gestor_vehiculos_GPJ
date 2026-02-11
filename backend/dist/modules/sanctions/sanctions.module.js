@@ -12,12 +12,13 @@ const typeorm_1 = require("@nestjs/typeorm");
 const sanction_entity_1 = require("../../database/entities/sanction.entity");
 const sanctions_service_1 = require("./sanctions.service");
 const sanctions_controller_1 = require("./sanctions.controller");
+const users_module_1 = require("../users/users.module");
 let SanctionsModule = class SanctionsModule {
 };
 exports.SanctionsModule = SanctionsModule;
 exports.SanctionsModule = SanctionsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([sanction_entity_1.Sanction])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([sanction_entity_1.Sanction]), users_module_1.UsersModule],
         controllers: [sanctions_controller_1.SanctionsController],
         providers: [sanctions_service_1.SanctionsService],
         exports: [sanctions_service_1.SanctionsService],

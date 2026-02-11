@@ -17,6 +17,8 @@ const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const storage_service_1 = require("./storage.service");
 const firebase_auth_guard_1 = require("../../common/guards/firebase-auth.guard");
+const permissions_guard_1 = require("../../common/guards/permissions.guard");
+const permissions_decorator_1 = require("../../common/decorators/permissions.decorator");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 let StorageController = class StorageController {
     constructor(storageService) {
@@ -53,6 +55,7 @@ __decorate([
 ], StorageController.prototype, "upload", null);
 __decorate([
     (0, common_1.Get)('record/:id'),
+    (0, permissions_decorator_1.RequirePermission)('storage_files', 'read'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -60,6 +63,7 @@ __decorate([
 ], StorageController.prototype, "getOne", null);
 __decorate([
     (0, common_1.Get)(':entityType/:entityId'),
+    (0, permissions_decorator_1.RequirePermission)('storage_files', 'read'),
     __param(0, (0, common_1.Param)('entityType')),
     __param(1, (0, common_1.Param)('entityId')),
     __metadata("design:type", Function),
@@ -75,7 +79,7 @@ __decorate([
 ], StorageController.prototype, "delete", null);
 exports.StorageController = StorageController = __decorate([
     (0, common_1.Controller)('storage'),
-    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
+    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard, permissions_guard_1.PermissionsGuard),
     __metadata("design:paramtypes", [storage_service_1.StorageService])
 ], StorageController);
 //# sourceMappingURL=storage.controller.js.map

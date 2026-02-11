@@ -10,18 +10,22 @@ import {
 } from '@nestjs/common';
 import { PermissionsService } from './permissions.service';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { RequirePermission } from '../../common/decorators/permissions.decorator';
 
 @Controller('permissions')
-@UseGuards(FirebaseAuthGuard)
+@UseGuards(FirebaseAuthGuard, PermissionsGuard)
 export class PermissionsController {
   constructor(private permissionsService: PermissionsService) {}
 
   @Get()
+  @RequirePermission('permissions', 'read')
   findAll() {
     return this.permissionsService.findAll();
   }
 
   @Get(':id')
+  @RequirePermission('permissions', 'read')
   findOne(@Param('id') id: string) {
     return this.permissionsService.findOne(id);
   }

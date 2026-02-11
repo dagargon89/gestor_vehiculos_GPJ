@@ -16,6 +16,8 @@ exports.CostsController = void 0;
 const common_1 = require("@nestjs/common");
 const costs_service_1 = require("./costs.service");
 const firebase_auth_guard_1 = require("../../common/guards/firebase-auth.guard");
+const permissions_guard_1 = require("../../common/guards/permissions.guard");
+const permissions_decorator_1 = require("../../common/decorators/permissions.decorator");
 let CostsController = class CostsController {
     constructor(costsService) {
         this.costsService = costsService;
@@ -39,6 +41,7 @@ let CostsController = class CostsController {
 exports.CostsController = CostsController;
 __decorate([
     (0, common_1.Get)(),
+    (0, permissions_decorator_1.RequirePermission)('costs', 'read'),
     __param(0, (0, common_1.Query)('vehicleId')),
     __param(1, (0, common_1.Query)('category')),
     __metadata("design:type", Function),
@@ -47,6 +50,7 @@ __decorate([
 ], CostsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('costs', 'read'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -54,6 +58,7 @@ __decorate([
 ], CostsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
+    (0, permissions_decorator_1.RequirePermission)('costs', 'create'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -61,6 +66,7 @@ __decorate([
 ], CostsController.prototype, "create", null);
 __decorate([
     (0, common_1.Put)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('costs', 'update'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -69,6 +75,7 @@ __decorate([
 ], CostsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('costs', 'delete'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -76,7 +83,7 @@ __decorate([
 ], CostsController.prototype, "remove", null);
 exports.CostsController = CostsController = __decorate([
     (0, common_1.Controller)('costs'),
-    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
+    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard, permissions_guard_1.PermissionsGuard),
     __metadata("design:paramtypes", [costs_service_1.CostsService])
 ], CostsController);
 //# sourceMappingURL=costs.controller.js.map

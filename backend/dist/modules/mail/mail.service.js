@@ -36,8 +36,10 @@ let MailService = MailService_1 = class MailService {
         }
     }
     async send(to, subject, text) {
-        if (!this.transporter)
+        if (!this.transporter) {
+            this.logger.debug('Mail not sent: SMTP not configured');
             return;
+        }
         const from = process.env.MAIL_FROM || process.env.MAIL_USER || 'noreply@fleet.local';
         try {
             await this.transporter.sendMail({

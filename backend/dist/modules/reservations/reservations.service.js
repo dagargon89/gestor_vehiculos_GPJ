@@ -26,24 +26,30 @@ let ReservationsService = class ReservationsService {
         this.notificationsService = notificationsService;
     }
     async findAll(filters) {
-        const qb = this.repo
-            .createQueryBuilder('r')
-            .leftJoinAndSelect('r.vehicle', 'v')
-            .leftJoinAndSelect('r.user', 'u')
-            .orderBy('r.startDatetime', 'DESC');
+        const where = {};
         if (filters?.status)
-            qb.andWhere('r.status = :status', { status: filters.status });
+            where.status = filters.status;
         if (filters?.vehicleId)
-            qb.andWhere('r.vehicleId = :vehicleId', { vehicleId: filters.vehicleId });
+            where.vehicleId = filters.vehicleId;
         if (filters?.userId)
-            qb.andWhere('r.userId = :userId', { userId: filters.userId });
+            where.userId = filters.userId;
+        const options = {
+            relations: ['vehicle', 'user'],
+            order: { startDatetime: 'DESC' },
+        };
+        if (Object.keys(where).length > 0) {
+            options.where = where;
+        }
+        let list = await this.repo.find(options);
         if (filters?.start) {
-            qb.andWhere('r.endDatetime > :start', { start: filters.start });
+            const start = new Date(filters.start);
+            list = list.filter((r) => r.endDatetime > start);
         }
         if (filters?.end) {
-            qb.andWhere('r.startDatetime < :end', { end: filters.end });
+            const end = new Date(filters.end);
+            list = list.filter((r) => r.startDatetime < end);
         }
-        return qb.getMany();
+        return list;
     }
     async findOne(id) {
         const r = await this.repo.findOne({

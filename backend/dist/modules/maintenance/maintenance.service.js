@@ -22,15 +22,16 @@ let MaintenanceService = class MaintenanceService {
         this.repo = repo;
     }
     async findAll(filters) {
-        const qb = this.repo
-            .createQueryBuilder('m')
-            .leftJoinAndSelect('m.vehicle', 'v')
-            .orderBy('m.scheduledDate', 'DESC');
+        const where = {};
         if (filters?.vehicleId)
-            qb.andWhere('m.vehicleId = :vehicleId', { vehicleId: filters.vehicleId });
+            where.vehicleId = filters.vehicleId;
         if (filters?.status)
-            qb.andWhere('m.status = :status', { status: filters.status });
-        return qb.getMany();
+            where.status = filters.status;
+        return this.repo.find({
+            where: Object.keys(where).length > 0 ? where : undefined,
+            relations: ['vehicle'],
+            order: { scheduledDate: 'DESC' },
+        });
     }
     async findOne(id) {
         const m = await this.repo.findOne({

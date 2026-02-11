@@ -15,12 +15,14 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { VehiclesService } from './vehicles.service';
 import { StorageService } from '../storage/storage.service';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { RequirePermission } from '../../common/decorators/permissions.decorator';
 import { CurrentUser, CurrentUserPayload } from '../../common/decorators/current-user.decorator';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 
 @Controller('vehicles')
-@UseGuards(FirebaseAuthGuard)
+@UseGuards(FirebaseAuthGuard, PermissionsGuard)
 export class VehiclesController {
   constructor(
     private vehiclesService: VehiclesService,
@@ -28,31 +30,37 @@ export class VehiclesController {
   ) {}
 
   @Get()
+  @RequirePermission('vehicles', 'read')
   findAll(@Query('status') status?: string) {
     return this.vehiclesService.findAll(status);
   }
 
   @Get(':id')
+  @RequirePermission('vehicles', 'read')
   findOne(@Param('id') id: string) {
     return this.vehiclesService.findOne(id);
   }
 
   @Post()
+  @RequirePermission('vehicles', 'create')
   create(@Body() body: CreateVehicleDto) {
     return this.vehiclesService.create(body);
   }
 
   @Put(':id')
+  @RequirePermission('vehicles', 'update')
   update(@Param('id') id: string, @Body() body: UpdateVehicleDto) {
     return this.vehiclesService.update(id, body);
   }
 
   @Delete(':id')
+  @RequirePermission('vehicles', 'delete')
   remove(@Param('id') id: string) {
     return this.vehiclesService.remove(id);
   }
 
   @Post(':id/photos')
+  @RequirePermission('vehicles', 'update')
   @UseInterceptors(FileInterceptor('photo'))
   async uploadPhoto(
     @Param('id') id: string,
@@ -66,6 +74,7 @@ export class VehiclesController {
   }
 
   @Delete('photos/:photoId')
+  @RequirePermission('vehicles', 'update')
   deletePhoto(@Param('photoId') photoId: string) {
     return this.storageService.deleteFile(photoId);
   }

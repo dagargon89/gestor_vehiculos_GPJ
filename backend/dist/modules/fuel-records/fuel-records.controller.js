@@ -16,6 +16,8 @@ exports.FuelRecordsController = void 0;
 const common_1 = require("@nestjs/common");
 const fuel_records_service_1 = require("./fuel-records.service");
 const firebase_auth_guard_1 = require("../../common/guards/firebase-auth.guard");
+const permissions_guard_1 = require("../../common/guards/permissions.guard");
+const permissions_decorator_1 = require("../../common/decorators/permissions.decorator");
 let FuelRecordsController = class FuelRecordsController {
     constructor(fuelRecordsService) {
         this.fuelRecordsService = fuelRecordsService;
@@ -39,6 +41,7 @@ let FuelRecordsController = class FuelRecordsController {
 exports.FuelRecordsController = FuelRecordsController;
 __decorate([
     (0, common_1.Get)(),
+    (0, permissions_decorator_1.RequirePermission)('fuel_records', 'read'),
     __param(0, (0, common_1.Query)('vehicleId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -46,6 +49,7 @@ __decorate([
 ], FuelRecordsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('fuel_records', 'read'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -53,6 +57,7 @@ __decorate([
 ], FuelRecordsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
+    (0, permissions_decorator_1.RequirePermission)('fuel_records', 'create'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -60,6 +65,7 @@ __decorate([
 ], FuelRecordsController.prototype, "create", null);
 __decorate([
     (0, common_1.Put)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('fuel_records', 'update'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -68,6 +74,7 @@ __decorate([
 ], FuelRecordsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('fuel_records', 'delete'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -75,7 +82,7 @@ __decorate([
 ], FuelRecordsController.prototype, "remove", null);
 exports.FuelRecordsController = FuelRecordsController = __decorate([
     (0, common_1.Controller)('fuel-records'),
-    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
+    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard, permissions_guard_1.PermissionsGuard),
     __metadata("design:paramtypes", [fuel_records_service_1.FuelRecordsService])
 ], FuelRecordsController);
 //# sourceMappingURL=fuel-records.controller.js.map

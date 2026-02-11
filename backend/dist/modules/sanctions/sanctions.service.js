@@ -17,18 +17,29 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const sanction_entity_1 = require("../../database/entities/sanction.entity");
+const users_service_1 = require("../users/users.service");
 let SanctionsService = class SanctionsService {
-    constructor(repo) {
+    constructor(repo, usersService) {
         this.repo = repo;
+        this.usersService = usersService;
     }
     async findAll(userId) {
-        const qb = this.repo
-            .createQueryBuilder('s')
-            .leftJoinAndSelect('s.user', 'u')
-            .orderBy('s.effectiveDate', 'DESC');
-        if (userId)
-            qb.andWhere('s.userId = :userId', { userId });
-        return qb.getMany();
+        const list = await this.repo.find({
+            where: userId ? { userId } : undefined,
+            relations: ['user'],
+            order: { effectiveDate: 'DESC' },
+        });
+        for (const s of list) {
+            if (s.userId?.trim() && !s.user) {
+                try {
+                    s.user = await this.usersService.findOne(s.userId);
+                }
+                catch {
+                    s.user = null;
+                }
+            }
+        }
+        return list;
     }
     async findOne(id) {
         const s = await this.repo.findOne({
@@ -55,6 +66,7 @@ exports.SanctionsService = SanctionsService;
 exports.SanctionsService = SanctionsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(sanction_entity_1.Sanction)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        users_service_1.UsersService])
 ], SanctionsService);
 //# sourceMappingURL=sanctions.service.js.map

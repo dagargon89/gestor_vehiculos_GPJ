@@ -5,6 +5,7 @@ export declare class UpdateVehicleDto {
     year?: number;
     color?: string;
     vin?: string;
+    photoUrls?: string;
     status?: string;
     currentOdometer?: number;
 }

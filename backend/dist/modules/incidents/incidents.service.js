@@ -17,23 +17,36 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const incident_entity_1 = require("../../database/entities/incident.entity");
+const users_service_1 = require("../users/users.service");
 let IncidentsService = class IncidentsService {
-    constructor(repo) {
+    constructor(repo, usersService) {
         this.repo = repo;
+        this.usersService = usersService;
     }
     async findAll(filters) {
-        const qb = this.repo
-            .createQueryBuilder('i')
-            .leftJoinAndSelect('i.vehicle', 'v')
-            .leftJoinAndSelect('i.user', 'u')
-            .orderBy('i.date', 'DESC');
+        const where = {};
         if (filters?.vehicleId)
-            qb.andWhere('i.vehicleId = :vehicleId', { vehicleId: filters.vehicleId });
+            where.vehicleId = filters.vehicleId;
         if (filters?.userId)
-            qb.andWhere('i.userId = :userId', { userId: filters.userId });
+            where.userId = filters.userId;
         if (filters?.status)
-            qb.andWhere('i.status = :status', { status: filters.status });
-        return qb.getMany();
+            where.status = filters.status;
+        const list = await this.repo.find({
+            where: Object.keys(where).length > 0 ? where : undefined,
+            relations: ['vehicle', 'user'],
+            order: { date: 'DESC' },
+        });
+        for (const i of list) {
+            if (i.userId?.trim() && !i.user) {
+                try {
+                    i.user = await this.usersService.findOne(i.userId);
+                }
+                catch {
+                    i.user = null;
+                }
+            }
+        }
+        return list;
     }
     async findOne(id) {
         const i = await this.repo.findOne({
@@ -60,6 +73,7 @@ exports.IncidentsService = IncidentsService;
 exports.IncidentsService = IncidentsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(incident_entity_1.Incident)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        users_service_1.UsersService])
 ], IncidentsService);
 //# sourceMappingURL=incidents.service.js.map

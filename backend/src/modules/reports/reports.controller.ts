@@ -1,13 +1,16 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { RequirePermission } from '../../common/decorators/permissions.decorator';
 
 @Controller('reports')
-@UseGuards(FirebaseAuthGuard)
+@UseGuards(FirebaseAuthGuard, PermissionsGuard)
 export class ReportsController {
   constructor(private reportsService: ReportsService) {}
 
   @Get('vehicle-usage')
+  @RequirePermission('reports', 'read')
   getVehicleUsage(
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,

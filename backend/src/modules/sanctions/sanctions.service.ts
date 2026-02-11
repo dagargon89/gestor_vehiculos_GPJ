@@ -23,7 +23,8 @@ export class SanctionsService {
         try {
           (s as Sanction & { user: Sanction['user'] }).user = await this.usersService.findOne(s.userId);
         } catch {
-          (s as Sanction & { user: Sanction['user'] }).user = null;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (s as any).user = null;
         }
       }
     }

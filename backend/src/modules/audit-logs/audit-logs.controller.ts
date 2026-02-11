@@ -1,13 +1,16 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { AuditLogsService } from './audit-logs.service';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { RequirePermission } from '../../common/decorators/permissions.decorator';
 
 @Controller('audit-logs')
-@UseGuards(FirebaseAuthGuard)
+@UseGuards(FirebaseAuthGuard, PermissionsGuard)
 export class AuditLogsController {
   constructor(private auditLogsService: AuditLogsService) {}
 
   @Get()
+  @RequirePermission('audit_logs', 'read')
   findAll(
     @Query('userId') userId?: string,
     @Query('resource') resource?: string,
@@ -24,6 +27,7 @@ export class AuditLogsController {
   }
 
   @Get(':id')
+  @RequirePermission('audit_logs', 'read')
   findOne(@Param('id') id: string) {
     return this.auditLogsService.findOne(id);
   }

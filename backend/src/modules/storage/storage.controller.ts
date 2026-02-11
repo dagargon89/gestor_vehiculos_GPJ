@@ -13,10 +13,12 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { StorageService } from './storage.service';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { RequirePermission } from '../../common/decorators/permissions.decorator';
 import { CurrentUser, CurrentUserPayload } from '../../common/decorators/current-user.decorator';
 
 @Controller('storage')
-@UseGuards(FirebaseAuthGuard)
+@UseGuards(FirebaseAuthGuard, PermissionsGuard)
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
@@ -40,11 +42,13 @@ export class StorageController {
   }
 
   @Get('record/:id')
+  @RequirePermission('storage_files', 'read')
   getOne(@Param('id') id: string) {
     return this.storageService.findOne(id);
   }
 
   @Get(':entityType/:entityId')
+  @RequirePermission('storage_files', 'read')
   getByEntity(
     @Param('entityType') entityType: string,
     @Param('entityId') entityId: string,

@@ -16,6 +16,8 @@ exports.AuditLogsController = void 0;
 const common_1 = require("@nestjs/common");
 const audit_logs_service_1 = require("./audit-logs.service");
 const firebase_auth_guard_1 = require("../../common/guards/firebase-auth.guard");
+const permissions_guard_1 = require("../../common/guards/permissions.guard");
+const permissions_decorator_1 = require("../../common/decorators/permissions.decorator");
 let AuditLogsController = class AuditLogsController {
     constructor(auditLogsService) {
         this.auditLogsService = auditLogsService;
@@ -32,6 +34,7 @@ let AuditLogsController = class AuditLogsController {
 exports.AuditLogsController = AuditLogsController;
 __decorate([
     (0, common_1.Get)(),
+    (0, permissions_decorator_1.RequirePermission)('audit_logs', 'read'),
     __param(0, (0, common_1.Query)('userId')),
     __param(1, (0, common_1.Query)('resource')),
     __param(2, (0, common_1.Query)('resourceId')),
@@ -44,6 +47,7 @@ __decorate([
 ], AuditLogsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('audit_logs', 'read'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -51,7 +55,7 @@ __decorate([
 ], AuditLogsController.prototype, "findOne", null);
 exports.AuditLogsController = AuditLogsController = __decorate([
     (0, common_1.Controller)('audit-logs'),
-    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
+    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard, permissions_guard_1.PermissionsGuard),
     __metadata("design:paramtypes", [audit_logs_service_1.AuditLogsService])
 ], AuditLogsController);
 //# sourceMappingURL=audit-logs.controller.js.map

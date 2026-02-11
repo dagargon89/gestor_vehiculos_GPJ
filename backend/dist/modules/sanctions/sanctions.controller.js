@@ -16,6 +16,8 @@ exports.SanctionsController = void 0;
 const common_1 = require("@nestjs/common");
 const sanctions_service_1 = require("./sanctions.service");
 const firebase_auth_guard_1 = require("../../common/guards/firebase-auth.guard");
+const permissions_guard_1 = require("../../common/guards/permissions.guard");
+const permissions_decorator_1 = require("../../common/decorators/permissions.decorator");
 let SanctionsController = class SanctionsController {
     constructor(sanctionsService) {
         this.sanctionsService = sanctionsService;
@@ -39,6 +41,7 @@ let SanctionsController = class SanctionsController {
 exports.SanctionsController = SanctionsController;
 __decorate([
     (0, common_1.Get)(),
+    (0, permissions_decorator_1.RequirePermission)('sanctions', 'read'),
     __param(0, (0, common_1.Query)('userId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -46,6 +49,7 @@ __decorate([
 ], SanctionsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('sanctions', 'read'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -53,6 +57,7 @@ __decorate([
 ], SanctionsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
+    (0, permissions_decorator_1.RequirePermission)('sanctions', 'create'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -60,6 +65,7 @@ __decorate([
 ], SanctionsController.prototype, "create", null);
 __decorate([
     (0, common_1.Put)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('sanctions', 'update'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -68,6 +74,7 @@ __decorate([
 ], SanctionsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('sanctions', 'delete'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -75,7 +82,7 @@ __decorate([
 ], SanctionsController.prototype, "remove", null);
 exports.SanctionsController = SanctionsController = __decorate([
     (0, common_1.Controller)('sanctions'),
-    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
+    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard, permissions_guard_1.PermissionsGuard),
     __metadata("design:paramtypes", [sanctions_service_1.SanctionsService])
 ], SanctionsController);
 //# sourceMappingURL=sanctions.controller.js.map

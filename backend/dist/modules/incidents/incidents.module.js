@@ -12,12 +12,13 @@ const typeorm_1 = require("@nestjs/typeorm");
 const incident_entity_1 = require("../../database/entities/incident.entity");
 const incidents_service_1 = require("./incidents.service");
 const incidents_controller_1 = require("./incidents.controller");
+const users_module_1 = require("../users/users.module");
 let IncidentsModule = class IncidentsModule {
 };
 exports.IncidentsModule = IncidentsModule;
 exports.IncidentsModule = IncidentsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([incident_entity_1.Incident])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([incident_entity_1.Incident]), users_module_1.UsersModule],
         controllers: [incidents_controller_1.IncidentsController],
         providers: [incidents_service_1.IncidentsService],
         exports: [incidents_service_1.IncidentsService],

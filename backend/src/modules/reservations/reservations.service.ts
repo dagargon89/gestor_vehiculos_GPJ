@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindManyOptions } from 'typeorm';
 import { Reservation } from '../../database/entities/reservation.entity';
 import { Vehicle } from '../../database/entities/vehicle.entity';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -27,7 +27,7 @@ export class ReservationsService {
     if (filters?.vehicleId) where.vehicleId = filters.vehicleId;
     if (filters?.userId) where.userId = filters.userId;
 
-    const options: Parameters<typeof this.repo.find>[0] = {
+    const options: FindManyOptions<Reservation> = {
       relations: ['vehicle', 'user'],
       order: { startDatetime: 'DESC' },
     };

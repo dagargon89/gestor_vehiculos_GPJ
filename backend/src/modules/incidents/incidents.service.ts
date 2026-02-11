@@ -31,7 +31,8 @@ export class IncidentsService {
         try {
           (i as Incident & { user: Incident['user'] }).user = await this.usersService.findOne(i.userId);
         } catch {
-          (i as Incident & { user: Incident['user'] }).user = null;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (i as any).user = null;
         }
       }
     }

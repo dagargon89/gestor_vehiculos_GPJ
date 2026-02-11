@@ -1,8 +1,10 @@
 import { Repository } from 'typeorm';
 import { Sanction } from '../../database/entities/sanction.entity';
+import { UsersService } from '../users/users.service';
 export declare class SanctionsService {
     private repo;
-    constructor(repo: Repository<Sanction>);
+    private usersService;
+    constructor(repo: Repository<Sanction>, usersService: UsersService);
     findAll(userId?: string): Promise<Sanction[]>;
     findOne(id: string): Promise<Sanction>;
     create(data: Partial<Sanction>): Promise<Sanction>;

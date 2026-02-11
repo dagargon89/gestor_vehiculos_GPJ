@@ -88,6 +88,7 @@ async function seedRolesAndPermissions(dataSource) {
         { resource: 'roles', action: 'read' },
         { resource: 'roles', action: 'update' },
         { resource: 'permissions', action: 'read' },
+        { resource: 'reports', action: 'read' },
     ]);
     const existingRoles = await roleRepo.count();
     if (existingRoles > 0) {

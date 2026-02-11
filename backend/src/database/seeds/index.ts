@@ -77,6 +77,7 @@ export async function seedRolesAndPermissions(dataSource: DataSource): Promise<v
     { resource: 'roles', action: 'read' },
     { resource: 'roles', action: 'update' },
     { resource: 'permissions', action: 'read' },
+    { resource: 'reports', action: 'read' },
   ]);
 
   const existingRoles = await roleRepo.count();

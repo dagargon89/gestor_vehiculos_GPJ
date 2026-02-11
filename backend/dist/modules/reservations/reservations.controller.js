@@ -16,6 +16,8 @@ exports.ReservationsController = void 0;
 const common_1 = require("@nestjs/common");
 const reservations_service_1 = require("./reservations.service");
 const firebase_auth_guard_1 = require("../../common/guards/firebase-auth.guard");
+const permissions_guard_1 = require("../../common/guards/permissions.guard");
+const permissions_decorator_1 = require("../../common/decorators/permissions.decorator");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 let ReservationsController = class ReservationsController {
     constructor(reservationsService) {
@@ -53,6 +55,7 @@ let ReservationsController = class ReservationsController {
 exports.ReservationsController = ReservationsController;
 __decorate([
     (0, common_1.Get)(),
+    (0, permissions_decorator_1.RequirePermission)('reservations', 'read'),
     __param(0, (0, common_1.Query)('status')),
     __param(1, (0, common_1.Query)('vehicleId')),
     __param(2, (0, common_1.Query)('userId')),
@@ -64,6 +67,7 @@ __decorate([
 ], ReservationsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Post)(':id/check-in'),
+    (0, permissions_decorator_1.RequirePermission)('reservations', 'update'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __param(2, (0, common_1.Body)()),
@@ -73,6 +77,7 @@ __decorate([
 ], ReservationsController.prototype, "checkIn", null);
 __decorate([
     (0, common_1.Post)(':id/check-out'),
+    (0, permissions_decorator_1.RequirePermission)('reservations', 'update'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __param(2, (0, common_1.Body)()),
@@ -82,6 +87,7 @@ __decorate([
 ], ReservationsController.prototype, "checkOut", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('reservations', 'read'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -89,6 +95,7 @@ __decorate([
 ], ReservationsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
+    (0, permissions_decorator_1.RequirePermission)('reservations', 'create'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -96,6 +103,7 @@ __decorate([
 ], ReservationsController.prototype, "create", null);
 __decorate([
     (0, common_1.Put)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('reservations', 'update'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -104,6 +112,7 @@ __decorate([
 ], ReservationsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('reservations', 'delete'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -111,7 +120,7 @@ __decorate([
 ], ReservationsController.prototype, "remove", null);
 exports.ReservationsController = ReservationsController = __decorate([
     (0, common_1.Controller)('reservations'),
-    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
+    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard, permissions_guard_1.PermissionsGuard),
     __metadata("design:paramtypes", [reservations_service_1.ReservationsService])
 ], ReservationsController);
 //# sourceMappingURL=reservations.controller.js.map
