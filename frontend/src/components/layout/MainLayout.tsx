@@ -25,6 +25,7 @@ export function MainLayout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const adminMenuRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
@@ -64,6 +65,17 @@ export function MainLayout() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
 
   const handleSignOut = async () => {
     setUserMenuOpen(false);
@@ -118,7 +130,19 @@ export function MainLayout() {
             </NavLink>
           </div>
 
-          {/* Menú central: Dashboard, Solicitud, Administración */}
+          {/* En móvil: espaciador + hamburguesa a la derecha */}
+          <div className="flex flex-1 justify-end md:hidden">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+              aria-label="Abrir menú"
+            >
+              <span className="material-icons text-2xl">menu</span>
+            </button>
+          </div>
+
+          {/* Menú central: Dashboard, Solicitud, Administración (solo desktop) */}
           <div className="hidden md:flex flex-1 justify-center">
             <div className="flex items-center gap-1">
             <NavLink
@@ -175,8 +199,8 @@ export function MainLayout() {
             </div>
           </div>
 
-          {/* Derecha: notificaciones + saludo + perfil (juntos); en móvil solo iconos */}
-          <div className="flex shrink-0 items-center gap-2 ml-auto md:ml-4">
+          {/* Derecha: notificaciones + perfil (solo desktop; en móvil van dentro del drawer) */}
+          <div className="hidden md:flex shrink-0 items-center gap-2 ml-4">
             {/* Notificaciones */}
             <div className="relative" ref={notificationsRef}>
               <button
@@ -193,8 +217,8 @@ export function MainLayout() {
                 )}
               </button>
               {notificationsOpen && (
-                <div className="absolute right-0 top-full mt-1 w-80 max-h-[400px] overflow-auto bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
-                  <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center">
+                <div className="fixed left-2 right-2 top-14 max-h-[70vh] overflow-auto bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 md:absolute md:left-auto md:right-0 md:top-full md:mt-1 md:w-80 md:max-h-[400px]">
+                  <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center shrink-0">
                     <span className="text-sm font-bold text-slate-900">Notificaciones</span>
                     {unreadCount > 0 && (
                       <span className="text-xs text-slate-500">{unreadCount} sin leer</span>
@@ -211,18 +235,18 @@ export function MainLayout() {
                           onClick={() => {
                             if (!n.read) markAsReadMutation.mutate(n.id);
                             if (n.actionUrl) navigate(n.actionUrl);
-                          setNotificationsOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
-                      >
-                        <p className="text-sm font-medium text-slate-900">{n.title}</p>
-                        <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">{n.message}</p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          {new Date(n.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      </button>
-                    ))
-                  )}
+                            setNotificationsOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
+                        >
+                          <p className="text-sm font-medium text-slate-900 break-words">{n.title}</p>
+                          <p className="text-xs text-slate-600 mt-0.5 line-clamp-2 break-words">{n.message}</p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            {new Date(n.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </button>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
@@ -252,10 +276,10 @@ export function MainLayout() {
               <span className="material-icons text-white/90">{userMenuOpen ? 'expand_less' : 'expand_more'}</span>
             </button>
             {userMenuOpen && (
-              <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
+              <div className="fixed left-2 right-2 top-14 w-auto max-w-xs bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 md:absolute md:left-auto md:right-0 md:top-full md:mt-1 md:w-56">
                 <div className="px-4 py-3 border-b border-slate-100">
                   <p className="text-sm font-bold text-slate-900 truncate">{userData?.displayName || 'Usuario'}</p>
-                  <p className="text-xs text-slate-500 truncate">{userData?.email}</p>
+                  <p className="text-xs text-slate-500 truncate break-all">{userData?.email}</p>
                 </div>
                 <div className="py-1">
                   <button
@@ -289,6 +313,157 @@ export function MainLayout() {
           </div>
         </div>
       </nav>
+
+      {/* Drawer menú móvil */}
+      {mobileMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            aria-hidden
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-xl z-50 flex flex-col md:hidden">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <span className="font-bold text-slate-900">Menú</span>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+                aria-label="Cerrar menú"
+              >
+                <span className="material-icons">close</span>
+              </button>
+            </div>
+
+            {/* En móvil: perfil y notificaciones dentro del drawer */}
+            <div className="md:hidden border-b border-slate-200">
+              {/* Bloque usuario: foto + nombre + opciones */}
+              <div className="p-4 flex items-center gap-3 border-b border-slate-100">
+                {userData?.photoUrl ? (
+                  <img
+                    src={userData.photoUrl}
+                    alt=""
+                    className="w-14 h-14 rounded-full object-cover border-2 border-slate-200 shrink-0"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="material-icons text-primary text-2xl">person</span>
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-slate-900 truncate">{userData?.displayName || 'Usuario'}</p>
+                  <p className="text-xs text-slate-500 truncate">Hola, {userName} ({roleName})</p>
+                </div>
+              </div>
+              <div className="py-2">
+                <button
+                  type="button"
+                  onClick={() => { setMobileMenuOpen(false); navigate('/mis-solicitudes'); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  <span className="material-icons text-lg">assignment</span>
+                  Mis solicitudes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMobileMenuOpen(false); navigate('/profile'); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  <span className="material-icons text-lg">person_outline</span>
+                  Mi perfil
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMobileMenuOpen(false); handleSignOut(); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <span className="material-icons text-lg">logout</span>
+                  Cerrar sesión
+                </button>
+              </div>
+              {/* Notificaciones dentro del drawer */}
+              <div className="px-4 py-2 border-t border-slate-100">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center gap-2">
+                  <span className="material-icons text-lg">notifications_none</span>
+                  Notificaciones {unreadCount > 0 && (
+                    <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </p>
+                <div className="mt-2 max-h-48 overflow-auto divide-y divide-slate-100 rounded-lg border border-slate-100">
+                  {notifications.length === 0 ? (
+                    <div className="px-3 py-4 text-center text-slate-500 text-sm">No hay notificaciones.</div>
+                  ) : (
+                    notifications.slice(0, 10).map((n: { id: string; title: string; message: string; read: boolean; createdAt: string; actionUrl?: string }) => (
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={() => {
+                          if (!n.read) markAsReadMutation.mutate(n.id);
+                          if (n.actionUrl) navigate(n.actionUrl);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2.5 hover:bg-slate-50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
+                      >
+                        <p className="text-sm font-medium text-slate-900 break-words">{n.title}</p>
+                        <p className="text-xs text-slate-500 mt-0.5 line-clamp-1 break-words">{n.message}</p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <nav className="flex-1 overflow-auto py-2">
+              <NavLink
+                to="/"
+                end
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'
+                  }`
+                }
+              >
+                <span className="material-icons text-xl">dashboard</span>
+                Dashboard
+              </NavLink>
+              <NavLink
+                to="/solicitud-vehiculos"
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'
+                  }`
+                }
+              >
+                <span className="material-icons text-xl">directions_car</span>
+                Solicitud de vehículos
+              </NavLink>
+              <div className="px-4 py-2 mt-2">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Administración</p>
+              </div>
+              {ADMIN_ROUTES.map(({ to, label }) => (
+                <button
+                  key={to}
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    navigate(to);
+                  }}
+                  className={`flex items-center gap-3 w-full px-4 py-3 text-left text-sm font-medium transition-colors ${
+                    location.pathname === to ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="material-icons text-xl text-slate-400">settings</span>
+                  {label}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </>
+      )}
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         <Outlet />
