@@ -228,6 +228,11 @@ export function MaintenanceList() {
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
 
+  const getVehicleLabel = (m: Maintenance) => {
+    const v = m.vehicle ?? vehicles.find((x: Vehicle) => x.id === m.vehicleId);
+    return v ? `${v.plate} — ${v.brand} ${v.model}` : '—';
+  };
+
   if (isLoading) return <div className="text-primary font-bold">Cargando mantenimientos...</div>;
 
   return (
@@ -287,7 +292,7 @@ export function MaintenanceList() {
                 maintenanceList.map((m: Maintenance) => (
                   <tr key={m.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-6 py-4 font-medium text-slate-900">
-                      {m.vehicle ? `${m.vehicle.plate} — ${m.vehicle.brand} ${m.vehicle.model}` : m.vehicleId}
+                      {getVehicleLabel(m)}
                     </td>
                     <td className="px-6 py-4 text-slate-600">{formatDate(m.scheduledDate)}</td>
                     <td className="px-6 py-4 text-slate-600">{m.type ?? '—'}</td>
@@ -318,7 +323,7 @@ export function MaintenanceList() {
             maintenanceList.map((m: Maintenance) => (
               <div key={m.id} className="bg-white rounded-[16px] shadow-sm border border-slate-200 p-5 flex flex-col">
                 <div className="font-medium text-slate-900">
-                  {m.vehicle ? `${m.vehicle.plate} — ${m.vehicle.brand} ${m.vehicle.model}` : m.vehicleId}
+                  {getVehicleLabel(m)}
                 </div>
                 <div className="text-slate-600 text-sm mt-1">{formatDate(m.scheduledDate)}</div>
                 <div className="text-slate-500 text-sm mt-0.5">{m.type ?? '—'}</div>
