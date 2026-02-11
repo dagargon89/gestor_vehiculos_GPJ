@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
+import { SearchSelect } from '../../components/ui/SearchSelect';
 
 type User = { id: string; displayName?: string; email?: string };
 
@@ -79,17 +80,14 @@ function SanctionFormModal({
           )}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Usuario *</label>
-            <select
-              required
+            <SearchSelect
+              options={users.map((u) => ({ value: u.id, label: u.displayName || u.email || u.id }))}
               value={form.userId}
-              onChange={(e) => setForm((f) => ({ ...f, userId: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-            >
-              <option value="">Seleccionar...</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>{u.displayName || u.email || u.id}</option>
-              ))}
-            </select>
+              onChange={(v) => setForm((f) => ({ ...f, userId: v }))}
+              placeholder="Seleccionar..."
+              required
+              className="w-full"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Motivo *</label>
@@ -204,16 +202,13 @@ export function SanctionList() {
       <div className="flex flex-wrap justify-between items-center gap-4">
         <h2 className="text-2xl font-bold text-slate-900">Sanciones</h2>
         <div className="flex items-center gap-3">
-          <select
+          <SearchSelect
+            options={[{ value: '', label: 'Todos los usuarios' }, ...users.map((u: User) => ({ value: u.id, label: u.displayName || u.email || u.id }))]}
             value={filterUserId}
-            onChange={(e) => setFilterUserId(e.target.value)}
-            className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary"
-          >
-            <option value="">Todos los usuarios</option>
-            {users.map((u: User) => (
-              <option key={u.id} value={u.id}>{u.displayName || u.email || u.id}</option>
-            ))}
-          </select>
+            onChange={setFilterUserId}
+            placeholder="Todos los usuarios"
+            className="w-48"
+          />
           <ViewToggle value={view} onChange={setView} storageKey="sanctionView" />
           <button
             type="button"

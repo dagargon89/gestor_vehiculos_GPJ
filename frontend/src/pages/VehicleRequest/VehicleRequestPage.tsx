@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { VehicleAvailabilityCalendar } from '../../components/calendar/VehicleAvailabilityCalendar';
+import { SearchSelect } from '../../components/ui/SearchSelect';
 
 type User = { id: string; email: string; displayName?: string };
 type Vehicle = {
@@ -185,17 +186,14 @@ function ReserveVehicleModal({
               )}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Solicitar para usuario *</label>
-                <select
-                  required
+                <SearchSelect
+                  options={users.map((u: User) => ({ value: u.id, label: u.displayName || u.email }))}
                   value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                >
-                  <option value="">Seleccionar usuario</option>
-                  {users.map((u: User) => (
-                    <option key={u.id} value={u.id}>{u.displayName || u.email}</option>
-                  ))}
-                </select>
+                  onChange={setUserId}
+                  placeholder="Seleccionar usuario"
+                  required
+                  className="w-full"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Evento</label>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '../../contexts/AuthContext';
 import apiClient from '../../services/api.service';
+import { SearchSelect } from '../../components/ui/SearchSelect';
 
 interface ProfileData {
   displayName: string;
@@ -369,16 +370,14 @@ export function ProfilePage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tipo</label>
-                <select
+                <SearchSelect
+                  options={LICENSE_TYPES}
                   value={form.licenseType}
-                  onChange={(e) => update('licenseType', e.target.value)}
+                  onChange={(v) => update('licenseType', v)}
+                  placeholder="Seleccionar..."
                   disabled={!editing}
                   className={inputClass(!editing)}
-                >
-                  {LICENSE_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
+                />
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Vencimiento</label>

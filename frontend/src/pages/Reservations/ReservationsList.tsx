@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { SearchSelect } from '../../components/ui/SearchSelect';
 
 type User = { id: string; email: string; displayName?: string };
 type Vehicle = { id: string; plate: string; brand: string; model: string };
@@ -110,35 +111,25 @@ function ReservationFormModal({
           )}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Vehículo *</label>
-            <select
-              required
+            <SearchSelect
+              options={vehicles.map((v) => ({ value: v.id, label: `${v.plate} – ${v.brand} ${v.model}` }))}
               value={form.vehicleId}
-              onChange={(e) => setForm((f) => ({ ...f, vehicleId: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-            >
-              <option value="">Seleccionar vehículo</option>
-              {vehicles.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.plate} – {v.brand} {v.model}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setForm((f) => ({ ...f, vehicleId: v }))}
+              placeholder="Seleccionar vehículo"
+              required
+              className="w-full"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Usuario *</label>
-            <select
-              required
+            <SearchSelect
+              options={users.map((u) => ({ value: u.id, label: u.displayName || u.email }))}
               value={form.userId}
-              onChange={(e) => setForm((f) => ({ ...f, userId: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-            >
-              <option value="">Seleccionar usuario</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.displayName || u.email}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setForm((f) => ({ ...f, userId: v }))}
+              placeholder="Seleccionar usuario"
+              required
+              className="w-full"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Inicio *</label>
@@ -193,15 +184,13 @@ function ReservationFormModal({
           {reservation && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Estado</label>
-              <select
+              <SearchSelect
+                options={STATUS_OPTIONS}
                 value={form.status}
-                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-              >
-                {STATUS_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
+                onChange={(v) => setForm((f) => ({ ...f, status: v }))}
+                placeholder="Estado"
+                className="w-full"
+              />
             </div>
           )}
           <div className="flex gap-3 pt-4">
@@ -309,16 +298,13 @@ export function ReservationsList() {
       <div className="flex flex-wrap justify-between items-center gap-4">
         <h2 className="text-2xl font-bold text-slate-900">Gestión de reservas</h2>
         <div className="flex flex-wrap items-center gap-3">
-            <select
+            <SearchSelect
+              options={[{ value: '', label: 'Todos los estados' }, ...STATUS_OPTIONS]}
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary"
-            >
-              <option value="">Todos los estados</option>
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
+              onChange={setFilterStatus}
+              placeholder="Todos los estados"
+              className="w-48"
+            />
             <button
               type="button"
               onClick={openCreate}

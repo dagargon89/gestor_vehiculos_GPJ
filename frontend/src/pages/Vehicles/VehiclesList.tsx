@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
+import { SearchSelect } from '../../components/ui/SearchSelect';
 
 type Vehicle = {
   id: string;
@@ -221,15 +222,13 @@ function VehicleFormModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Estado</label>
-              <select
+              <SearchSelect
+                options={STATUS_OPTIONS}
                 value={form.status}
-                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-              >
-                {STATUS_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
+                onChange={(v) => setForm((f) => ({ ...f, status: v }))}
+                placeholder="Estado"
+                className="w-full"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Odómetro (km)</label>

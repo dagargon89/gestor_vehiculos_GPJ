@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
+import { SearchSelect } from '../../components/ui/SearchSelect';
 
 type Role = { id: string; name: string; description?: string };
 
@@ -99,28 +100,23 @@ function UserFormModal({
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Rol</label>
-            <select
+            <SearchSelect
+              options={[{ value: '', label: 'Sin rol' }, ...roles.map((r) => ({ value: r.id, label: r.name }))]}
               value={form.roleId}
-              onChange={(e) => setForm((f) => ({ ...f, roleId: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-            >
-              <option value="">Sin rol</option>
-              {roles.map((r) => (
-                <option key={r.id} value={r.id}>{r.name}</option>
-              ))}
-            </select>
+              onChange={(v) => setForm((f) => ({ ...f, roleId: v }))}
+              placeholder="Sin rol"
+              className="w-full"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Estado</label>
-            <select
+            <SearchSelect
+              options={STATUS_OPTIONS}
               value={form.status}
-              onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-            >
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
+              onChange={(v) => setForm((f) => ({ ...f, status: v }))}
+              placeholder="Estado"
+              className="w-full"
+            />
           </div>
           <div className="flex gap-3 pt-4">
             <button
