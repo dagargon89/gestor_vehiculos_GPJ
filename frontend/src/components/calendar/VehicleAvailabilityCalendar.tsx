@@ -206,6 +206,8 @@ export function VehicleAvailabilityCalendar({
         borderLeft: `4px solid ${isPending ? '#d97706' : '#b91c1c'}`,
         color: '#fff',
         borderRadius: '4px',
+        marginBottom: '2px',
+        boxSizing: 'border-box',
       },
     };
   };
@@ -262,6 +264,7 @@ export function VehicleAvailabilityCalendar({
           eventPropGetter={eventStyleGetter}
           messages={messages}
           culture="es"
+          popup
           components={{
             event: EventWithTooltip,
           }}
