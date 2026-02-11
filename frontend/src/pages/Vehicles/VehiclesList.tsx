@@ -49,12 +49,20 @@ function VehicleFormModal({
     year: vehicle?.year ?? '',
     color: vehicle?.color ?? '',
     vin: vehicle?.vin ?? '',
-    photoUrls: vehicle?.photoUrls ?? '',
     status: vehicle?.status ?? 'available',
     currentOdometer: vehicle?.currentOdometer ?? '',
   });
+  const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const uploadVehiclePhoto = async (vehicleId: string, file: File): Promise<void> => {
+    const formData = new FormData();
+    formData.append('photo', file);
+    await apiClient.post(`/vehicles/${vehicleId}/photos`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,14 +76,19 @@ function VehicleFormModal({
         year: form.year === '' ? undefined : Number(form.year),
         color: form.color.trim() || undefined,
         vin: form.vin.trim() || undefined,
-        photoUrls: form.photoUrls.trim() || undefined,
         status: form.status,
         currentOdometer: form.currentOdometer === '' ? undefined : Number(form.currentOdometer),
       };
+      let vehicleId: string;
       if (vehicle) {
         await apiClient.put(`/vehicles/${vehicle.id}`, payload);
+        vehicleId = vehicle.id;
       } else {
-        await apiClient.post('/vehicles', payload);
+        const { data: created } = await apiClient.post<{ id: string }>('/vehicles', payload);
+        vehicleId = created.id;
+      }
+      for (const file of pendingPhotos) {
+        await uploadVehiclePhoto(vehicleId, file);
       }
       onSuccess();
       onClose();
@@ -171,14 +184,39 @@ function VehicleFormModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">URL(s) de foto</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Foto(s) del vehículo</label>
             <input
-              type="text"
-              placeholder="https://... (varias separadas por coma)"
-              value={form.photoUrls}
-              onChange={(e) => setForm((f) => ({ ...f, photoUrls: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files ?? []);
+                setPendingPhotos((prev) => [...prev, ...files]);
+                e.target.value = '';
+              }}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
             />
+            {pendingPhotos.length > 0 && (
+              <ul className="mt-2 space-y-1 text-sm text-slate-600">
+                {pendingPhotos.map((f, i) => (
+                  <li key={i} className="flex items-center justify-between gap-2">
+                    <span className="truncate">{f.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setPendingPhotos((prev) => prev.filter((_, idx) => idx !== i))}
+                      className="text-red-600 hover:underline shrink-0"
+                    >
+                      Quitar
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {vehicle?.photoUrls && (
+              <p className="mt-1 text-xs text-slate-500">
+                El vehículo ya tiene fotos. Las que subas aquí se añadirán.
+              </p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
