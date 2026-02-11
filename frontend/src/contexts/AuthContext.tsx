@@ -72,7 +72,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           queryClient.invalidateQueries({ queryKey: ['users'] });
         } catch (err) {
           console.error('Error obteniendo datos del usuario:', err);
-          setUserData(null);
           const status = (err as { response?: { status?: number } })?.response?.status;
           const isNetwork = !(err as { response?: unknown }).response;
           const message = isNetwork
@@ -83,6 +82,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 ? 'Error en el servidor al crear o obtener tu usuario. Revisa los logs del backend.'
                 : 'No se pudo sincronizar con el servidor. Comprueba que el backend esté en marcha en http://localhost:3000.';
           setAuthSyncError(message);
+          setUserData({
+            id: '',
+            email: user.email ?? '',
+            displayName: user.displayName ?? undefined,
+            photoUrl: user.photoURL ?? null,
+            role: undefined,
+            permissions: [],
+          });
         }
       } else {
         setUserData(null);
@@ -139,6 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUserData(response.data);
+      setAuthSyncError(null);
     } catch {
       // Silenciar si falla; el usuario ya está logueado
     }

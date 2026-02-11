@@ -23,6 +23,10 @@ export declare class UsersService {
     createFromFirebase(dto: CreateFromFirebaseDto): Promise<User>;
     updateLastLogin(id: string): Promise<void>;
     updateUserData(id: string, data: Partial<User>): Promise<User>;
+    private static readonly UPDATE_ALLOWED_KEYS;
     update(id: string, data: Partial<User>): Promise<User>;
     remove(id: string): Promise<void>;
+    claimAdmin(userId: string): Promise<{
+        success: true;
+    }>;
 }

@@ -47,7 +47,15 @@ let FirebaseAuthGuard = FirebaseAuthGuard_1 = class FirebaseAuthGuard {
             if (userWithPermissions.status !== 'active') {
                 throw new common_1.UnauthorizedException('Usuario suspendido o inactivo');
             }
-            request.user = userWithPermissions;
+            const role = userWithPermissions.role;
+            const permissions = Array.isArray(userWithPermissions.permissions)
+                ? userWithPermissions.permissions
+                : [];
+            request.user = {
+                ...userWithPermissions,
+                role: role != null ? { id: role.id, name: role.name } : null,
+                permissions,
+            };
             request.firebaseToken = decodedToken;
             return true;
         }

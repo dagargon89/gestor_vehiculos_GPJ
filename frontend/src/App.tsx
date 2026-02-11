@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { PermissionRoute } from './components/auth/PermissionRoute';
 import { MainLayout } from './components/layout/MainLayout';
 import { Login } from './pages/Auth/Login';
 import { Dashboard } from './pages/Dashboard/Dashboard';
@@ -18,6 +19,15 @@ import { IncidentList } from './pages/Incidents/IncidentList';
 import { SanctionList } from './pages/Sanctions/SanctionList';
 import { RolePermissionsPage } from './pages/RolePermissions/RolePermissionsPage';
 import { SystemSettingsPage } from './pages/SystemSettings/SystemSettingsPage';
+import { canAccessDashboard } from './config/routePermissions';
+import { useAuth } from './contexts/AuthContext';
+
+function DashboardOrRedirect() {
+  const { userData } = useAuth();
+  if (canAccessDashboard(userData?.permissions, userData?.role?.name))
+    return <Dashboard />;
+  return <Navigate to="/profile" replace />;
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,20 +50,20 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Dashboard />} />
-              <Route path="vehicles" element={<VehiclesList />} />
-              <Route path="solicitud-vehiculos" element={<VehicleRequestPage />} />
-              <Route path="reservations" element={<ReservationsList />} />
-              <Route path="users" element={<UsersList />} />
-              <Route path="providers" element={<ProvidersList />} />
-              <Route path="reports" element={<ReportsPage />} />
-              <Route path="maintenance" element={<MaintenanceList />} />
-              <Route path="incidents" element={<IncidentList />} />
-              <Route path="sanctions" element={<SanctionList />} />
-              <Route path="role-permissions" element={<RolePermissionsPage />} />
-              <Route path="system-settings" element={<SystemSettingsPage />} />
+              <Route index element={<DashboardOrRedirect />} />
+              <Route path="vehicles" element={<PermissionRoute resource="vehicles" action="read"><VehiclesList /></PermissionRoute>} />
+              <Route path="solicitud-vehiculos" element={<PermissionRoute oneOf={[{ resource: 'reservations', action: 'read' }, { resource: 'reservations', action: 'create' }]}><VehicleRequestPage /></PermissionRoute>} />
+              <Route path="reservations" element={<PermissionRoute resource="reservations" action="read"><ReservationsList /></PermissionRoute>} />
+              <Route path="users" element={<PermissionRoute resource="users" action="read"><UsersList /></PermissionRoute>} />
+              <Route path="providers" element={<PermissionRoute resource="providers" action="read"><ProvidersList /></PermissionRoute>} />
+              <Route path="reports" element={<PermissionRoute resource="reports" action="read"><ReportsPage /></PermissionRoute>} />
+              <Route path="maintenance" element={<PermissionRoute resource="maintenance" action="read"><MaintenanceList /></PermissionRoute>} />
+              <Route path="incidents" element={<PermissionRoute resource="incidents" action="read"><IncidentList /></PermissionRoute>} />
+              <Route path="sanctions" element={<PermissionRoute resource="sanctions" action="read"><SanctionList /></PermissionRoute>} />
+              <Route path="role-permissions" element={<PermissionRoute resource="roles" action="read"><RolePermissionsPage /></PermissionRoute>} />
+              <Route path="system-settings" element={<PermissionRoute resource="system_settings" action="read"><SystemSettingsPage /></PermissionRoute>} />
               <Route path="profile" element={<ProfilePage />} />
-              <Route path="mis-solicitudes" element={<MyRequestsPage />} />
+              <Route path="mis-solicitudes" element={<PermissionRoute oneOf={[{ resource: 'reservations', action: 'read' }, { resource: 'reservations', action: 'create' }]}><MyRequestsPage /></PermissionRoute>} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

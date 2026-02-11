@@ -5,8 +5,9 @@ export interface CurrentUserPayload {
   firebaseUid: string;
   email: string;
   displayName?: string;
+  photoUrl?: string | null;
   roleId?: string;
-  role?: { name: string };
+  role?: { id?: string; name: string };
   status: string;
   permissions?: { resource: string; action: string }[];
 }

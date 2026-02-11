@@ -36,11 +36,15 @@ export const ADMIN_ROUTE_ITEMS: { to: string; label: string; resource: string; a
 
 /**
  * Comprueba si el usuario puede ver "Solicitud de vehículos" o "Mis solicitudes":
- * tiene reservations:read o reservations:create.
+ * tiene reservations:read o reservations:create, o es admin (acceso total).
  */
 export function canAccessReservationRequests(
   permissions: { resource: string; action: string }[] | undefined,
+  roleName?: string | null,
 ): boolean {
+  const role = roleName?.toLowerCase();
+  if (role === 'admin') return true;
+  if (role === 'conductor') return true;
   const perms = permissions ?? [];
   return (
     perms.some((p) => p.resource === 'reservations' && p.action === 'read') ||
@@ -50,11 +54,15 @@ export function canAccessReservationRequests(
 
 /**
  * Comprueba si el usuario puede ver el Dashboard:
- * tiene al menos vehicles:read o reservations:read.
+ * tiene al menos vehicles:read o reservations:read, o es admin/conductor (acceso).
  */
 export function canAccessDashboard(
   permissions: { resource: string; action: string }[] | undefined,
+  roleName?: string | null,
 ): boolean {
+  const role = roleName?.toLowerCase();
+  if (role === 'admin') return true;
+  if (role === 'conductor') return true;
   const perms = permissions ?? [];
   return (
     perms.some((p) => p.resource === 'vehicles' && p.action === 'read') ||

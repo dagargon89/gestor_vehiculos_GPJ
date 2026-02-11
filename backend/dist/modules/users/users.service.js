@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var UsersService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
@@ -18,7 +19,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const user_entity_1 = require("../../database/entities/user.entity");
 const role_entity_1 = require("../../database/entities/role.entity");
-let UsersService = class UsersService {
+let UsersService = UsersService_1 = class UsersService {
     constructor(userRepo, roleRepo) {
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
@@ -45,7 +46,37 @@ let UsersService = class UsersService {
         });
         if (!user)
             throw new common_1.NotFoundException('Usuario no encontrado');
-        const permissions = user.role?.permissions?.map((p) => ({ resource: p.resource, action: p.action })) || [];
+        let role = user.role ?? null;
+        let roleIdToLoad = user.roleId?.trim() || null;
+        if (!role && !roleIdToLoad) {
+            try {
+                const raw = await this.userRepo.query('SELECT role_id FROM users WHERE id = $1 LIMIT 1', [id]);
+                roleIdToLoad = raw?.[0]?.role_id?.trim() || null;
+            }
+            catch {
+                roleIdToLoad = null;
+            }
+            if (!roleIdToLoad) {
+                try {
+                    const rawAlt = await this.userRepo.query('SELECT roleid FROM users WHERE id = $1 LIMIT 1', [id]);
+                    roleIdToLoad = rawAlt?.[0]?.roleid?.trim() || null;
+                }
+                catch {
+                    roleIdToLoad = null;
+                }
+            }
+        }
+        if (!role && roleIdToLoad) {
+            const loadedRole = await this.roleRepo.findOne({
+                where: { id: roleIdToLoad },
+                relations: ['permissions'],
+            });
+            if (loadedRole) {
+                role = loadedRole;
+                user.role = loadedRole;
+            }
+        }
+        const permissions = (role?.permissions ?? []).map((p) => ({ resource: p.resource, action: p.action }));
         return { ...user, permissions };
     }
     async createFromFirebase(dto) {
@@ -68,15 +99,59 @@ let UsersService = class UsersService {
         return this.findOne(id);
     }
     async update(id, data) {
-        await this.userRepo.update(id, data);
+        const payload = {};
+        for (const key of UsersService_1.UPDATE_ALLOWED_KEYS) {
+            if (key in data) {
+                const value = data[key];
+                payload[key] = value;
+            }
+        }
+        if (payload.roleId === '')
+            payload.roleId = null;
+        await this.userRepo.update(id, payload);
         return this.findOne(id);
     }
     async remove(id) {
         await this.userRepo.softDelete(id);
     }
+    async claimAdmin(userId) {
+        const raw = await this.userRepo.query('SELECT role_id FROM users WHERE id = $1 LIMIT 1', [userId]);
+        const currentRoleId = raw?.[0]?.role_id?.trim() || null;
+        if (currentRoleId) {
+            throw new common_1.BadRequestException('Ya tienes un rol asignado.');
+        }
+        const adminRole = await this.roleRepo.findOne({ where: { name: 'admin' } });
+        if (!adminRole) {
+            throw new common_1.BadRequestException('No existe el rol admin en la base de datos. Ejecuta los seeds.');
+        }
+        const countResult = await this.userRepo.query('SELECT COUNT(*) AS count FROM users WHERE role_id = $1', [adminRole.id]);
+        const adminCount = parseInt(countResult?.[0]?.count ?? '0', 10);
+        if (adminCount >= 1) {
+            throw new common_1.BadRequestException('Ya existe un administrador. Pide que te asignen un rol desde Gestión de usuarios.');
+        }
+        await this.userRepo.update(userId, { roleId: adminRole.id });
+        return { success: true };
+    }
 };
 exports.UsersService = UsersService;
-exports.UsersService = UsersService = __decorate([
+UsersService.UPDATE_ALLOWED_KEYS = [
+    'displayName',
+    'department',
+    'status',
+    'roleId',
+    'employeeId',
+    'phone',
+    'licenseNumber',
+    'licenseType',
+    'licenseExpiry',
+    'licenseRestrictions',
+    'emergencyContactName',
+    'emergencyContactPhone',
+    'emergencyContactRelationship',
+    'emailNotifications',
+    'autoApprovalEnabled',
+];
+exports.UsersService = UsersService = UsersService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __param(1, (0, typeorm_1.InjectRepository)(role_entity_1.Role)),

@@ -3,8 +3,10 @@ export interface CurrentUserPayload {
     firebaseUid: string;
     email: string;
     displayName?: string;
+    photoUrl?: string | null;
     roleId?: string;
     role?: {
+        id?: string;
         name: string;
     };
     status: string;

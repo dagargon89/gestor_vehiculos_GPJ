@@ -12,4 +12,8 @@ export class AuthService {
   async deleteAccount(userId: string, _firebaseUid: string): Promise<void> {
     await this.usersService.updateUserData(userId, { status: 'inactive' } as never);
   }
+
+  async claimAdmin(userId: string): Promise<{ success: true }> {
+    return this.usersService.claimAdmin(userId);
+  }
 }

@@ -60,7 +60,7 @@ export class User {
   @Column({ default: 'active' })
   status: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'role_id', nullable: true })
   roleId: string;
 
   @ManyToOne(() => Role, { nullable: true, onDelete: 'SET NULL' })

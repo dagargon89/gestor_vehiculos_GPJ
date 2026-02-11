@@ -52,7 +52,15 @@ export class FirebaseAuthGuard implements CanActivate {
         throw new UnauthorizedException('Usuario suspendido o inactivo');
       }
 
-      request.user = userWithPermissions;
+      const role = userWithPermissions.role;
+      const permissions = Array.isArray((userWithPermissions as { permissions?: unknown }).permissions)
+        ? (userWithPermissions as { permissions: { resource: string; action: string }[] }).permissions
+        : [];
+      request.user = {
+        ...userWithPermissions,
+        role: role != null ? { id: role.id, name: role.name } : null,
+        permissions,
+      };
       request.firebaseToken = decodedToken;
       return true;
     } catch (err: unknown) {

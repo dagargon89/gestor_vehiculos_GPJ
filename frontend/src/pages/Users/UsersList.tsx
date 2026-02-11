@@ -53,7 +53,7 @@ function UserFormModal({
       const payload = {
         displayName: form.displayName.trim() || undefined,
         department: form.department.trim() || undefined,
-        roleId: form.roleId || undefined,
+        roleId: form.roleId?.trim() || null,
         status: form.status,
       };
       await apiClient.put(`/users/${user.id}`, payload);
