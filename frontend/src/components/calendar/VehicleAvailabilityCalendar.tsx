@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, startOfWeek, getDay, isSameDay } from 'date-fns';
@@ -185,6 +185,19 @@ export function VehicleAvailabilityCalendar({
     });
   }, [reservations, monthStart, monthEnd]);
 
+  const [view, setView] = useState<'month' | 'week' | 'day' | 'agenda'>(() => {
+    if (typeof window === 'undefined') return 'month';
+    return window.matchMedia('(max-width: 767px)').matches ? 'agenda' : 'month';
+  });
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setView(mq.matches ? 'agenda' : 'month');
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
   const eventStyleGetter = (event: ReservationEvent) => {
     const isPending = event.status === 'pending';
     return {
@@ -240,7 +253,8 @@ export function VehicleAvailabilityCalendar({
           endAccessor="end"
           titleAccessor="title"
           tooltipAccessor={() => ''}
-          view="month"
+          view={view}
+          onView={setView}
           date={currentDate}
           onNavigate={onNavigate}
           onSelectSlot={onSelectSlot}

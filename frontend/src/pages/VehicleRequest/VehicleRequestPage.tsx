@@ -125,7 +125,7 @@ function ReserveVehicleModal({
         className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-[90rem] min-h-[90vh] max-h-[98vh] overflow-y-auto my-2 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+        <div className="px-4 py-3 md:px-6 md:py-4 border-b border-slate-200 flex justify-between items-center">
           <h3 className="text-lg font-bold text-slate-900">
             Reservar: {vehicle.plate} – {vehicle.brand} {vehicle.model}
           </h3>
@@ -138,24 +138,24 @@ function ReserveVehicleModal({
             <span className="material-icons">close</span>
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 flex-1 flex flex-col min-h-0">
+        <form onSubmit={handleSubmit} className="p-4 md:p-6 flex-1 flex flex-col min-h-0">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
-            <div className="lg:col-span-2 space-y-4 flex flex-col min-h-0">
+            <div className="lg:col-span-2 space-y-4 flex flex-col min-h-0 order-2 lg:order-1">
               <h4 className="text-sm font-bold text-slate-700">Calendario de disponibilidad</h4>
               <p className="text-xs text-slate-500">
                 Los días en naranja/rojo tienen reservas. Selecciona un hueco para elegir fecha y hora.
               </p>
-              <div className="flex-1 min-h-[480px]">
+              <div className="flex-1 min-h-[320px] md:min-h-[560px]">
                 <VehicleAvailabilityCalendar
                   vehicleId={vehicle.id}
                   currentDate={calendarDate}
                   onNavigate={(d) => setCalendarDate(d)}
                   onSelectSlot={handleSelectSlot}
                   className="h-full"
-                  minHeight={440}
+                  minHeight={520}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Fecha y hora de salida *</label>
                   <input
@@ -178,7 +178,7 @@ function ReserveVehicleModal({
                 </div>
               </div>
             </div>
-            <div className="lg:col-span-1 space-y-4">
+            <div className="lg:col-span-1 space-y-4 order-1 lg:order-2 min-w-0">
               <h4 className="text-sm font-bold text-slate-700">Datos de la solicitud</h4>
               {error && (
                 <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
