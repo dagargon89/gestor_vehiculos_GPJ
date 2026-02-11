@@ -5,10 +5,105 @@ import apiClient from '../../services/api.service';
 type Permission = { id: string; resource: string; action: string };
 type Role = { id: string; name: string; description?: string; permissions?: Permission[] };
 
+function CreateRoleModal({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess: (newRoleId: string) => void;
+}) {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError('El nombre del rol es obligatorio.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await apiClient.post<{ id: string }>('/roles', {
+        name: trimmed,
+        description: description.trim() || undefined,
+      });
+      onSuccess(res.data.id);
+      onClose();
+    } catch (err: unknown) {
+      const msg = err && typeof err === 'object' && 'response' in err
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        : 'Error al crear el rol';
+      setError(String(msg));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-6 py-4 border-b border-slate-200">
+          <h3 className="text-lg font-bold text-slate-900">Nuevo rol</h3>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Nombre *</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ej: supervisor"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Descripción (opcional)</label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Breve descripción del rol"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
+            >
+              {submitting ? 'Creando...' : 'Crear rol'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export function RolePermissionsPage() {
   const queryClient = useQueryClient();
   const [selectedRoleId, setSelectedRoleId] = useState<string>('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const { data: roles = [] } = useQuery({
     queryKey: ['roles'],
@@ -39,6 +134,11 @@ export function RolePermissionsPage() {
 
   const handleSelectRole = (roleId: string) => {
     setSelectedRoleId(roleId);
+  };
+
+  const handleRoleCreated = (newRoleId: string) => {
+    queryClient.invalidateQueries({ queryKey: ['roles'] });
+    setSelectedRoleId(newRoleId);
   };
 
   const togglePermission = (id: string) => {
@@ -104,8 +204,15 @@ export function RolePermissionsPage() {
               </li>
             ))}
           </ul>
+          <button
+            type="button"
+            onClick={() => setCreateModalOpen(true)}
+            className="mt-4 w-full px-4 py-2.5 border border-dashed border-slate-300 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-primary hover:text-primary transition-colors"
+          >
+            + Nuevo rol
+          </button>
           {roles.length === 0 && (
-            <p className="text-slate-500 text-sm">No hay roles cargados.</p>
+            <p className="text-slate-500 text-sm mt-2">No hay roles cargados.</p>
           )}
         </div>
 
@@ -172,6 +279,13 @@ export function RolePermissionsPage() {
           )}
         </div>
       </div>
+
+      {createModalOpen && (
+        <CreateRoleModal
+          onClose={() => setCreateModalOpen(false)}
+          onSuccess={handleRoleCreated}
+        />
+      )}
     </div>
   );
 }
