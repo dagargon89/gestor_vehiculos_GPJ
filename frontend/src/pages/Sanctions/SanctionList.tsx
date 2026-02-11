@@ -3,6 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
+import { usePagination } from '../../hooks/usePagination';
+import { TableToolbar } from '../../components/ui/TableToolbar';
+import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 
 type User = { id: string; displayName?: string; email?: string };
 
@@ -195,6 +198,28 @@ export function SanctionList() {
     return name || u.email || '—';
   };
 
+  const {
+    paginatedData: paginatedSanctions,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    PAGE_SIZE_OPTIONS,
+  } = usePagination<Sanction>(sanctionList, { pageSize: 25 });
+
+  const exportHeaders = ['Usuario', 'Motivo', 'Fecha efectiva', 'Fecha fin'];
+  const getExportRows = (list: Sanction[]) =>
+    list.map((s) => [
+      getUserLabel(s),
+      s.reason,
+      formatDate(s.effectiveDate),
+      s.endDate ? formatDate(s.endDate) : '—',
+    ]);
+
   if (isLoading) return <div className="text-primary font-bold">Cargando sanciones...</div>;
 
   return (
@@ -222,6 +247,20 @@ export function SanctionList() {
 
       {view === 'table' && (
         <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+          <TableToolbar
+            page={page}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            onExportCSV={() => exportToCSV(exportHeaders, getExportRows(sanctionList), 'sanciones.csv')}
+            onExportExcel={() => exportToExcel(exportHeaders, getExportRows(sanctionList), 'sanciones.xlsx', 'Sanciones')}
+            onExportPDF={() => exportToPDF(exportHeaders, getExportRows(sanctionList), 'sanciones.pdf', 'Sanciones')}
+          />
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
@@ -233,12 +272,12 @@ export function SanctionList() {
               </tr>
             </thead>
             <tbody>
-              {sanctionList.length === 0 ? (
+              {paginatedSanctions.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No hay sanciones registradas.</td>
                 </tr>
               ) : (
-                sanctionList.map((s: Sanction) => (
+                paginatedSanctions.map((s: Sanction) => (
                   <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-6 py-4 font-medium text-slate-900">
                       {getUserLabel(s)}

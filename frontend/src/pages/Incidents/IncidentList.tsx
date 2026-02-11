@@ -3,6 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
+import { usePagination } from '../../hooks/usePagination';
+import { TableToolbar } from '../../components/ui/TableToolbar';
+import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string };
 type User = { id: string; displayName?: string; email?: string };
@@ -241,6 +244,29 @@ export function IncidentList() {
     return name || u.email || '—';
   };
 
+  const {
+    paginatedData: paginatedIncidents,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    PAGE_SIZE_OPTIONS,
+  } = usePagination<Incident>(incidentList, { pageSize: 25 });
+
+  const exportHeaders = ['Vehículo', 'Usuario', 'Fecha', 'Estado', 'Descripción'];
+  const getExportRows = (list: Incident[]) =>
+    list.map((i) => [
+      getVehicleLabel(i),
+      getUserLabel(i),
+      formatDate(i.date),
+      STATUS_OPTIONS.find((o) => o.value === i.status)?.label ?? i.status,
+      (i.description ?? '').slice(0, 100),
+    ]);
+
   if (isLoading) return <div className="text-primary font-bold">Cargando incidentes...</div>;
 
   return (
@@ -275,6 +301,20 @@ export function IncidentList() {
 
       {view === 'table' && (
         <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+          <TableToolbar
+            page={page}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            onExportCSV={() => exportToCSV(exportHeaders, getExportRows(incidentList), 'incidentes.csv')}
+            onExportExcel={() => exportToExcel(exportHeaders, getExportRows(incidentList), 'incidentes.xlsx', 'Incidentes')}
+            onExportPDF={() => exportToPDF(exportHeaders, getExportRows(incidentList), 'incidentes.pdf', 'Incidentes')}
+          />
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
@@ -287,12 +327,12 @@ export function IncidentList() {
               </tr>
             </thead>
             <tbody>
-              {incidentList.length === 0 ? (
+              {paginatedIncidents.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-slate-500">No hay incidentes registrados.</td>
                 </tr>
               ) : (
-                incidentList.map((i: Incident) => (
+                paginatedIncidents.map((i: Incident) => (
                   <tr key={i.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-6 py-4 font-medium text-slate-900">
                       {getVehicleLabel(i)}

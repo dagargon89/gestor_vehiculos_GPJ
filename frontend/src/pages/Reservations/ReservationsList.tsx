@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { SearchSelect } from '../../components/ui/SearchSelect';
+import { usePagination } from '../../hooks/usePagination';
+import { TableToolbar } from '../../components/ui/TableToolbar';
+import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 
 type User = { id: string; email: string; displayName?: string };
 type Vehicle = { id: string; plate: string; brand: string; model: string };
@@ -291,6 +294,29 @@ export function ReservationsList() {
     ? reservations.filter((r: Reservation) => r.status === filterStatus)
     : reservations;
 
+  const {
+    paginatedData: paginatedReservations,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    PAGE_SIZE_OPTIONS,
+  } = usePagination<Reservation>(filteredReservations, { pageSize: 25 });
+
+  const exportHeaders = ['Vehículo', 'Usuario', 'Inicio', 'Fin', 'Estado'];
+  const getExportRows = (list: Reservation[]) =>
+    list.map((r) => [
+      getVehicleLabel(r),
+      getUserLabel(r),
+      new Date(r.startDatetime).toLocaleString(),
+      new Date(r.endDatetime).toLocaleString(),
+      STATUS_OPTIONS.find((o) => o.value === r.status)?.label ?? r.status,
+    ]);
+
   if (isLoading) return <div className="text-primary font-bold">Cargando reservas...</div>;
 
   return (
@@ -315,6 +341,20 @@ export function ReservationsList() {
           </div>
       </div>
       <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+            <TableToolbar
+              page={page}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              startIndex={startIndex}
+              endIndex={endIndex}
+              pageSizeOptions={PAGE_SIZE_OPTIONS}
+              onExportCSV={() => exportToCSV(exportHeaders, getExportRows(filteredReservations), 'reservas.csv')}
+              onExportExcel={() => exportToExcel(exportHeaders, getExportRows(filteredReservations), 'reservas.xlsx', 'Reservas')}
+              onExportPDF={() => exportToPDF(exportHeaders, getExportRows(filteredReservations), 'reservas.pdf', 'Reservas')}
+            />
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
@@ -327,12 +367,12 @@ export function ReservationsList() {
                 </tr>
               </thead>
               <tbody>
-                {filteredReservations.length === 0 ? (
+                {paginatedReservations.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-8 text-center text-slate-500">No hay reservas.</td>
                   </tr>
                 ) : (
-                  filteredReservations.map((r: Reservation) => (
+                  paginatedReservations.map((r: Reservation) => (
                     <tr key={r.id} className="border-b border-slate-100 hover:bg-slate-50">
                       <td className="px-6 py-4 font-medium text-slate-900">{getVehicleLabel(r)}</td>
                       <td className="px-6 py-4 text-slate-600">{getUserLabel(r)}</td>

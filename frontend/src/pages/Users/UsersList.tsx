@@ -3,6 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
+import { usePagination } from '../../hooks/usePagination';
+import { TableToolbar } from '../../components/ui/TableToolbar';
+import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 
 type Role = { id: string; name: string; description?: string };
 
@@ -145,6 +148,8 @@ export function UsersList() {
   const [view, setView] = useState<ViewMode>(() => getStoredView('usersView'));
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [filterRoleId, setFilterRoleId] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
 
   const { data: users = [], isLoading, isError, error } = useQuery({
     queryKey: ['users'],
@@ -177,6 +182,36 @@ export function UsersList() {
     deleteMutation.mutate(u.id);
   };
 
+  const filteredUsers = users.filter((u: User) => {
+    if (filterRoleId && (u.roleId ?? '') !== filterRoleId) return false;
+    if (filterStatus && u.status !== filterStatus) return false;
+    return true;
+  });
+
+  const {
+    paginatedData: paginatedUsers,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    PAGE_SIZE_OPTIONS,
+  } = usePagination<User>(filteredUsers, { pageSize: 25 });
+
+  const getRoleName = (u: User) => u.role?.name ?? (u.roleId && roles.find((r: Role) => r.id === u.roleId)?.name) ?? '—';
+  const exportHeaders = ['Email', 'Nombre', 'Departamento', 'Rol', 'Estado'];
+  const getExportRows = (list: User[]) =>
+    list.map((u: User) => [
+      u.email,
+      u.displayName ?? '—',
+      u.department ?? '—',
+      getRoleName(u),
+      STATUS_OPTIONS.find((o) => o.value === u.status)?.label ?? u.status,
+    ]);
+
   if (isLoading) return <div className="text-primary font-bold">Cargando usuarios...</div>;
 
   if (isError) {
@@ -199,10 +234,40 @@ export function UsersList() {
     <div className="space-y-6">
       <div className="flex flex-wrap justify-between items-center gap-4">
         <h2 className="text-2xl font-bold text-slate-900">Usuarios</h2>
-        <ViewToggle value={view} onChange={setView} storageKey="usersView" />
+        <div className="flex flex-wrap items-center gap-3">
+          <SearchSelect
+            options={[{ value: '', label: 'Todos los roles' }, ...roles.map((r: Role) => ({ value: r.id, label: r.name }))]}
+            value={filterRoleId}
+            onChange={setFilterRoleId}
+            placeholder="Todos los roles"
+            className="w-48"
+          />
+          <SearchSelect
+            options={[{ value: '', label: 'Todos los estados' }, ...STATUS_OPTIONS]}
+            value={filterStatus}
+            onChange={setFilterStatus}
+            placeholder="Todos los estados"
+            className="w-48"
+          />
+          <ViewToggle value={view} onChange={setView} storageKey="usersView" />
+        </div>
       </div>
       {view === 'table' && (
         <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+          <TableToolbar
+            page={page}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            onExportCSV={() => exportToCSV(exportHeaders, getExportRows(filteredUsers), 'usuarios.csv')}
+            onExportExcel={() => exportToExcel(exportHeaders, getExportRows(filteredUsers), 'usuarios.xlsx', 'Usuarios')}
+            onExportPDF={() => exportToPDF(exportHeaders, getExportRows(filteredUsers), 'usuarios.pdf', 'Usuarios')}
+          />
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
@@ -215,13 +280,13 @@ export function UsersList() {
               </tr>
             </thead>
             <tbody>
-              {users.length === 0 ? (
+              {paginatedUsers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-slate-500">No hay usuarios registrados.</td>
                 </tr>
               ) : (
-                users.map((u: User) => {
-                  const roleName = u.role?.name ?? (u.roleId && roles.find((r: Role) => r.id === u.roleId)?.name) ?? '—';
+                paginatedUsers.map((u: User) => {
+                  const roleName = getRoleName(u);
                   return (
                   <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-6 py-4 font-medium text-slate-900">{u.email}</td>

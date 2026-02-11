@@ -3,6 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
+import { usePagination } from '../../hooks/usePagination';
+import { TableToolbar } from '../../components/ui/TableToolbar';
+import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string };
 
@@ -229,6 +232,28 @@ export function MaintenanceList() {
     return v ? `${v.plate} — ${v.brand} ${v.model}` : '—';
   };
 
+  const {
+    paginatedData: paginatedMaintenance,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    PAGE_SIZE_OPTIONS,
+  } = usePagination<Maintenance>(maintenanceList, { pageSize: 25 });
+
+  const exportHeaders = ['Vehículo', 'Fecha', 'Tipo', 'Estado'];
+  const getExportRows = (list: Maintenance[]) =>
+    list.map((m) => [
+      getVehicleLabel(m),
+      formatDate(m.scheduledDate),
+      m.type ?? '—',
+      STATUS_OPTIONS.find((o) => o.value === m.status)?.label ?? m.status,
+    ]);
+
   if (isLoading) return <div className="text-primary font-bold">Cargando mantenimientos...</div>;
 
   return (
@@ -263,6 +288,20 @@ export function MaintenanceList() {
 
       {view === 'table' && (
         <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+          <TableToolbar
+            page={page}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            onExportCSV={() => exportToCSV(exportHeaders, getExportRows(maintenanceList), 'mantenimientos.csv')}
+            onExportExcel={() => exportToExcel(exportHeaders, getExportRows(maintenanceList), 'mantenimientos.xlsx', 'Mantenimientos')}
+            onExportPDF={() => exportToPDF(exportHeaders, getExportRows(maintenanceList), 'mantenimientos.pdf', 'Mantenimientos')}
+          />
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
@@ -274,12 +313,12 @@ export function MaintenanceList() {
               </tr>
             </thead>
             <tbody>
-              {maintenanceList.length === 0 ? (
+              {paginatedMaintenance.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No hay mantenimientos registrados.</td>
                 </tr>
               ) : (
-                maintenanceList.map((m: Maintenance) => (
+                paginatedMaintenance.map((m: Maintenance) => (
                   <tr key={m.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-6 py-4 font-medium text-slate-900">
                       {getVehicleLabel(m)}

@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
+import { usePagination } from '../../hooks/usePagination';
+import { TableToolbar } from '../../components/ui/TableToolbar';
+import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 
 type Provider = {
   id: string;
@@ -150,6 +153,7 @@ export function ProvidersList() {
   const [view, setView] = useState<ViewMode>(() => getStoredView('providersView'));
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
+  const [filterSearch, setFilterSearch] = useState('');
 
   const { data: providers = [], isLoading } = useQuery({
     queryKey: ['providers'],
@@ -179,13 +183,41 @@ export function ProvidersList() {
     deleteMutation.mutate(p.id);
   };
 
+  const filteredProviders = filterSearch.trim()
+    ? providers.filter((p: Provider) => p.name.toLowerCase().includes(filterSearch.trim().toLowerCase()))
+    : providers;
+
+  const {
+    paginatedData: paginatedProviders,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    PAGE_SIZE_OPTIONS,
+  } = usePagination<Provider>(filteredProviders, { pageSize: 25 });
+
+  const exportHeaders = ['Nombre', 'Contacto', 'Teléfono', 'Email'];
+  const getExportRows = (list: Provider[]) =>
+    list.map((p) => [p.name, p.contactName ?? '—', p.phone ?? '—', p.email ?? '—']);
+
   if (isLoading) return <div className="text-primary font-bold">Cargando proveedores...</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap justify-between items-center gap-4">
         <h2 className="text-2xl font-bold text-slate-900">Proveedores</h2>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            type="text"
+            value={filterSearch}
+            onChange={(e) => setFilterSearch(e.target.value)}
+            placeholder="Buscar por nombre"
+            className="w-48 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary"
+          />
           <ViewToggle value={view} onChange={setView} storageKey="providersView" />
           <button
             type="button"
@@ -198,6 +230,20 @@ export function ProvidersList() {
       </div>
       {view === 'table' && (
         <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+          <TableToolbar
+            page={page}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            onExportCSV={() => exportToCSV(exportHeaders, getExportRows(filteredProviders), 'proveedores.csv')}
+            onExportExcel={() => exportToExcel(exportHeaders, getExportRows(filteredProviders), 'proveedores.xlsx', 'Proveedores')}
+            onExportPDF={() => exportToPDF(exportHeaders, getExportRows(filteredProviders), 'proveedores.pdf', 'Proveedores')}
+          />
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
@@ -209,12 +255,12 @@ export function ProvidersList() {
               </tr>
             </thead>
             <tbody>
-              {providers.length === 0 ? (
+              {paginatedProviders.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No hay proveedores registrados.</td>
                 </tr>
               ) : (
-                providers.map((p: Provider) => (
+                paginatedProviders.map((p: Provider) => (
                   <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-6 py-4 font-medium text-slate-900">{p.name}</td>
                     <td className="px-6 py-4 text-slate-600">{p.contactName ?? '—'}</td>

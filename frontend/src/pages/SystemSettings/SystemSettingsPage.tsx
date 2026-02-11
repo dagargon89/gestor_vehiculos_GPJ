@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { usePagination } from '../../hooks/usePagination';
+import { TableToolbar } from '../../components/ui/TableToolbar';
+import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 
 type SystemSetting = { id: string; key: string; value: string };
 
@@ -138,6 +141,22 @@ export function SystemSettingsPage() {
     deleteMutation.mutate(s.id);
   };
 
+  const {
+    paginatedData: paginatedSettings,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    PAGE_SIZE_OPTIONS,
+  } = usePagination<SystemSetting>(settings, { pageSize: 25 });
+
+  const exportHeaders = ['Clave', 'Valor'];
+  const getExportRows = (list: SystemSetting[]) => list.map((s) => [s.key, s.value]);
+
   if (isLoading) return <div className="text-primary font-bold">Cargando configuración...</div>;
 
   return (
@@ -154,6 +173,20 @@ export function SystemSettingsPage() {
       </div>
 
       <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+        <TableToolbar
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          pageSizeOptions={PAGE_SIZE_OPTIONS}
+          onExportCSV={() => exportToCSV(exportHeaders, getExportRows(settings), 'configuracion-sistema.csv')}
+          onExportExcel={() => exportToExcel(exportHeaders, getExportRows(settings), 'configuracion-sistema.xlsx', 'Configuración')}
+          onExportPDF={() => exportToPDF(exportHeaders, getExportRows(settings), 'configuracion-sistema.pdf', 'Configuración del sistema')}
+        />
         <table className="w-full">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
@@ -163,14 +196,14 @@ export function SystemSettingsPage() {
             </tr>
           </thead>
           <tbody>
-            {settings.length === 0 ? (
+            {paginatedSettings.length === 0 ? (
               <tr>
                 <td colSpan={3} className="px-6 py-8 text-center text-slate-500">
                   No hay configuraciones. Añade una para parámetros globales del sistema.
                 </td>
               </tr>
             ) : (
-              settings.map((s: SystemSetting) => (
+              paginatedSettings.map((s: SystemSetting) => (
                 <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50">
                   <td className="px-6 py-4 font-medium text-slate-900 font-mono text-sm">{s.key}</td>
                   <td className="px-6 py-4 text-slate-600 max-w-md truncate">{s.value}</td>

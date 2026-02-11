@@ -42,7 +42,6 @@ function EventWithTooltip({
   const description = event.description;
   const destination = event.destination;
   const reservedBy = event.reservedBy;
-  const hasAny = eventTitle || description || destination || reservedBy;
 
   const timeFmt = isSameDay(event.start, event.end)
     ? (d: Date) => format(d, 'HH:mm', { locale: es })
@@ -185,7 +184,8 @@ export function VehicleAvailabilityCalendar({
     });
   }, [reservations, monthStart, monthEnd]);
 
-  const [view, setView] = useState<'month' | 'week' | 'day' | 'agenda'>(() => {
+  type ViewType = 'month' | 'week' | 'day' | 'agenda' | 'work_week';
+  const [view, setView] = useState<ViewType>(() => {
     if (typeof window === 'undefined') return 'month';
     return window.matchMedia('(max-width: 767px)').matches ? 'agenda' : 'month';
   });
@@ -207,7 +207,7 @@ export function VehicleAvailabilityCalendar({
         color: '#fff',
         borderRadius: '4px',
         marginBottom: '2px',
-        boxSizing: 'border-box',
+        boxSizing: 'border-box' as const,
       },
     };
   };
@@ -256,7 +256,7 @@ export function VehicleAvailabilityCalendar({
           titleAccessor="title"
           tooltipAccessor={() => ''}
           view={view}
-          onView={setView}
+          onView={(v: ViewType) => setView(v)}
           date={currentDate}
           onNavigate={onNavigate}
           onSelectSlot={onSelectSlot}

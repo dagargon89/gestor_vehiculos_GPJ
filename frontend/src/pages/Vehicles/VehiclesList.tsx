@@ -3,6 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
+import { usePagination } from '../../hooks/usePagination';
+import { TableToolbar } from '../../components/ui/TableToolbar';
+import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 
 type Vehicle = {
   id: string;
@@ -268,6 +271,7 @@ export function VehiclesList() {
   const [view, setView] = useState<ViewMode>(() => getStoredView('vehiclesView'));
   const [modalOpen, setModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [filterStatus, setFilterStatus] = useState('');
 
   const { data: vehicles = [], isLoading } = useQuery({
     queryKey: ['vehicles'],
@@ -297,6 +301,32 @@ export function VehiclesList() {
     deleteMutation.mutate(v.id);
   };
 
+  const filteredVehicles = filterStatus
+    ? vehicles.filter((v: Vehicle) => v.status === filterStatus)
+    : vehicles;
+
+  const {
+    paginatedData: paginatedVehicles,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    PAGE_SIZE_OPTIONS,
+  } = usePagination<Vehicle>(filteredVehicles, { pageSize: 25 });
+
+  const exportHeaders = ['Placa', 'Marca', 'Modelo', 'Estado'];
+  const getExportRows = (list: Vehicle[]) =>
+    list.map((v: Vehicle) => [
+      v.plate,
+      v.brand,
+      v.model,
+      STATUS_OPTIONS.find((o) => o.value === v.status)?.label ?? v.status,
+    ]);
+
   if (isLoading) return <div className="text-primary font-bold">Cargando vehículos...</div>;
 
   return (
@@ -304,6 +334,13 @@ export function VehiclesList() {
       <div className="flex flex-wrap justify-between items-center gap-4">
         <h2 className="text-2xl font-bold text-slate-900">Vehículos</h2>
         <div className="flex items-center gap-3">
+          <SearchSelect
+            options={[{ value: '', label: 'Todos los estados' }, ...STATUS_OPTIONS]}
+            value={filterStatus}
+            onChange={setFilterStatus}
+            placeholder="Todos los estados"
+            className="w-48"
+          />
           <ViewToggle value={view} onChange={setView} storageKey="vehiclesView" />
           <button
             type="button"
@@ -316,6 +353,20 @@ export function VehiclesList() {
       </div>
       {view === 'table' && (
         <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+          <TableToolbar
+            page={page}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            onExportCSV={() => exportToCSV(exportHeaders, getExportRows(filteredVehicles), 'vehiculos.csv')}
+            onExportExcel={() => exportToExcel(exportHeaders, getExportRows(filteredVehicles), 'vehiculos.xlsx', 'Vehículos')}
+            onExportPDF={() => exportToPDF(exportHeaders, getExportRows(filteredVehicles), 'vehiculos.pdf', 'Vehículos')}
+          />
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
@@ -327,12 +378,12 @@ export function VehiclesList() {
               </tr>
             </thead>
             <tbody>
-              {vehicles.length === 0 ? (
+              {paginatedVehicles.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No hay vehículos registrados.</td>
                 </tr>
               ) : (
-                vehicles.map((v: Vehicle) => (
+                paginatedVehicles.map((v: Vehicle) => (
                   <tr key={v.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-6 py-4 font-medium text-slate-900">{v.plate}</td>
                     <td className="px-6 py-4 text-slate-600">{v.brand}</td>

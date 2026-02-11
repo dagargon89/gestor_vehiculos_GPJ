@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { usePagination } from '../../hooks/usePagination';
+import { TableToolbar } from '../../components/ui/TableToolbar';
+import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
+
+type ReportRow = { id: string; plate: string; brand: string; model: string; totalReservations: string; totalKmDriven: string; utilizationRate: string };
 
 export function ReportsPage() {
   const [startDate, setStartDate] = useState(() => {
@@ -19,6 +24,29 @@ export function ReportsPage() {
       return res.data;
     },
   });
+
+  const {
+    paginatedData: paginatedReport,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    PAGE_SIZE_OPTIONS,
+  } = usePagination<ReportRow>(report, { pageSize: 25 });
+
+  const exportHeaders = ['Placa', 'Marca / Modelo', 'Reservas', 'Km', '% Uso'];
+  const getExportRows = (list: ReportRow[]) =>
+    list.map((row) => [
+      row.plate,
+      `${row.brand} ${row.model}`,
+      row.totalReservations,
+      row.totalKmDriven ?? '—',
+      (row.utilizationRate ?? '—') + '%',
+    ]);
 
   return (
     <div className="space-y-6">
@@ -48,34 +76,50 @@ export function ReportsPage() {
         {isLoading ? (
           <div className="px-6 py-8 text-primary font-bold">Cargando...</div>
         ) : (
-          <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Placa</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Marca / Modelo</th>
-                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Reservas</th>
-                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Km</th>
-                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">% Uso</th>
-              </tr>
-            </thead>
-            <tbody>
-              {report.length === 0 ? (
+          <>
+            <TableToolbar
+              page={page}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              startIndex={startIndex}
+              endIndex={endIndex}
+              pageSizeOptions={PAGE_SIZE_OPTIONS}
+              onExportCSV={() => exportToCSV(exportHeaders, getExportRows(report), 'reporte-uso-vehiculos.csv')}
+              onExportExcel={() => exportToExcel(exportHeaders, getExportRows(report), 'reporte-uso-vehiculos.xlsx', 'Uso de vehículos')}
+              onExportPDF={() => exportToPDF(exportHeaders, getExportRows(report), 'reporte-uso-vehiculos.pdf', 'Uso de vehículos')}
+            />
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">Sin datos en el período.</td>
+                  <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Placa</th>
+                  <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Marca / Modelo</th>
+                  <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Reservas</th>
+                  <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Km</th>
+                  <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">% Uso</th>
                 </tr>
-              ) : (
-                report.map((row: { id: string; plate: string; brand: string; model: string; totalReservations: string; totalKmDriven: string; utilizationRate: string }) => (
-                  <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="px-6 py-4 font-medium text-slate-900">{row.plate}</td>
-                    <td className="px-6 py-4 text-slate-600">{row.brand} {row.model}</td>
-                    <td className="px-6 py-4 text-right text-slate-600">{row.totalReservations}</td>
-                    <td className="px-6 py-4 text-right text-slate-600">{row.totalKmDriven ?? '—'}</td>
-                    <td className="px-6 py-4 text-right text-primary font-bold">{row.utilizationRate ?? '—'}%</td>
+              </thead>
+              <tbody>
+                {paginatedReport.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-slate-500">Sin datos en el período.</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  paginatedReport.map((row: ReportRow) => (
+                    <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50">
+                      <td className="px-6 py-4 font-medium text-slate-900">{row.plate}</td>
+                      <td className="px-6 py-4 text-slate-600">{row.brand} {row.model}</td>
+                      <td className="px-6 py-4 text-right text-slate-600">{row.totalReservations}</td>
+                      <td className="px-6 py-4 text-right text-slate-600">{row.totalKmDriven ?? '—'}</td>
+                      <td className="px-6 py-4 text-right text-primary font-bold">{row.utilizationRate ?? '—'}%</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </>
         )}
       </div>
     </div>
