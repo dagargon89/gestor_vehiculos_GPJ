@@ -276,9 +276,19 @@ export function ReservationsList() {
     setModalOpen(true);
   };
 
+  const getVehicleLabel = (r: Reservation) => {
+    const v = r.vehicle ?? vehicles.find((x: Vehicle) => x.id === r.vehicleId);
+    return v ? v.plate : '—';
+  };
+  const getUserLabel = (r: Reservation) => {
+    const u = r.user ?? users.find((x: User) => x.id === r.userId);
+    return u ? (u.displayName || u.email) : '—';
+  };
+
   const handleDelete = (r: Reservation) => {
-    const label = r.vehicle?.plate
-      ? `Reserva de ${r.vehicle.plate} (${new Date(r.startDatetime).toLocaleString()})`
+    const plate = getVehicleLabel(r);
+    const label = plate !== '—'
+      ? `Reserva de ${plate} (${new Date(r.startDatetime).toLocaleString()})`
       : `Reserva ${r.id}`;
     if (!window.confirm(`¿Eliminar la reserva: ${label}?`)) return;
     deleteMutation.mutate(r.id);
@@ -334,8 +344,8 @@ export function ReservationsList() {
                 ) : (
                   filteredReservations.map((r: Reservation) => (
                     <tr key={r.id} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="px-6 py-4 font-medium text-slate-900">{r.vehicle?.plate ?? '—'}</td>
-                      <td className="px-6 py-4 text-slate-600">{(r.user?.displayName || r.user?.email) ?? '—'}</td>
+                      <td className="px-6 py-4 font-medium text-slate-900">{getVehicleLabel(r)}</td>
+                      <td className="px-6 py-4 text-slate-600">{getUserLabel(r)}</td>
                       <td className="px-6 py-4 text-slate-600">{new Date(r.startDatetime).toLocaleString()}</td>
                       <td className="px-6 py-4 text-slate-600">{new Date(r.endDatetime).toLocaleString()}</td>
                       <td className="px-6 py-4">
