@@ -20,5 +20,5 @@ export declare class ReservationsService {
     findOverdue(): Promise<Reservation[]>;
     remove(id: string): Promise<void>;
     checkIn(id: string, userId: string, odometer: number, fuelPhotoUrl?: string, conditionPhotoUrls?: string[]): Promise<Reservation>;
-    checkOut(id: string, userId: string, odometer: number, fuelPhotoUrl?: string, conditionPhotoUrls?: string[]): Promise<Reservation>;
+    checkOut(id: string, userId: string, odometer: number, fuelPhotoUrl?: string, conditionPhotoUrls?: string[], fuelLevel?: string): Promise<Reservation>;
 }

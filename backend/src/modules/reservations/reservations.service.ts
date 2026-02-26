@@ -218,6 +218,7 @@ export class ReservationsService {
     odometer: number,
     fuelPhotoUrl?: string,
     conditionPhotoUrls?: string[],
+    fuelLevel?: string,
   ): Promise<Reservation> {
     const reservation = await this.findOne(id);
     if (reservation.userId !== userId) {
@@ -241,6 +242,7 @@ export class ReservationsService {
       status: 'completed',
     };
     if (fuelPhotoUrl != null && fuelPhotoUrl !== '') payload.checkoutFuelPhotoUrl = fuelPhotoUrl;
+    if (fuelLevel != null && fuelLevel.trim() !== '') payload.checkoutFuelLevel = fuelLevel.trim();
     if (conditionPhotoUrls != null && conditionPhotoUrls.length > 0) {
       payload.checkoutConditionPhotoUrls = JSON.stringify(conditionPhotoUrls);
     }

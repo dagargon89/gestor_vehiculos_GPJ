@@ -109,6 +109,7 @@ function CheckInOutForm({
   onClose: () => void;
 }) {
   const [odometer, setOdometer] = useState('');
+  const [fuelLevel, setFuelLevel] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [fuelPhotoUrl, setFuelPhotoUrl] = useState<string | null>(null);
   const [conditionPhotoUrls, setConditionPhotoUrls] = useState<string[]>([]);
@@ -126,6 +127,7 @@ function CheckInOutForm({
     mutationFn: async (payload: {
       odometer: number;
       fuelPhotoUrl?: string | null;
+      fuelLevel?: string;
       conditionPhotoUrls?: string[];
     }) => {
       const url =
@@ -135,6 +137,7 @@ function CheckInOutForm({
       await apiClient.post(url, {
         odometer: payload.odometer,
         ...(payload.fuelPhotoUrl && { fuelPhotoUrl: payload.fuelPhotoUrl }),
+        ...(payload.fuelLevel && payload.fuelLevel.trim() && { fuelLevel: payload.fuelLevel.trim() }),
         ...(payload.conditionPhotoUrls?.length
           ? { conditionPhotoUrls: payload.conditionPhotoUrls }
           : {}),
@@ -214,6 +217,7 @@ function CheckInOutForm({
     mutation.mutate({
       odometer: km,
       fuelPhotoUrl: fuelPhotoUrl || undefined,
+      ...(action === 'checkout' && fuelLevel.trim() && { fuelLevel: fuelLevel.trim() }),
       conditionPhotoUrls: conditionPhotoUrls.length ? conditionPhotoUrls : undefined,
     });
   };
@@ -272,6 +276,26 @@ function CheckInOutForm({
           {hint && <p className="mt-2 text-sm text-slate-500">{hint}</p>}
         </div>
 
+        {action === 'checkout' && (
+        <div className="mb-4">
+          <label htmlFor="fuel-level" className="block text-sm font-medium text-slate-700 mb-2">
+            Nivel de gasolina (opcional)
+          </label>
+          <select
+            id="fuel-level"
+            value={fuelLevel}
+            onChange={(e) => setFuelLevel(e.target.value)}
+            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary text-slate-700"
+          >
+            <option value="">Seleccionar…</option>
+            <option value="Vacío">Vacío</option>
+            <option value="1/4">1/4</option>
+            <option value="1/2">1/2</option>
+            <option value="3/4">3/4</option>
+            <option value="Lleno">Lleno</option>
+          </select>
+        </div>
+        )}
         <div className="mb-4">
           <label className="block text-sm font-medium text-slate-700 mb-2">
             Foto del nivel de gasolina (opcional)

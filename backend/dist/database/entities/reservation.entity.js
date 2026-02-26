@@ -83,6 +83,10 @@ __decorate([
     __metadata("design:type", String)
 ], Reservation.prototype, "checkoutFuelPhotoUrl", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 50, nullable: true }),
+    __metadata("design:type", String)
+], Reservation.prototype, "checkoutFuelLevel", void 0);
+__decorate([
     (0, typeorm_1.Column)({ type: 'text', nullable: true }),
     __metadata("design:type", String)
 ], Reservation.prototype, "checkoutConditionPhotoUrls", void 0);

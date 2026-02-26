@@ -12,6 +12,7 @@ export declare class ReservationsController {
     checkOut(id: string, user: CurrentUserPayload, body: {
         odometer: number;
         fuelPhotoUrl?: string;
+        fuelLevel?: string;
         conditionPhotoUrls?: string[];
     }): Promise<import("../../database/entities/reservation.entity").Reservation>;
     findOne(id: string): Promise<import("../../database/entities/reservation.entity").Reservation>;

@@ -181,7 +181,7 @@ let ReservationsService = class ReservationsService {
         await this.repo.update(id, payload);
         return this.findOne(id);
     }
-    async checkOut(id, userId, odometer, fuelPhotoUrl, conditionPhotoUrls) {
+    async checkOut(id, userId, odometer, fuelPhotoUrl, conditionPhotoUrls, fuelLevel) {
         const reservation = await this.findOne(id);
         if (reservation.userId !== userId) {
             throw new common_1.ForbiddenException('Solo el titular de la reserva puede hacer check-out');
@@ -205,6 +205,8 @@ let ReservationsService = class ReservationsService {
         };
         if (fuelPhotoUrl != null && fuelPhotoUrl !== '')
             payload.checkoutFuelPhotoUrl = fuelPhotoUrl;
+        if (fuelLevel != null && fuelLevel.trim() !== '')
+            payload.checkoutFuelLevel = fuelLevel.trim();
         if (conditionPhotoUrls != null && conditionPhotoUrls.length > 0) {
             payload.checkoutConditionPhotoUrls = JSON.stringify(conditionPhotoUrls);
         }

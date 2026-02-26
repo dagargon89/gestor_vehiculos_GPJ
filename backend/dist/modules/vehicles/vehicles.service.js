@@ -17,21 +17,61 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const vehicle_entity_1 = require("../../database/entities/vehicle.entity");
+const reservation_entity_1 = require("../../database/entities/reservation.entity");
 let VehiclesService = class VehiclesService {
-    constructor(vehicleRepo) {
+    constructor(vehicleRepo, reservationRepo) {
         this.vehicleRepo = vehicleRepo;
+        this.reservationRepo = reservationRepo;
     }
     async findAll(status) {
-        return this.vehicleRepo.find({
+        const vehicles = await this.vehicleRepo.find({
             where: status ? { status } : {},
             order: { plate: 'ASC' },
+        });
+        if (vehicles.length === 0)
+            return [];
+        const vehicleIds = vehicles.map((v) => v.id);
+        const allCompleted = await this.reservationRepo
+            .createQueryBuilder('r')
+            .where('r.status = :status', { status: 'completed' })
+            .andWhere('r.vehicleId IN (:...ids)', { ids: vehicleIds })
+            .leftJoinAndSelect('r.user', 'user')
+            .orderBy('r.endDatetime', 'DESC')
+            .getMany();
+        const byVehicle = new Map();
+        for (const r of allCompleted) {
+            if (!byVehicle.has(r.vehicleId)) {
+                const user = r.user;
+                byVehicle.set(r.vehicleId, {
+                    lastFuelLevel: r.checkoutFuelLevel ?? null,
+                    lastUsedByUser: user ? (user.displayName || user.email) || null : null,
+                });
+            }
+        }
+        return vehicles.map((v) => {
+            const extra = byVehicle.get(v.id);
+            return {
+                ...v,
+                lastFuelLevel: extra?.lastFuelLevel ?? null,
+                lastUsedByUser: extra?.lastUsedByUser ?? null,
+            };
         });
     }
     async findOne(id) {
         const v = await this.vehicleRepo.findOne({ where: { id } });
         if (!v)
             throw new common_1.NotFoundException('Vehículo no encontrado');
-        return v;
+        const last = await this.reservationRepo.findOne({
+            where: { vehicleId: id, status: 'completed' },
+            relations: ['user'],
+            order: { endDatetime: 'DESC' },
+        });
+        const user = last?.user;
+        return {
+            ...v,
+            lastFuelLevel: last?.checkoutFuelLevel ?? null,
+            lastUsedByUser: user ? (user.displayName || user.email) || null : null,
+        };
     }
     async create(data) {
         const vehicle = this.vehicleRepo.create(data);
@@ -54,6 +94,8 @@ exports.VehiclesService = VehiclesService;
 exports.VehiclesService = VehiclesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(vehicle_entity_1.Vehicle)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(reservation_entity_1.Reservation)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], VehiclesService);
 //# sourceMappingURL=vehicles.service.js.map

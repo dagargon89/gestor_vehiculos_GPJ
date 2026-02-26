@@ -31,7 +31,7 @@ let ReservationsController = class ReservationsController {
         return this.reservationsService.checkIn(id, user.id, body.odometer, body.fuelPhotoUrl, body.conditionPhotoUrls);
     }
     checkOut(id, user, body) {
-        return this.reservationsService.checkOut(id, user.id, body.odometer, body.fuelPhotoUrl, body.conditionPhotoUrls);
+        return this.reservationsService.checkOut(id, user.id, body.odometer, body.fuelPhotoUrl, body.conditionPhotoUrls, body.fuelLevel);
     }
     findOne(id) {
         return this.reservationsService.findOne(id);

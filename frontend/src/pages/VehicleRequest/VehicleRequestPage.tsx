@@ -15,6 +15,8 @@ type Vehicle = {
   status: string;
   currentOdometer?: number;
   photoUrls?: string | null;
+  lastFuelLevel?: string | null;
+  lastUsedByUser?: string | null;
 };
 
 const VEHICLE_STATUS_OPTIONS: Record<string, string> = {
@@ -309,8 +311,10 @@ export function VehicleRequestPage() {
                     <div className="text-slate-500 text-xs mt-0.5">{v.color}</div>
                   )}
                   {v.currentOdometer != null && (
-                    <div className="text-slate-500 text-xs">Odómetro: {v.currentOdometer.toLocaleString()} km</div>
+                    <div className="text-slate-500 text-xs">Kilometraje: {v.currentOdometer.toLocaleString()} km</div>
                   )}
+                  <div className="text-slate-500 text-xs">Gasolina: {v.lastFuelLevel ?? '—'}</div>
+                  <div className="text-slate-500 text-xs">Último uso: {v.lastUsedByUser ?? '—'}</div>
                   <div className="mt-4 pt-4 border-t border-slate-100">
                     <button
                       type="button"

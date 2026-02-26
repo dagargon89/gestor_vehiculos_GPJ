@@ -18,6 +18,8 @@ type Vehicle = {
   photoUrls?: string | null;
   status: string;
   currentOdometer?: number;
+  lastFuelLevel?: string | null;
+  lastUsedByUser?: string | null;
 };
 
 function getFirstPhotoUrl(photoUrls: string | null | undefined): string | null {
@@ -234,7 +236,7 @@ function VehicleFormModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Odómetro (km)</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Kilometraje (km)</label>
               <input
                 type="number"
                 min="0"
@@ -466,9 +468,11 @@ export function VehiclesList() {
                     )}
                     {v.currentOdometer != null && (
                       <div className="text-slate-600 text-sm">
-                        Odómetro: {v.currentOdometer.toLocaleString()} km
+                        Kilometraje: {v.currentOdometer.toLocaleString()} km
                       </div>
                     )}
+                    <div className="text-slate-600 text-sm">Gasolina: {v.lastFuelLevel ?? '—'}</div>
+                    <div className="text-slate-600 text-sm">Último uso: {v.lastUsedByUser ?? '—'}</div>
                     <div className="mt-4 flex flex-col gap-2">
                       <button
                         type="button"

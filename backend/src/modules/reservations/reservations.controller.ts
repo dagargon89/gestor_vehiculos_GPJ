@@ -57,7 +57,7 @@ export class ReservationsController {
   checkOut(
     @Param('id') id: string,
     @CurrentUser() user: CurrentUserPayload,
-    @Body() body: { odometer: number; fuelPhotoUrl?: string; conditionPhotoUrls?: string[] },
+    @Body() body: { odometer: number; fuelPhotoUrl?: string; fuelLevel?: string; conditionPhotoUrls?: string[] },
   ) {
     return this.reservationsService.checkOut(
       id,
@@ -65,6 +65,7 @@ export class ReservationsController {
       body.odometer,
       body.fuelPhotoUrl,
       body.conditionPhotoUrls,
+      body.fuelLevel,
     );
   }
 

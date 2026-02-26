@@ -17,6 +17,7 @@ export declare class Reservation {
     checkinConditionPhotoUrls: string;
     checkoutOdometer: number;
     checkoutFuelPhotoUrl: string;
+    checkoutFuelLevel: string;
     checkoutConditionPhotoUrls: string;
     createdAt: Date;
     updatedAt: Date;

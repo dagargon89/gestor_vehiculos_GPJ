@@ -10,6 +10,7 @@ exports.VehiclesModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const vehicle_entity_1 = require("../../database/entities/vehicle.entity");
+const reservation_entity_1 = require("../../database/entities/reservation.entity");
 const vehicles_service_1 = require("./vehicles.service");
 const vehicles_controller_1 = require("./vehicles.controller");
 const storage_module_1 = require("../storage/storage.module");
@@ -18,7 +19,7 @@ let VehiclesModule = class VehiclesModule {
 exports.VehiclesModule = VehiclesModule;
 exports.VehiclesModule = VehiclesModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([vehicle_entity_1.Vehicle]), storage_module_1.StorageModule],
+        imports: [typeorm_1.TypeOrmModule.forFeature([vehicle_entity_1.Vehicle, reservation_entity_1.Reservation]), storage_module_1.StorageModule],
         controllers: [vehicles_controller_1.VehiclesController],
         providers: [vehicles_service_1.VehiclesService],
         exports: [vehicles_service_1.VehiclesService],

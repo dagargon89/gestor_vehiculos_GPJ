@@ -63,6 +63,9 @@ export class Reservation {
   @Column({ type: 'text', nullable: true })
   checkoutFuelPhotoUrl: string;
 
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  checkoutFuelLevel: string;
+
   @Column({ type: 'text', nullable: true })
   checkoutConditionPhotoUrls: string; // JSON array of URLs
 

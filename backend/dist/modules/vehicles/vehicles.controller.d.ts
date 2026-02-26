@@ -7,8 +7,8 @@ export declare class VehiclesController {
     private vehiclesService;
     private storageService;
     constructor(vehiclesService: VehiclesService, storageService: StorageService);
-    findAll(status?: string): Promise<import("../../database/entities/vehicle.entity").Vehicle[]>;
-    findOne(id: string): Promise<import("../../database/entities/vehicle.entity").Vehicle>;
+    findAll(status?: string): Promise<import("./vehicles.service").VehicleWithLastUse[]>;
+    findOne(id: string): Promise<import("./vehicles.service").VehicleWithLastUse>;
     create(body: CreateVehicleDto): Promise<import("../../database/entities/vehicle.entity").Vehicle>;
     update(id: string, body: UpdateVehicleDto): Promise<import("../../database/entities/vehicle.entity").Vehicle>;
     remove(id: string): Promise<void>;
