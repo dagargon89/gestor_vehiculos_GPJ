@@ -108,7 +108,7 @@ function EventWithTooltip({
     <>
       <span
         ref={ref}
-        className="inline-block w-full cursor-pointer"
+        className="inline-block w-full cursor-default"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -153,13 +153,15 @@ export function AllReservationsCalendar({
   });
 
   const events: ReservationEvent[] = useMemo(() => {
-    const inRange = reservations.filter((r: { startDatetime: string; endDatetime: string }) => {
-      const start = new Date(r.startDatetime).getTime();
-      const end = new Date(r.endDatetime).getTime();
-      const rangeStart = new Date(monthStart).getTime();
-      const rangeEnd = new Date(monthEnd).getTime();
-      return end >= rangeStart && start <= rangeEnd;
-    });
+    const inRange = reservations
+      .filter((r: { status: string }) => r.status === 'pending' || r.status === 'active')
+      .filter((r: { startDatetime: string; endDatetime: string }) => {
+        const start = new Date(r.startDatetime).getTime();
+        const end = new Date(r.endDatetime).getTime();
+        const rangeStart = new Date(monthStart).getTime();
+        const rangeEnd = new Date(monthEnd).getTime();
+        return end >= rangeStart && start <= rangeEnd;
+      });
     return inRange.map((r: Record<string, unknown>) => {
       const startDt = (r.startDatetime ?? r.start_datetime) as string;
       const endDt = (r.endDatetime ?? r.end_datetime) as string;
@@ -238,7 +240,7 @@ export function AllReservationsCalendar({
           <span className="inline-block w-3 h-3 rounded bg-red-600 ml-3 mr-1" /> Activa
         </p>
       </div>
-      <div className="p-4 rbc-calendar-wrapper" style={{ minHeight: `${minHeight}px`, height: `${minHeight}px` }}>
+      <div className="p-4 rbc-calendar-wrapper rbc-readonly" style={{ minHeight: `${minHeight}px`, height: `${minHeight}px` }}>
         <Calendar
           localizer={localizer}
           events={events}
@@ -250,6 +252,9 @@ export function AllReservationsCalendar({
           onView={(v: ViewType) => setView(v)}
           date={currentDate}
           onNavigate={onNavigate}
+          selectable={false}
+          onDrillDown={() => {}}
+          onSelectEvent={() => {}}
           eventPropGetter={eventStyleGetter}
           messages={messages}
           culture="es"
