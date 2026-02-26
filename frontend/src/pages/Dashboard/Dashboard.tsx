@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { AllReservationsCalendar } from '../../components/calendar/AllReservationsCalendar';
 
 export function Dashboard() {
   const [dateRange] = useState('last30');
+  const [calendarDate, setCalendarDate] = useState(() => new Date());
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles'],
@@ -186,6 +188,20 @@ export function Dashboard() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold text-slate-900">Calendario de reservas</h3>
+          <Link to="/reservations" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+            Ver todas las reservas
+          </Link>
+        </div>
+        <AllReservationsCalendar
+          currentDate={calendarDate}
+          onNavigate={setCalendarDate}
+          minHeight={420}
+        />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
