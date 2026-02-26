@@ -6,6 +6,7 @@ import { PermissionRoute } from './components/auth/PermissionRoute';
 import { MainLayout } from './components/layout/MainLayout';
 import { Login } from './pages/Auth/Login';
 import { Dashboard } from './pages/Dashboard/Dashboard';
+import { ConductorDashboard } from './pages/Dashboard/ConductorDashboard';
 import { VehiclesList } from './pages/Vehicles/VehiclesList';
 import { ReservationsList } from './pages/Reservations/ReservationsList';
 import { VehicleRequestPage } from './pages/VehicleRequest/VehicleRequestPage';
@@ -21,13 +22,15 @@ import { RolePermissionsPage } from './pages/RolePermissions/RolePermissionsPage
 import { SystemSettingsPage } from './pages/SystemSettings/SystemSettingsPage';
 import { FuelRecordsList } from './pages/FuelRecords/FuelRecordsList';
 import { AssignRolesPage } from './pages/AssignRoles/AssignRolesPage';
-import { canAccessDashboard } from './config/routePermissions';
+import { canAccessDashboard, isConductor } from './config/routePermissions';
 import { useAuth } from './contexts/AuthContext';
 
 function DashboardOrRedirect() {
   const { userData } = useAuth();
   if (canAccessDashboard(userData?.permissions, userData?.role?.name))
     return <Dashboard />;
+  if (isConductor(userData?.role?.name))
+    return <ConductorDashboard />;
   return <Navigate to="/profile" replace />;
 }
 

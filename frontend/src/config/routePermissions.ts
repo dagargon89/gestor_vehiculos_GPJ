@@ -73,19 +73,20 @@ export function canAccessReservationRequests(
 }
 
 /**
- * Comprueba si el usuario puede ver el Dashboard:
- * tiene al menos vehicles:read o reservations:read, o es admin/conductor (acceso).
+ * Comprueba si el usuario puede ver el Dashboard (solo uso administrativo).
+ * Solo admin y manager_flotilla tienen acceso; el conductor no ve el dashboard.
  */
 export function canAccessDashboard(
-  permissions: { resource: string; action: string }[] | undefined,
+  _permissions: { resource: string; action: string }[] | undefined,
   roleName?: string | null,
 ): boolean {
   const role = roleName?.toLowerCase();
-  if (role === 'admin') return true;
-  if (role === 'conductor') return true;
-  const perms = permissions ?? [];
-  return (
-    perms.some((p) => p.resource === 'vehicles' && p.action === 'read') ||
-    perms.some((p) => p.resource === 'reservations' && p.action === 'read')
-  );
+  return role === 'admin' || role === 'manager_flotilla';
+}
+
+/**
+ * Indica si el usuario tiene rol conductor (dashboard exclusivo de conductores).
+ */
+export function isConductor(roleName?: string | null): boolean {
+  return roleName?.toLowerCase() === 'conductor';
 }

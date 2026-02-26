@@ -9,6 +9,7 @@ import {
   ADMIN_ROUTE_ITEMS,
   canAccessDashboard,
   canAccessReservationRequests,
+  isConductor,
 } from '../../config/routePermissions';
 
 export function MainLayout() {
@@ -21,6 +22,7 @@ export function MainLayout() {
     items: adminRoutes.filter((r) => r.category === cat.key),
   })).filter((group) => group.items.length > 0);
   const showDashboard = canAccessDashboard(userData?.permissions, userData?.role?.name);
+  const showConductorHome = isConductor(userData?.role?.name);
   const showReservationRequests = canAccessReservationRequests(userData?.permissions, userData?.role?.name);
   const navigate = useNavigate();
   const location = useLocation();
@@ -189,6 +191,19 @@ export function MainLayout() {
               }
             >
               Dashboard
+            </NavLink>
+            )}
+            {showConductorHome && (
+            <NavLink
+              to="/"
+              end
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors ${
+                  isActive ? 'bg-white/20' : 'hover:bg-white/10'
+                }`
+              }
+            >
+              Inicio
             </NavLink>
             )}
             {showReservationRequests && (
@@ -480,6 +495,21 @@ export function MainLayout() {
               >
                 <span className="material-icons text-xl">dashboard</span>
                 Dashboard
+              </NavLink>
+              )}
+              {showConductorHome && (
+              <NavLink
+                to="/"
+                end
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'
+                  }`
+                }
+              >
+                <span className="material-icons text-xl">home</span>
+                Inicio
               </NavLink>
               )}
               {showReservationRequests && (
