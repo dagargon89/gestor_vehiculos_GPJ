@@ -2,10 +2,10 @@ import { User } from './user.entity';
 import { Vehicle } from './vehicle.entity';
 export declare class Reservation {
     id: string;
-    userId: string;
     user: User;
-    vehicleId: string;
+    userId: string;
     vehicle: Vehicle;
+    vehicleId: string;
     startDatetime: Date;
     endDatetime: Date;
     status: string;

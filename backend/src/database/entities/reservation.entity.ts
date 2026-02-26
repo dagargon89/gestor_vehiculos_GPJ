@@ -16,19 +16,19 @@ export class Reservation {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  userId: string;
-
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column()
-  vehicleId: string;
+  @Column({ name: 'user_id' })
+  userId: string;
 
   @ManyToOne(() => Vehicle, (v) => v.reservations)
   @JoinColumn({ name: 'vehicle_id' })
   vehicle: Vehicle;
+
+  @Column({ name: 'vehicle_id' })
+  vehicleId: string;
 
   @Column({ type: 'timestamptz' })
   startDatetime: Date;

@@ -21,23 +21,23 @@ __decorate([
     __metadata("design:type", String)
 ], Reservation.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], Reservation.prototype, "userId", void 0);
-__decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User),
     (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
     __metadata("design:type", user_entity_1.User)
 ], Reservation.prototype, "user", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ name: 'user_id' }),
     __metadata("design:type", String)
-], Reservation.prototype, "vehicleId", void 0);
+], Reservation.prototype, "userId", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => vehicle_entity_1.Vehicle, (v) => v.reservations),
     (0, typeorm_1.JoinColumn)({ name: 'vehicle_id' }),
     __metadata("design:type", vehicle_entity_1.Vehicle)
 ], Reservation.prototype, "vehicle", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'vehicle_id' }),
+    __metadata("design:type", String)
+], Reservation.prototype, "vehicleId", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'timestamptz' }),
     __metadata("design:type", Date)
