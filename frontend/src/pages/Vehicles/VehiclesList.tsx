@@ -22,15 +22,18 @@ type Vehicle = {
   lastUsedByUser?: string | null;
 };
 
-function getFirstPhotoUrl(photoUrls: string | null | undefined): string | null {
-  if (!photoUrls || !photoUrls.trim()) return null;
+function parsePhotoUrls(photoUrls: string | null | undefined): string[] {
+  if (!photoUrls || !photoUrls.trim()) return [];
   try {
-    const parsed = JSON.parse(photoUrls) as string[];
-    return Array.isArray(parsed) && parsed[0] ? parsed[0] : null;
-  } catch {
-    const first = photoUrls.split(',')[0]?.trim();
-    return first || null;
-  }
+    const parsed = JSON.parse(photoUrls);
+    if (Array.isArray(parsed)) return parsed.filter((u: string) => u && u.trim());
+  } catch { /* not JSON */ }
+  return photoUrls.split(',').map((u) => u.trim()).filter(Boolean);
+}
+
+function getFirstPhotoUrl(photoUrls: string | null | undefined): string | null {
+  const urls = parsePhotoUrls(photoUrls);
+  return urls[0] ?? null;
 }
 
 const STATUS_OPTIONS = [
@@ -58,6 +61,9 @@ function VehicleFormModal({
     status: vehicle?.status ?? 'available',
     currentOdometer: vehicle?.currentOdometer ?? '',
   });
+  const [existingPhotos, setExistingPhotos] = useState<string[]>(() =>
+    parsePhotoUrls(vehicle?.photoUrls),
+  );
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -75,7 +81,7 @@ function VehicleFormModal({
     setError(null);
     setSubmitting(true);
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         plate: form.plate.trim(),
         brand: form.brand.trim(),
         model: form.model.trim(),
@@ -87,6 +93,13 @@ function VehicleFormModal({
       };
       let vehicleId: string;
       if (vehicle) {
+        const originalPhotos = parsePhotoUrls(vehicle.photoUrls);
+        const photosChanged =
+          originalPhotos.length !== existingPhotos.length ||
+          originalPhotos.some((u, i) => u !== existingPhotos[i]);
+        if (photosChanged) {
+          payload.photoUrls = existingPhotos.join(',');
+        }
         await apiClient.put(`/vehicles/${vehicle.id}`, payload);
         vehicleId = vehicle.id;
       } else {
@@ -191,6 +204,26 @@ function VehicleFormModal({
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Foto(s) del vehículo</label>
+            {existingPhotos.length > 0 && (
+              <div className="mb-3">
+                <p className="text-xs text-slate-500 mb-2">Fotos actuales (haz clic en X para eliminar):</p>
+                <div className="flex flex-wrap gap-2">
+                  {existingPhotos.map((url, i) => (
+                    <div key={url} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-slate-200">
+                      <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setExistingPhotos((prev) => prev.filter((_, idx) => idx !== i))}
+                        className="absolute top-0 right-0 w-6 h-6 bg-red-600 text-white flex items-center justify-center rounded-bl-lg text-xs font-bold opacity-80 hover:opacity-100"
+                        title="Eliminar foto"
+                      >
+                        X
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <input
               type="file"
               accept="image/*"
@@ -217,11 +250,6 @@ function VehicleFormModal({
                   </li>
                 ))}
               </ul>
-            )}
-            {vehicle?.photoUrls && (
-              <p className="mt-1 text-xs text-slate-500">
-                El vehículo ya tiene fotos. Las que subas aquí se añadirán.
-              </p>
             )}
           </div>
           <div className="grid grid-cols-2 gap-4">
