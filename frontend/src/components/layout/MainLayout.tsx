@@ -5,6 +5,7 @@ import apiClient from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/usePermissions';
 import {
+  ADMIN_MENU_CATEGORIES,
   ADMIN_ROUTE_ITEMS,
   canAccessDashboard,
   canAccessReservationRequests,
@@ -15,6 +16,10 @@ export function MainLayout() {
   const [retryingSync, setRetryingSync] = useState(false);
   const { can } = usePermissions();
   const adminRoutes = ADMIN_ROUTE_ITEMS.filter((r) => can(r.resource, r.action));
+  const adminRoutesByCategory = ADMIN_MENU_CATEGORIES.map((cat) => ({
+    ...cat,
+    items: adminRoutes.filter((r) => r.category === cat.key),
+  })).filter((group) => group.items.length > 0);
   const showDashboard = canAccessDashboard(userData?.permissions, userData?.role?.name);
   const showReservationRequests = canAccessReservationRequests(userData?.permissions, userData?.role?.name);
   const navigate = useNavigate();
@@ -214,17 +219,23 @@ export function MainLayout() {
               </button>
               {adminMenuOpen && (
                 <div className="absolute left-0 top-full mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
-                  {adminRoutes.map(({ to, label }) => (
-                    <button
-                      key={to}
-                      type="button"
-                      onClick={() => handleAdminLink(to)}
-                      className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
-                        location.pathname === to ? 'text-primary bg-primary/5' : 'text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      {label}
-                    </button>
+                  {adminRoutesByCategory.map(({ key: categoryKey, label: categoryLabel, items }) => (
+                    <div key={categoryKey} className={categoryKey !== adminRoutesByCategory[0]?.key ? 'border-t border-slate-100 pt-2 mt-2' : ''}>
+                      <p className="px-4 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wide">{categoryLabel}</p>
+                      {items.map(({ to, label, icon }) => (
+                        <button
+                          key={to}
+                          type="button"
+                          onClick={() => handleAdminLink(to)}
+                          className={`w-full flex items-center gap-3 text-left px-4 py-2.5 text-sm font-medium transition-colors ${
+                            location.pathname === to ? 'text-primary bg-primary/5' : 'text-slate-700 hover:bg-slate-50'
+                          }`}
+                        >
+                          <span className="material-icons text-lg text-slate-500">{icon}</span>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
                   ))}
                 </div>
               )}
@@ -490,21 +501,26 @@ export function MainLayout() {
               <div className="px-4 py-2 mt-2">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Administración</p>
               </div>
-              {adminRoutes.map(({ to, label }) => (
-                <button
-                  key={to}
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    navigate(to);
-                  }}
-                  className={`flex items-center gap-3 w-full px-4 py-3 text-left text-sm font-medium transition-colors ${
-                    location.pathname === to ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <span className="material-icons text-xl text-slate-400">settings</span>
-                  {label}
-                </button>
+              {adminRoutesByCategory.map(({ key: categoryKey, label: categoryLabel, items }) => (
+                <div key={categoryKey} className="mt-2">
+                  <p className="px-4 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">{categoryLabel}</p>
+                  {items.map(({ to, label, icon }) => (
+                    <button
+                      key={to}
+                      type="button"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        navigate(to);
+                      }}
+                      className={`flex items-center gap-3 w-full px-4 py-3 text-left text-sm font-medium transition-colors ${
+                        location.pathname === to ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className="material-icons text-xl text-slate-400">{icon}</span>
+                      {label}
+                    </button>
+                  ))}
+                </div>
               ))}
               </>
               )}

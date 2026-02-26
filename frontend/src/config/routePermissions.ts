@@ -20,20 +20,38 @@ export const ROUTE_PERMISSION: Record<
 };
 
 /**
- * Rutas de administración (menú) con su etiqueta y permiso.
+ * Orden y etiquetas de categorías del menú Administración.
  */
-export const ADMIN_ROUTE_ITEMS: { to: string; label: string; resource: string; action: string }[] = [
-  { to: '/vehicles', label: 'Gestión de Vehículos', resource: 'vehicles', action: 'read' },
-  { to: '/reservations', label: 'Gestión de Reservas', resource: 'reservations', action: 'read' },
-  { to: '/maintenance', label: 'Gestión de Mantenimientos', resource: 'maintenance', action: 'read' },
-  { to: '/fuel-records', label: 'Registros de combustible', resource: 'fuel_records', action: 'read' },
-  { to: '/incidents', label: 'Incidentes', resource: 'incidents', action: 'read' },
-  { to: '/sanctions', label: 'Sanciones', resource: 'sanctions', action: 'read' },
-  { to: '/users', label: 'Gestión de Usuarios', resource: 'users', action: 'read' },
-  { to: '/providers', label: 'Gestión de Proveedores', resource: 'providers', action: 'read' },
-  { to: '/reports', label: 'Reportes y Estadísticas', resource: 'reports', action: 'read' },
-  { to: '/role-permissions', label: 'Permisos por rol', resource: 'roles', action: 'read' },
-  { to: '/system-settings', label: 'Configuración del sistema', resource: 'system_settings', action: 'read' },
+export const ADMIN_MENU_CATEGORIES: { key: string; label: string }[] = [
+  { key: 'flota', label: 'Flota' },
+  { key: 'usuarios', label: 'Usuarios y proveedores' },
+  { key: 'sistema', label: 'Sistema' },
+];
+
+export type AdminRouteItem = {
+  to: string;
+  label: string;
+  resource: string;
+  action: string;
+  icon: string;
+  category: string;
+};
+
+/**
+ * Rutas de administración (menú) con etiqueta, permiso, icono y categoría.
+ */
+export const ADMIN_ROUTE_ITEMS: AdminRouteItem[] = [
+  { to: '/vehicles', label: 'Gestión de Vehículos', resource: 'vehicles', action: 'read', icon: 'directions_car', category: 'flota' },
+  { to: '/reservations', label: 'Gestión de Reservas', resource: 'reservations', action: 'read', icon: 'event_note', category: 'flota' },
+  { to: '/maintenance', label: 'Gestión de Mantenimientos', resource: 'maintenance', action: 'read', icon: 'build', category: 'flota' },
+  { to: '/fuel-records', label: 'Registros de combustible', resource: 'fuel_records', action: 'read', icon: 'local_gas_station', category: 'flota' },
+  { to: '/incidents', label: 'Incidentes', resource: 'incidents', action: 'read', icon: 'warning', category: 'flota' },
+  { to: '/sanctions', label: 'Sanciones', resource: 'sanctions', action: 'read', icon: 'gavel', category: 'flota' },
+  { to: '/users', label: 'Gestión de Usuarios', resource: 'users', action: 'read', icon: 'people', category: 'usuarios' },
+  { to: '/providers', label: 'Gestión de Proveedores', resource: 'providers', action: 'read', icon: 'business', category: 'usuarios' },
+  { to: '/reports', label: 'Reportes y Estadísticas', resource: 'reports', action: 'read', icon: 'bar_chart', category: 'sistema' },
+  { to: '/role-permissions', label: 'Permisos por rol', resource: 'roles', action: 'read', icon: 'lock', category: 'sistema' },
+  { to: '/system-settings', label: 'Configuración del sistema', resource: 'system_settings', action: 'read', icon: 'settings', category: 'sistema' },
 ];
 
 /**
