@@ -45,7 +45,11 @@ export class FirebaseAuthGuard implements CanActivate {
         });
       }
 
-      await this.usersService.updateLastLogin(user.id);
+      try {
+        await this.usersService.updateLastLogin(user.id);
+      } catch (lastLoginErr) {
+        this.logger.warn('updateLastLogin falló (no bloqueante):', (lastLoginErr as Error)?.message);
+      }
       const userWithPermissions = await this.usersService.findOneWithPermissions(user.id);
 
       if (userWithPermissions.status !== 'active') {
@@ -74,11 +78,13 @@ export class FirebaseAuthGuard implements CanActivate {
       if (error.code && String(error.code).startsWith('auth/')) {
         throw new UnauthorizedException('Token inválido');
       }
-      this.logger.error(
-        `Error en autenticación/creación de usuario: ${error.message ?? err}`,
-        error.stack,
+      const msg = error.message ?? String(err);
+      this.logger.error(`Error en autenticación/creación de usuario: ${msg}`, error.stack);
+      // En desarrollo, incluir el mensaje real para depuración
+      const isDev = process.env.NODE_ENV !== 'production';
+      throw new InternalServerErrorException(
+        isDev ? `Error al crear o obtener usuario: ${msg}` : 'Error al crear o obtener usuario',
       );
-      throw new InternalServerErrorException('Error al crear o obtener usuario');
     }
   }
 }

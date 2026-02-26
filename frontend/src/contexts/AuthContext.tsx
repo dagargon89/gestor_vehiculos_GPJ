@@ -72,14 +72,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           queryClient.invalidateQueries({ queryKey: ['users'] });
         } catch (err) {
           console.error('Error obteniendo datos del usuario:', err);
-          const status = (err as { response?: { status?: number } })?.response?.status;
-          const isNetwork = !(err as { response?: unknown }).response;
+          const ax = err as { response?: { status?: number; data?: { message?: string | string[] } } };
+          const status = ax?.response?.status;
+          const isNetwork = !ax?.response;
+          const serverMsg = Array.isArray(ax?.response?.data?.message)
+            ? ax.response.data.message[0]
+            : ax?.response?.data?.message;
           const message = isNetwork
             ? 'No se pudo conectar con el servidor. Para que tu usuario se guarde en la base de datos, el backend debe estar en marcha (puerto 3000). ¿Lo tienes levantado?'
             : status === 401
               ? 'El servidor rechazó la sesión. Comprueba que el backend use el mismo proyecto de Firebase que el frontend.'
               : status === 500
-                ? 'Error en el servidor al crear o obtener tu usuario. Revisa los logs del backend.'
+                ? serverMsg
+                  ? `Error en el servidor: ${serverMsg}`
+                  : 'Error en el servidor al crear o obtener tu usuario. Revisa los logs del backend.'
                 : 'No se pudo sincronizar con el servidor. Comprueba que el backend esté en marcha en http://localhost:3000.';
           setAuthSyncError(message);
           setUserData({

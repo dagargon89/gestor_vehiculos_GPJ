@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.seedRolesAndPermissions = seedRolesAndPermissions;
+exports.seedBootstrapAdminUser = seedBootstrapAdminUser;
 exports.seedVehicles = seedVehicles;
 exports.seedProviders = seedProviders;
 exports.seedSystemSettings = seedSystemSettings;
@@ -101,6 +102,15 @@ async function seedRolesAndPermissions(dataSource) {
         permissions,
     });
     await roleRepo.save(adminRole);
+    const managerResources = ['vehicles', 'reservations', 'maintenance', 'fuel_records', 'costs', 'incidents', 'sanctions', 'providers'];
+    const managerRole = roleRepo.create({
+        name: 'manager_flotilla',
+        description: 'Manager de flotilla: gestión operativa (vehículos, reservas, mantenimiento, costos, incidentes, sanciones, proveedores, reportes, notificaciones)',
+        permissions: permissions.filter((p) => (managerResources.includes(p.resource) && ['create', 'read', 'update', 'delete'].includes(p.action)) ||
+            (p.resource === 'reports' && p.action === 'read') ||
+            (p.resource === 'notifications' && ['read', 'update'].includes(p.action))),
+    });
+    await roleRepo.save(managerRole);
     const conductorRole = roleRepo.create({
         name: 'conductor',
         description: 'Conductor de vehículos',
@@ -108,7 +118,81 @@ async function seedRolesAndPermissions(dataSource) {
             ['read', 'create', 'update'].includes(p.action)),
     });
     await roleRepo.save(conductorRole);
-    console.log('  roles y permissions sembrados.');
+    console.log('  roles y permissions sembrados (admin, manager_flotilla, conductor).');
+}
+async function seedBootstrapAdminUser(dataSource) {
+    const userRepo = dataSource.getRepository(user_entity_1.User);
+    const roleRepo = dataSource.getRepository(role_entity_1.Role);
+    const adminRole = await roleRepo.findOne({ where: { name: 'admin' } });
+    if (!adminRole) {
+        console.log('  bootstrap admin: no existe rol admin, omitiendo.');
+        return;
+    }
+    const seedEmail = (process.env.SEED_ADMIN_EMAIL || 'admin@example.com').trim();
+    const seedPassword = process.env.SEED_ADMIN_PASSWORD || 'admin123';
+    const existingUser = await userRepo.findOne({ where: { email: seedEmail } });
+    if (existingUser) {
+        if (!existingUser.roleId) {
+            await userRepo.update(existingUser.id, { roleId: adminRole.id });
+            console.log('  bootstrap admin: usuario existente sin rol, asignado rol admin.');
+        }
+        else {
+            console.log('  bootstrap admin: usuario ya existe con rol, omitiendo.');
+        }
+        return;
+    }
+    let firebaseUid;
+    try {
+        const raw = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+        if (!raw || !raw.trim()) {
+            console.log('  bootstrap admin: FIREBASE_SERVICE_ACCOUNT_KEY no definido, omitiendo.');
+            return;
+        }
+        const serviceAccount = JSON.parse(raw);
+        if (!serviceAccount ||
+            typeof serviceAccount.client_email !== 'string' ||
+            typeof serviceAccount.project_id !== 'string' ||
+            !serviceAccount.private_key) {
+            console.log('  bootstrap admin: FIREBASE_SERVICE_ACCOUNT_KEY inválido, omitiendo.');
+            return;
+        }
+        const admin = await Promise.resolve().then(() => require('firebase-admin'));
+        if (!admin.apps.length) {
+            admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+        }
+        const auth = admin.auth();
+        try {
+            const userRecord = await auth.createUser({
+                email: seedEmail,
+                password: seedPassword,
+                displayName: 'Admin',
+            });
+            firebaseUid = userRecord.uid;
+        }
+        catch (err) {
+            const code = err?.code;
+            if (code === 'auth/email-already-exists') {
+                const byEmail = await auth.getUserByEmail(seedEmail);
+                firebaseUid = byEmail.uid;
+            }
+            else {
+                throw err;
+            }
+        }
+    }
+    catch (err) {
+        console.warn('  bootstrap admin: no se pudo crear en Firebase:', err?.message ?? err);
+        return;
+    }
+    const newUser = userRepo.create({
+        firebaseUid,
+        email: seedEmail,
+        displayName: 'Admin',
+        status: 'active',
+        roleId: adminRole.id,
+    });
+    await userRepo.save(newUser);
+    console.log('  bootstrap admin creado. Inicio de sesión: email =', seedEmail, ', contraseña = (la configurada en SEED_ADMIN_PASSWORD o admin123).');
 }
 async function seedVehicles(dataSource) {
     const repo = dataSource.getRepository(vehicle_entity_1.Vehicle);
@@ -300,8 +384,9 @@ async function seedStorageFiles(dataSource) {
     console.log('  storage_files sembrados.');
 }
 async function runAllSeeds(dataSource) {
-    console.log('Ejecutando seeders (tabla users excluida)...');
+    console.log('Ejecutando seeders...');
     await seedRolesAndPermissions(dataSource);
+    await seedBootstrapAdminUser(dataSource);
     await seedVehicles(dataSource);
     await seedProviders(dataSource);
     await seedSystemSettings(dataSource);

@@ -114,24 +114,6 @@ let UsersService = UsersService_1 = class UsersService {
     async remove(id) {
         await this.userRepo.softDelete(id);
     }
-    async claimAdmin(userId) {
-        const raw = await this.userRepo.query('SELECT role_id FROM users WHERE id = $1 LIMIT 1', [userId]);
-        const currentRoleId = raw?.[0]?.role_id?.trim() || null;
-        if (currentRoleId) {
-            throw new common_1.BadRequestException('Ya tienes un rol asignado.');
-        }
-        const adminRole = await this.roleRepo.findOne({ where: { name: 'admin' } });
-        if (!adminRole) {
-            throw new common_1.BadRequestException('No existe el rol admin en la base de datos. Ejecuta los seeds.');
-        }
-        const countResult = await this.userRepo.query('SELECT COUNT(*) AS count FROM users WHERE role_id = $1', [adminRole.id]);
-        const adminCount = parseInt(countResult?.[0]?.count ?? '0', 10);
-        if (adminCount >= 1) {
-            throw new common_1.BadRequestException('Ya existe un administrador. Pide que te asignen un rol desde Gestión de usuarios.');
-        }
-        await this.userRepo.update(userId, { roleId: adminRole.id });
-        return { success: true };
-    }
 };
 exports.UsersService = UsersService;
 UsersService.UPDATE_ALLOWED_KEYS = [

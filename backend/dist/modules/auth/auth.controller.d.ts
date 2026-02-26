@@ -24,9 +24,6 @@ export declare class AuthController {
             action: string;
         }[];
     };
-    claimAdmin(user: CurrentUserPayload): Promise<{
-        success: true;
-    }>;
     syncUser(user: CurrentUserPayload, body: Record<string, unknown>): Promise<import("../../database/entities/user.entity").User>;
     deleteAccount(user: CurrentUserPayload): Promise<{
         message: string;

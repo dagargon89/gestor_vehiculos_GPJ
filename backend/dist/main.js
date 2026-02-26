@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+require("dotenv/config");
 const core_1 = require("@nestjs/core");
 const common_1 = require("@nestjs/common");
 const app_module_1 = require("./app.module");
@@ -34,7 +35,10 @@ async function bootstrap() {
     });
     const port = process.env.PORT || 3000;
     await app.listen(port, '0.0.0.0');
-    console.log(`Backend running on http://localhost:${port}`);
+    console.log(`Backend running on http://0.0.0.0:${port}`);
 }
-bootstrap();
+bootstrap().catch((err) => {
+    console.error('Error al iniciar el backend:', err);
+    process.exit(1);
+});
 //# sourceMappingURL=main.js.map

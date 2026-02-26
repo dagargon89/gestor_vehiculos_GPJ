@@ -1,6 +1,5 @@
 # Orquestador principal: PostgreSQL, Redis y Backend para VPS/desarrollo
 # Uso: docker compose up -d
-version: '3.8'
 
 services:
   postgres:
@@ -13,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - fleet-network
     healthcheck:
@@ -68,6 +67,12 @@ services:
     networks:
       - fleet-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
 volumes:
   postgres_data:

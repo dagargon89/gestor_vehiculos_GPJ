@@ -41,9 +41,6 @@ let AuthController = AuthController_1 = class AuthController {
         this.logger.log(`/auth/me: userId=${u.id} role=${role?.name ?? 'null'} permissionsCount=${permissions.length}`);
         return payload;
     }
-    async claimAdmin(user) {
-        return this.authService.claimAdmin(user.id);
-    }
     syncUser(user, body) {
         return this.authService.updateUserData(user.id, body);
     }
@@ -61,14 +58,6 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "getCurrentUser", null);
-__decorate([
-    (0, common_1.Post)('claim-admin'),
-    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
-    __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "claimAdmin", null);
 __decorate([
     (0, common_1.Post)('sync-user'),
     (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),

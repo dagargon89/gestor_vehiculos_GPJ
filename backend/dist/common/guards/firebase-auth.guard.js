@@ -42,7 +42,12 @@ let FirebaseAuthGuard = FirebaseAuthGuard_1 = class FirebaseAuthGuard {
                     photoURL: decodedToken.picture || null,
                 });
             }
-            await this.usersService.updateLastLogin(user.id);
+            try {
+                await this.usersService.updateLastLogin(user.id);
+            }
+            catch (lastLoginErr) {
+                this.logger.warn('updateLastLogin falló (no bloqueante):', lastLoginErr?.message);
+            }
             const userWithPermissions = await this.usersService.findOneWithPermissions(user.id);
             if (userWithPermissions.status !== 'active') {
                 throw new common_1.UnauthorizedException('Usuario suspendido o inactivo');
@@ -70,8 +75,10 @@ let FirebaseAuthGuard = FirebaseAuthGuard_1 = class FirebaseAuthGuard {
             if (error.code && String(error.code).startsWith('auth/')) {
                 throw new common_1.UnauthorizedException('Token inválido');
             }
-            this.logger.error(`Error en autenticación/creación de usuario: ${error.message ?? err}`, error.stack);
-            throw new common_1.InternalServerErrorException('Error al crear o obtener usuario');
+            const msg = error.message ?? String(err);
+            this.logger.error(`Error en autenticación/creación de usuario: ${msg}`, error.stack);
+            const isDev = process.env.NODE_ENV !== 'production';
+            throw new common_1.InternalServerErrorException(isDev ? `Error al crear o obtener usuario: ${msg}` : 'Error al crear o obtener usuario');
         }
     }
 };

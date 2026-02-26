@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 export declare function seedRolesAndPermissions(dataSource: DataSource): Promise<void>;
+export declare function seedBootstrapAdminUser(dataSource: DataSource): Promise<void>;
 export declare function seedVehicles(dataSource: DataSource): Promise<void>;
 export declare function seedProviders(dataSource: DataSource): Promise<void>;
 export declare function seedSystemSettings(dataSource: DataSource): Promise<void>;

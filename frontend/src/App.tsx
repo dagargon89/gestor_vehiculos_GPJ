@@ -20,6 +20,7 @@ import { SanctionList } from './pages/Sanctions/SanctionList';
 import { RolePermissionsPage } from './pages/RolePermissions/RolePermissionsPage';
 import { SystemSettingsPage } from './pages/SystemSettings/SystemSettingsPage';
 import { FuelRecordsList } from './pages/FuelRecords/FuelRecordsList';
+import { AssignRolesPage } from './pages/AssignRoles/AssignRolesPage';
 import { canAccessDashboard } from './config/routePermissions';
 import { useAuth } from './contexts/AuthContext';
 
@@ -65,6 +66,7 @@ function App() {
               <Route path="role-permissions" element={<PermissionRoute resource="roles" action="read"><RolePermissionsPage /></PermissionRoute>} />
               <Route path="system-settings" element={<PermissionRoute resource="system_settings" action="read"><SystemSettingsPage /></PermissionRoute>} />
               <Route path="profile" element={<ProfilePage />} />
+              <Route path="asignar-roles" element={<AssignRolesPage />} />
               <Route path="mis-solicitudes" element={<PermissionRoute oneOf={[{ resource: 'reservations', action: 'read' }, { resource: 'reservations', action: 'create' }]}><MyRequestsPage /></PermissionRoute>} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

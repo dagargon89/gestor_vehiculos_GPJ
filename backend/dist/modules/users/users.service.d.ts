@@ -26,7 +26,4 @@ export declare class UsersService {
     private static readonly UPDATE_ALLOWED_KEYS;
     update(id: string, data: Partial<User>): Promise<User>;
     remove(id: string): Promise<void>;
-    claimAdmin(userId: string): Promise<{
-        success: true;
-    }>;
 }

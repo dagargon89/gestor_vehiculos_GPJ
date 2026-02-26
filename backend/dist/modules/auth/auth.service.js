@@ -22,9 +22,6 @@ let AuthService = class AuthService {
     async deleteAccount(userId, _firebaseUid) {
         await this.usersService.updateUserData(userId, { status: 'inactive' });
     }
-    async claimAdmin(userId) {
-        return this.usersService.claimAdmin(userId);
-    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([

@@ -11,9 +11,12 @@ export default defineConfig({
   server: {
     proxy: {
       // En desarrollo, las peticiones a /api se reenvían al backend (evita CORS).
+      // Si ves ECONNRESET, comprueba que el backend esté en marcha: cd backend && npm run start:dev
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://127.0.0.1:3001',
         changeOrigin: true,
+        timeout: 60000,
+        proxyTimeout: 60000,
       },
     },
   },
