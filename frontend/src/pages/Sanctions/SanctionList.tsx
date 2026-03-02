@@ -6,6 +6,8 @@ import { SearchSelect } from '../../components/ui/SearchSelect';
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
+import { useAuth } from '../../contexts/AuthContext';
+import { isConductor } from '../../config/routePermissions';
 
 type User = { id: string; displayName?: string; email?: string };
 
@@ -29,8 +31,11 @@ function SanctionFormModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const { userData } = useAuth();
+  const esConductor = isConductor(userData?.role?.name);
+
   const [form, setForm] = useState({
-    userId: sanction?.userId ?? '',
+    userId: sanction?.userId ?? (esConductor && userData?.id ? userData.id : ''),
     reason: sanction?.reason ?? '',
     effectiveDate: sanction?.effectiveDate ? sanction.effectiveDate.slice(0, 10) : '',
     endDate: sanction?.endDate ? sanction.endDate.slice(0, 10) : '',
@@ -83,14 +88,21 @@ function SanctionFormModal({
           )}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Usuario *</label>
-            <SearchSelect
-              options={users.map((u) => ({ value: u.id, label: u.displayName || u.email || u.id }))}
-              value={form.userId}
-              onChange={(v) => setForm((f) => ({ ...f, userId: v }))}
-              placeholder="Seleccionar..."
-              required
-              className="w-full"
-            />
+            {esConductor ? (
+              <div className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 font-medium flex items-center gap-2">
+                <span className="material-icons text-slate-400 text-base">person</span>
+                {userData?.displayName || userData?.email || 'Usuario actual'}
+              </div>
+            ) : (
+              <SearchSelect
+                options={users.map((u) => ({ value: u.id, label: u.displayName || u.email || u.id }))}
+                value={form.userId}
+                onChange={(v) => setForm((f) => ({ ...f, userId: v }))}
+                placeholder="Seleccionar..."
+                required
+                className="w-full"
+              />
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Motivo *</label>

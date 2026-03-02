@@ -5,6 +5,8 @@ import { SearchSelect } from '../../components/ui/SearchSelect';
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
+import { useAuth } from '../../contexts/AuthContext';
+import { isConductor } from '../../config/routePermissions';
 
 type User = { id: string; email: string; displayName?: string };
 type Vehicle = { id: string; plate: string; brand: string; model: string };
@@ -44,6 +46,9 @@ function ReservationFormModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const { userData } = useAuth();
+  const esConductor = isConductor(userData?.role?.name);
+
   const [form, setForm] = useState(() => {
     const start = reservation?.startDatetime
       ? new Date(reservation.startDatetime).toISOString().slice(0, 16)
@@ -53,7 +58,7 @@ function ReservationFormModal({
       : '';
     return {
       vehicleId: reservation?.vehicleId ?? '',
-      userId: reservation?.userId ?? '',
+      userId: reservation?.userId ?? (esConductor && userData?.id ? userData.id : ''),
       startDatetime: start,
       endDatetime: end,
       status: reservation?.status ?? 'pending',
@@ -125,14 +130,21 @@ function ReservationFormModal({
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Usuario *</label>
-            <SearchSelect
-              options={users.map((u) => ({ value: u.id, label: u.displayName || u.email }))}
-              value={form.userId}
-              onChange={(v) => setForm((f) => ({ ...f, userId: v }))}
-              placeholder="Seleccionar usuario"
-              required
-              className="w-full"
-            />
+            {esConductor ? (
+              <div className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 font-medium flex items-center gap-2">
+                <span className="material-icons text-slate-400 text-base">person</span>
+                {userData?.displayName || userData?.email || 'Usuario actual'}
+              </div>
+            ) : (
+              <SearchSelect
+                options={users.map((u) => ({ value: u.id, label: u.displayName || u.email }))}
+                value={form.userId}
+                onChange={(v) => setForm((f) => ({ ...f, userId: v }))}
+                placeholder="Seleccionar usuario"
+                required
+                className="w-full"
+              />
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Inicio *</label>

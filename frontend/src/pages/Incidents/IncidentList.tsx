@@ -6,6 +6,8 @@ import { SearchSelect } from '../../components/ui/SearchSelect';
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
+import { useAuth } from '../../contexts/AuthContext';
+import { isConductor } from '../../config/routePermissions';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string };
 type User = { id: string; displayName?: string; email?: string };
@@ -41,9 +43,12 @@ function IncidentFormModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const { userData } = useAuth();
+  const esConductor = isConductor(userData?.role?.name);
+
   const [form, setForm] = useState({
     vehicleId: incident?.vehicleId ?? '',
-    userId: incident?.userId ?? '',
+    userId: incident?.userId ?? (esConductor && userData?.id ? userData.id : ''),
     date: incident?.date ? incident.date.slice(0, 10) : '',
     description: incident?.description ?? '',
     status: incident?.status ?? 'open',
@@ -108,13 +113,20 @@ function IncidentFormModal({
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Usuario (opcional)</label>
-            <SearchSelect
-              options={[{ value: '', label: 'Ninguno' }, ...users.map((u) => ({ value: u.id, label: u.displayName || u.email || u.id }))]}
-              value={form.userId}
-              onChange={(v) => setForm((f) => ({ ...f, userId: v }))}
-              placeholder="Ninguno"
-              className="w-full"
-            />
+            {esConductor ? (
+              <div className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 font-medium flex items-center gap-2">
+                <span className="material-icons text-slate-400 text-base">person</span>
+                {userData?.displayName || userData?.email || 'Usuario actual'}
+              </div>
+            ) : (
+              <SearchSelect
+                options={[{ value: '', label: 'Ninguno' }, ...users.map((u) => ({ value: u.id, label: u.displayName || u.email || u.id }))]}
+                value={form.userId}
+                onChange={(v) => setForm((f) => ({ ...f, userId: v }))}
+                placeholder="Ninguno"
+                className="w-full"
+              />
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Fecha *</label>
