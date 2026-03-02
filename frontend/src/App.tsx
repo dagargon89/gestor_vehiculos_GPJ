@@ -57,7 +57,7 @@ function App() {
             >
               <Route index element={<DashboardOrRedirect />} />
               <Route path="vehicles" element={<PermissionRoute resource="vehicles" action="read"><VehiclesList /></PermissionRoute>} />
-              <Route path="solicitud-vehiculos" element={<PermissionRoute oneOf={[{ resource: 'reservations', action: 'read' }, { resource: 'reservations', action: 'create' }]}><VehicleRequestPage /></PermissionRoute>} />
+              <Route path="solicitud-vehiculos" element={<PermissionRoute oneOf={[{ resource: 'reservations', action: 'read' }, { resource: 'reservations', action: 'create' }]} bypassForRoles={['conductor']}><VehicleRequestPage /></PermissionRoute>} />
               <Route path="reservations" element={<PermissionRoute resource="reservations" action="read"><ReservationsList /></PermissionRoute>} />
               <Route path="users" element={<PermissionRoute resource="users" action="read"><UsersList /></PermissionRoute>} />
               <Route path="providers" element={<PermissionRoute resource="providers" action="read"><ProvidersList /></PermissionRoute>} />
@@ -70,7 +70,7 @@ function App() {
               <Route path="system-settings" element={<PermissionRoute resource="system_settings" action="read"><SystemSettingsPage /></PermissionRoute>} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="asignar-roles" element={<AssignRolesPage />} />
-              <Route path="mis-solicitudes" element={<PermissionRoute oneOf={[{ resource: 'reservations', action: 'read' }, { resource: 'reservations', action: 'create' }]}><MyRequestsPage /></PermissionRoute>} />
+              <Route path="mis-solicitudes" element={<PermissionRoute oneOf={[{ resource: 'reservations', action: 'read' }, { resource: 'reservations', action: 'create' }]} bypassForRoles={['conductor']}><MyRequestsPage /></PermissionRoute>} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

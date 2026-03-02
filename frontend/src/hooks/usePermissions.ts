@@ -21,18 +21,20 @@ function can(
   action: string,
   roleName?: string | null,
 ): boolean {
-  const perms = permissions ?? [];
-  if (perms.length > 0) {
-    return perms.some((p) => p.resource === resource && p.action === action);
-  }
   const role = roleName?.toLowerCase();
   if (role === 'admin') return true;
+
+  const explicit = permissions ?? [];
+
+  // Conductors always have their defaults merged with any explicit permissions
   if (role === 'conductor') {
-    return CONDUCTOR_DEFAULT_PERMISSIONS.some(
-      (p) => p.resource === resource && p.action === action,
+    const defaults = CONDUCTOR_DEFAULT_PERMISSIONS.filter(
+      (dp) => !explicit.some((ep) => ep.resource === dp.resource && ep.action === dp.action),
     );
+    return [...explicit, ...defaults].some((p) => p.resource === resource && p.action === action);
   }
-  return false;
+
+  return explicit.some((p) => p.resource === resource && p.action === action);
 }
 
 export function usePermissions() {

@@ -16,7 +16,9 @@ export function MainLayout() {
   const { userData, signOut, authSyncError, refreshUserData } = useAuth();
   const [retryingSync, setRetryingSync] = useState(false);
   const { can } = usePermissions();
-  const adminRoutes = ADMIN_ROUTE_ITEMS.filter((r) => can(r.resource, r.action));
+  const adminRoutes = isConductor(userData?.role?.name)
+    ? []
+    : ADMIN_ROUTE_ITEMS.filter((r) => can(r.resource, r.action));
   const adminRoutesByCategory = ADMIN_MENU_CATEGORIES.map((cat) => ({
     ...cat,
     items: adminRoutes.filter((r) => r.category === cat.key),
@@ -36,7 +38,7 @@ export function MainLayout() {
   const notificationsRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
-  const canReadNotifications = can('notifications', 'read');
+  const canReadNotifications = can('notifications', 'read') || isConductor(userData?.role?.name);
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', userData?.id],
     queryFn: async () => {
