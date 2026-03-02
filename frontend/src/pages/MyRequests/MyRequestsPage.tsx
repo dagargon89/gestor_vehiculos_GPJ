@@ -582,10 +582,45 @@ export function MyRequestsPage() {
             Aún no tienes reservas en tu historial.
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {history.map((r: Reservation) => (
-              <ReservationCard key={r.id} r={r} />
-            ))}
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Vehículo</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Evento</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Salida</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Regreso</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Estado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {history.map((r: Reservation) => {
+                    const vehicleLabel = r.vehicle
+                      ? `${r.vehicle.plate} – ${r.vehicle.brand} ${r.vehicle.model}`
+                      : '—';
+                    return (
+                      <tr key={r.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 font-medium text-slate-700 whitespace-nowrap">{vehicleLabel}</td>
+                        <td className="px-4 py-3 text-slate-600 max-w-[200px]">
+                          <div className="truncate">{r.eventName || '—'}</div>
+                          {r.destination && (
+                            <div className="text-slate-400 text-xs truncate">{r.destination}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{formatDate(r.startDatetime)}</td>
+                        <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{formatDate(r.endDatetime)}</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[r.status] ?? 'bg-slate-100 text-slate-700'}`}>
+                            {STATUS_LABELS[r.status] ?? r.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </section>
