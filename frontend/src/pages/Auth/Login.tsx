@@ -6,11 +6,7 @@ import { auth } from '../../config/firebase.config';
 
 function getFirebaseErrorMessage(code: string): string {
   const messages: Record<string, string> = {
-    'auth/invalid-credential': 'Correo o contraseña incorrectos.',
-    'auth/invalid-email': 'El correo no es válido.',
     'auth/user-disabled': 'Esta cuenta ha sido deshabilitada.',
-    'auth/user-not-found': 'No existe una cuenta con este correo.',
-    'auth/wrong-password': 'Contraseña incorrecta.',
     'auth/popup-closed-by-user': 'Inicio de sesión cancelado.',
     'auth/cancelled-popup-request': 'Inicio de sesión cancelado.',
     'auth/popup-blocked': 'El popup fue bloqueado. Permite ventanas emergentes para este sitio.',
@@ -21,16 +17,10 @@ function getFirebaseErrorMessage(code: string): string {
 }
 
 export function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [forgotOpen, setForgotOpen] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotStatus, setForgotStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
-  const [forgotError, setForgotError] = useState<string | null>(null);
-  const { signInWithGoogle, signInWithEmail, sendPasswordResetEmail, currentUser, loading: authLoading } = useAuth();
+  const { signInWithGoogle, currentUser, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
@@ -41,29 +31,12 @@ export function Login() {
     }
   }, [authLoading, currentUser, navigate, from]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-    try {
-      if (auth) await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
-      await signInWithEmail(email, password);
-      // No navegar aquí: el useEffect redirige cuando currentUser y authLoading estén actualizados en el contexto
-    } catch (err: unknown) {
-      const code = (err as { code?: string })?.code ?? '';
-      setError(getFirebaseErrorMessage(code));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleGoogle = async () => {
     setError(null);
     setLoading(true);
     try {
       if (auth) await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
       await signInWithGoogle();
-      // No navegar aquí: el useEffect redirige cuando currentUser y authLoading estén actualizados en el contexto
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code ?? '';
       setError(getFirebaseErrorMessage(code));
@@ -71,23 +44,6 @@ export function Login() {
       setLoading(false);
     }
   };
-
-  const handleForgotSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setForgotError(null);
-    setForgotStatus('sending');
-    try {
-      await sendPasswordResetEmail(forgotEmail.trim());
-      setForgotStatus('success');
-    } catch (err: unknown) {
-      const code = (err as { code?: string })?.code ?? '';
-      setForgotError(code === 'auth/user-not-found' ? 'No existe una cuenta con este correo.' : getFirebaseErrorMessage(code));
-      setForgotStatus('error');
-    }
-  };
-
-  const isValidEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
-  const canSubmit = email.trim() && password && isValidEmail(email);
 
   if (authLoading) {
     return (
@@ -120,42 +76,7 @@ export function Login() {
             <p className="text-slate-500 font-medium text-lg">Acceso al panel de gestión de flota.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="block text-sm font-bold text-slate-700" htmlFor="email">Correo electrónico</label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary">
-                  <span className="material-icons text-xl">mail_outline</span>
-                </div>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-11 pr-4 py-3.5 border border-slate-200 rounded-[16px] bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:text-base font-medium shadow-sm"
-                  placeholder="correo@ejemplo.com"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="block text-sm font-bold text-slate-700" htmlFor="password">Contraseña</label>
-                <button type="button" onClick={() => { setForgotOpen(true); setForgotStatus('idle'); setForgotError(null); setForgotEmail(email); }} className="text-sm font-bold text-primary hover:text-accent transition-colors">¿Olvidó su contraseña?</button>
-              </div>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary">
-                  <span className="material-icons text-xl">lock_outline</span>
-                </div>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-11 pr-4 py-3.5 border border-slate-200 rounded-[16px] bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:text-base font-medium shadow-sm"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
+          <div className="space-y-6">
             <div className="flex items-center">
               <input
                 id="remember-me"
@@ -172,32 +93,10 @@ export function Login() {
               </div>
             )}
             <button
-              type="submit"
-              disabled={loading || !canSubmit}
-              className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-[16px] shadow-lg shadow-primary/30 text-base font-bold text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
-            >
-              {loading ? (
-                <>
-                  <span className="material-icons animate-spin text-xl">refresh</span>
-                  Ingresando...
-                </>
-              ) : (
-                'Iniciar sesión'
-              )}
-            </button>
-            <div className="relative py-2">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-slate-400 font-medium">Acceso alternativo</span>
-              </div>
-            </div>
-            <button
               type="button"
               onClick={handleGoogle}
               disabled={loading}
-              className="w-full flex justify-center items-center gap-3 py-3.5 px-4 border border-slate-200 rounded-[16px] shadow-sm bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-primary hover:border-primary/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full flex justify-center items-center gap-3 py-3.5 px-4 border border-slate-200 rounded-[16px] shadow-lg shadow-primary/20 bg-white text-base font-bold text-slate-700 hover:bg-slate-50 hover:text-primary hover:border-primary/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? (
                 <>
@@ -213,52 +112,7 @@ export function Login() {
                 </>
               )}
             </button>
-          </form>
-
-          {forgotOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setForgotOpen(false)}>
-              <div className="bg-white rounded-[16px] shadow-xl border border-slate-200 p-6 w-full max-w-md space-y-4" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-slate-900">Restablecer contraseña</h3>
-                  <button type="button" onClick={() => setForgotOpen(false)} className="text-slate-400 hover:text-slate-600">
-                    <span className="material-icons">close</span>
-                  </button>
-                </div>
-                <p className="text-sm text-slate-600">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
-                {forgotStatus === 'success' ? (
-                  <div className="rounded-[16px] bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800 font-medium">
-                    Revisa tu correo para restablecer la contraseña.
-                  </div>
-                ) : (
-                  <form onSubmit={handleForgotSubmit} className="space-y-4">
-                    <input
-                      type="email"
-                      value={forgotEmail}
-                      onChange={e => setForgotEmail(e.target.value)}
-                      placeholder="Correo electrónico"
-                      className="block w-full px-4 py-3 border border-slate-200 rounded-[16px] bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                      required
-                    />
-                    {forgotError && (
-                      <div className="rounded-[16px] bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">{forgotError}</div>
-                    )}
-                    <div className="flex gap-2">
-                      <button type="button" onClick={() => setForgotOpen(false)} className="flex-1 py-2.5 px-4 rounded-[16px] border border-slate-200 font-bold text-slate-700 hover:bg-slate-50">
-                        Cancelar
-                      </button>
-                      <button type="submit" disabled={forgotStatus === 'sending' || !isValidEmail(forgotEmail)} className="flex-1 py-2.5 px-4 rounded-[16px] bg-primary text-white font-bold hover:bg-primary-dark disabled:opacity-60">
-                        {forgotStatus === 'sending' ? 'Enviando...' : 'Enviar enlace'}
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </div>
-            </div>
-          )}
-          <p className="text-center text-sm text-slate-500">
-            ¿Problemas de acceso técnico?{' '}
-            <a className="font-bold text-accent hover:text-pink-700 transition-colors" href="#">Soporte técnico</a>
-          </p>
+          </div>
         </div>
 
         <div className="text-xs text-slate-400 font-semibold flex items-center gap-2">
