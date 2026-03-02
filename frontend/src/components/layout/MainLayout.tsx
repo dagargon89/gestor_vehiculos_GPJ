@@ -167,8 +167,8 @@ export function MainLayout() {
             </NavLink>
           </div>
 
-          {/* En móvil: espaciador + hamburguesa a la derecha */}
-          <div className="flex flex-1 justify-end md:hidden">
+          {/* En móvil/tablet: espaciador + hamburguesa a la derecha */}
+          <div className="flex flex-1 justify-end lg:hidden">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
@@ -180,7 +180,7 @@ export function MainLayout() {
           </div>
 
           {/* Menú central: Dashboard, Solicitud, Administración (solo desktop) */}
-          <div className="hidden md:flex flex-1 justify-center">
+          <div className="hidden lg:flex flex-1 justify-center">
             <div className="flex items-center gap-1">
             {showDashboard && (
             <NavLink
@@ -261,8 +261,8 @@ export function MainLayout() {
             </div>
           </div>
 
-          {/* Derecha: notificaciones + perfil (solo desktop; en móvil van dentro del drawer) */}
-          <div className="hidden md:flex shrink-0 items-center gap-2 ml-4">
+          {/* Derecha: notificaciones + perfil (solo desktop; en móvil/tablet van dentro del drawer) */}
+          <div className="hidden lg:flex shrink-0 items-center gap-2 ml-4">
             {/* Notificaciones (solo si tiene permiso) */}
             {canReadNotifications && (
             <div className="relative" ref={notificationsRef}>
@@ -280,7 +280,7 @@ export function MainLayout() {
                 )}
               </button>
               {notificationsOpen && (
-                <div className="fixed left-2 right-2 top-14 max-h-[70vh] overflow-auto bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 md:absolute md:left-auto md:right-0 md:top-full md:mt-1 md:w-80 md:max-h-[400px]">
+                <div className="fixed left-2 right-2 top-14 max-h-[70vh] overflow-auto bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-1 lg:w-80 lg:max-h-[400px]">
                   <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center shrink-0">
                     <span className="text-sm font-bold text-slate-900">Notificaciones</span>
                     {unreadCount > 0 && (
@@ -323,7 +323,7 @@ export function MainLayout() {
               onClick={() => setUserMenuOpen((prev) => !prev)}
               className="flex items-center gap-2 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-colors"
             >
-              <span className="hidden sm:inline text-sm font-medium">
+              <span className="hidden xl:inline text-sm font-medium">
                 Hola, {userName} ({roleName})
               </span>
               {userData?.photoUrl ? (
@@ -340,7 +340,7 @@ export function MainLayout() {
               <span className="material-icons text-white/90">{userMenuOpen ? 'expand_less' : 'expand_more'}</span>
             </button>
             {userMenuOpen && (
-              <div className="fixed left-2 right-2 top-14 w-auto max-w-xs bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 md:absolute md:left-auto md:right-0 md:top-full md:mt-1 md:w-56">
+              <div className="fixed left-2 right-2 top-14 w-auto max-w-xs bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-1 lg:w-56">
                 <div className="px-4 py-3 border-b border-slate-100">
                   <p className="text-sm font-bold text-slate-900 truncate">{userData?.displayName || 'Usuario'}</p>
                   <p className="text-xs text-slate-500 truncate break-all">{userData?.email}</p>
@@ -386,7 +386,7 @@ export function MainLayout() {
             aria-hidden
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-xl z-50 flex flex-col md:hidden">
+          <div className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-xl z-50 flex flex-col lg:hidden">
             <div className="flex items-center justify-between p-4 border-b border-slate-200">
               <span className="font-bold text-slate-900">Menú</span>
               <button
@@ -399,8 +399,8 @@ export function MainLayout() {
               </button>
             </div>
 
-            {/* En móvil: perfil y notificaciones dentro del drawer */}
-            <div className="md:hidden border-b border-slate-200">
+            {/* En móvil/tablet: perfil y notificaciones dentro del drawer */}
+            <div className="lg:hidden border-b border-slate-200">
               {/* Bloque usuario: foto + nombre + opciones */}
               <div className="p-4 flex items-center gap-3 border-b border-slate-100">
                 {userData?.photoUrl ? (
