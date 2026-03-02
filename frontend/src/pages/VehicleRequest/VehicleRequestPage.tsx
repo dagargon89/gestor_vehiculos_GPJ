@@ -331,9 +331,10 @@ export function VehicleRequestPage() {
                     <button
                       type="button"
                       onClick={() => setReserveVehicle(v)}
-                      className="w-full px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium text-sm"
+                      disabled={v.status === 'maintenance'}
+                      className="w-full px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium text-sm disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
                     >
-                      Reservar
+                      {v.status === 'maintenance' ? 'En mantenimiento' : 'Reservar'}
                     </button>
                   </div>
                 </div>
