@@ -19,6 +19,7 @@ export declare class ReservationsService {
     findOne(id: string): Promise<Reservation>;
     create(data: Partial<Reservation>): Promise<Reservation>;
     update(id: string, data: Partial<Reservation>): Promise<Reservation>;
+    private assertNoConflict;
     findOverdue(): Promise<Reservation[]>;
     remove(id: string): Promise<void>;
     checkIn(id: string, userId: string, odometer: number, fuelPhotoUrl?: string, conditionPhotoUrls?: string[]): Promise<Reservation>;

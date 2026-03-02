@@ -84,22 +84,19 @@ export class ReservationsService {
     if (payload.endDatetime && typeof payload.endDatetime === 'string') {
       payload.endDatetime = new Date(payload.endDatetime as string);
     }
-    // Auto-aprobación: si el ajuste global está activo y la fecha está disponible
+    // Validar conflictos de horario (siempre, independientemente de auto-aprobación)
     let autoApproved = false;
     if (payload.vehicleId && payload.startDatetime && payload.endDatetime) {
+      await this.assertNoConflict(
+        payload.vehicleId as string,
+        payload.startDatetime as Date,
+        payload.endDatetime as Date,
+      );
+      // Auto-aprobación: si el ajuste global está activo, aprobar directamente
       const autoApproveSetting = await this.systemSettingsService.findByKey('auto_approve_reservations');
       if (autoApproveSetting?.value === 'true') {
-        const conflicts = await this.repo
-          .createQueryBuilder('r')
-          .where('r.vehicleId = :vehicleId', { vehicleId: payload.vehicleId })
-          .andWhere('r.status IN (:...statuses)', { statuses: ['pending', 'active'] })
-          .andWhere('r.startDatetime < :end', { end: payload.endDatetime })
-          .andWhere('r.endDatetime > :start', { start: payload.startDatetime })
-          .getCount();
-        if (conflicts === 0) {
-          payload.status = 'active';
-          autoApproved = true;
-        }
+        payload.status = 'active';
+        autoApproved = true;
       }
     }
 
@@ -157,13 +154,22 @@ export class ReservationsService {
     if (Object.keys(payload).length === 0) {
       return previous;
     }
+
+    // Validar conflictos si el resultado quedará en estado activo o pendiente
+    const newStatus = (payload.status as string) ?? previous.status;
+    if (newStatus === 'pending' || newStatus === 'active') {
+      const newVehicleId = (payload.vehicleId as string) ?? previous.vehicleId;
+      const newStart = (payload.startDatetime as Date) ?? previous.startDatetime;
+      const newEnd = (payload.endDatetime as Date) ?? previous.endDatetime;
+      await this.assertNoConflict(newVehicleId, newStart, newEnd, id);
+    }
+
     await this.repo.update(id, payload);
     const updated = await this.findOne(id);
 
     const vehicleLabel = previous.vehicle
       ? `${previous.vehicle.plate} – ${previous.vehicle.brand} ${previous.vehicle.model}`
       : 'vehículo';
-    const newStatus = (payload.status as string) ?? previous.status;
 
     if (newStatus === 'cancelled') {
       await this.notificationsService.notifyUser(
@@ -192,6 +198,29 @@ export class ReservationsService {
     }
 
     return updated;
+  }
+
+  private async assertNoConflict(
+    vehicleId: string,
+    start: Date,
+    end: Date,
+    excludeId?: string,
+  ): Promise<void> {
+    let qb = this.repo
+      .createQueryBuilder('r')
+      .where('r.vehicleId = :vehicleId', { vehicleId })
+      .andWhere('r.status IN (:...statuses)', { statuses: ['pending', 'active'] })
+      .andWhere('r.startDatetime < :end', { end })
+      .andWhere('r.endDatetime > :start', { start });
+    if (excludeId) {
+      qb = qb.andWhere('r.id != :excludeId', { excludeId });
+    }
+    const count = await qb.getCount();
+    if (count > 0) {
+      throw new BadRequestException(
+        'El vehículo ya tiene una reserva en ese horario. Elige otro horario o vehículo.',
+      );
+    }
   }
 
   async findOverdue(): Promise<Reservation[]> {
