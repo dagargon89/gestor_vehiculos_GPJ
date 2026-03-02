@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { VehicleAvailabilityCalendar } from '../../components/calendar/VehicleAvailabilityCalendar';
 import { SearchSelect } from '../../components/ui/SearchSelect';
+import { useAuth } from '../../contexts/AuthContext';
+import { isConductor } from '../../config/routePermissions';
 
 type User = { id: string; email: string; displayName?: string };
 type Vehicle = {
@@ -46,7 +48,9 @@ function ReserveVehicleModal({
   onSuccess: () => void;
 }) {
   const queryClient = useQueryClient();
-  const [userId, setUserId] = useState('');
+  const { userData } = useAuth();
+  const esConductor = isConductor(userData?.role?.name);
+  const [userId, setUserId] = useState(() => esConductor && userData?.id ? userData.id : '');
   const [startDatetime, setStartDatetime] = useState('');
   const [endDatetime, setEndDatetime] = useState('');
   const [eventName, setEventName] = useState('');
@@ -62,6 +66,7 @@ function ReserveVehicleModal({
       const res = await apiClient.get('/users');
       return res.data;
     },
+    enabled: !esConductor,
   });
 
   const toDatetimeLocal = (d: Date) => {
@@ -188,14 +193,21 @@ function ReserveVehicleModal({
               )}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Solicitar para usuario *</label>
-                <SearchSelect
-                  options={users.map((u: User) => ({ value: u.id, label: u.displayName || u.email }))}
-                  value={userId}
-                  onChange={setUserId}
-                  placeholder="Seleccionar usuario"
-                  required
-                  className="w-full"
-                />
+                {esConductor ? (
+                  <div className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 font-medium flex items-center gap-2">
+                    <span className="material-icons text-slate-400 text-base">person</span>
+                    {userData?.displayName || userData?.email || 'Usuario actual'}
+                  </div>
+                ) : (
+                  <SearchSelect
+                    options={users.map((u: User) => ({ value: u.id, label: u.displayName || u.email }))}
+                    value={userId}
+                    onChange={setUserId}
+                    placeholder="Seleccionar usuario"
+                    required
+                    className="w-full"
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Evento</label>

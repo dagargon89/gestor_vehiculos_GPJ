@@ -210,7 +210,7 @@ let ReservationsService = class ReservationsService {
         }
         const odometerNum = Number(odometer);
         if (!Number.isInteger(odometerNum) || odometerNum < 0) {
-            throw new common_1.BadRequestException('El odómetro debe ser un número entero mayor o igual a 0');
+            throw new common_1.BadRequestException('El kilometraje debe ser un número entero mayor o igual a 0');
         }
         const payload = { checkinOdometer: odometerNum };
         if (fuelPhotoUrl != null && fuelPhotoUrl !== '')
@@ -234,10 +234,10 @@ let ReservationsService = class ReservationsService {
         }
         const odometerNum = Number(odometer);
         if (!Number.isInteger(odometerNum) || odometerNum < 0) {
-            throw new common_1.BadRequestException('El odómetro debe ser un número entero mayor o igual a 0');
+            throw new common_1.BadRequestException('El kilometraje debe ser un número entero mayor o igual a 0');
         }
         if (odometerNum < reservation.checkinOdometer) {
-            throw new common_1.BadRequestException('El odómetro de devolución no puede ser menor que el de salida');
+            throw new common_1.BadRequestException('El kilometraje de devolución no puede ser menor que el de salida');
         }
         const payload = {
             checkoutOdometer: odometerNum,

@@ -129,7 +129,7 @@ function FuelRecordFormModal({
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Odómetro (km)</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Kilometraje (km)</label>
             <input
               type="number"
               min="0"
@@ -204,7 +204,7 @@ export function FuelRecordsList() {
 
   const { paginatedData: paginatedRecords, page, setPage, pageSize, setPageSize, totalItems, totalPages, startIndex, endIndex, PAGE_SIZE_OPTIONS } = usePagination<FuelRecord>(filteredByDate, { pageSize: 25 });
 
-  const exportHeaders = ['Vehículo', 'Fecha', 'Litros', 'Costo', 'Odómetro (km)'];
+  const exportHeaders = ['Vehículo', 'Fecha', 'Litros', 'Costo', 'Kilometraje (km)'];
   const getExportRows = (list: FuelRecord[]) => list.map((r) => [getVehicleLabel(r), formatDate(r.date), formatNum(r.liters), r.cost != null ? formatNum(r.cost) : '—', formatNum(r.odometer)]);
 
   if (isLoading) return <div className="text-primary font-bold">Cargando registros de combustible...</div>;
@@ -251,7 +251,7 @@ export function FuelRecordsList() {
                 <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Fecha</th>
                 <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Litros</th>
                 <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Costo</th>
-                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Odómetro</th>
+                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Kilometraje</th>
                 <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Acciones</th>
               </tr>
             </thead>
@@ -289,7 +289,7 @@ export function FuelRecordsList() {
                 <div className="text-slate-600 text-sm mt-1">{formatDate(r.date)}</div>
                 <div className="text-slate-600 text-sm mt-0.5">{formatNum(r.liters)} L</div>
                 {r.cost != null && <div className="text-slate-500 text-sm">Costo: {formatNum(r.cost)}</div>}
-                {r.odometer != null && <div className="text-slate-500 text-sm">Odómetro: {formatNum(r.odometer)} km</div>}
+                {r.odometer != null && <div className="text-slate-500 text-sm">Kilometraje: {formatNum(r.odometer)} km</div>}
                 <div className="mt-4 pt-4 border-t border-slate-100 flex gap-3">
                   <button type="button" onClick={() => openEdit(r)} className="text-primary font-medium hover:underline text-sm">Editar</button>
                   <button type="button" onClick={() => handleDelete(r)} className="text-red-600 font-medium hover:underline text-sm">Eliminar</button>

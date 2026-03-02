@@ -202,16 +202,16 @@ function CheckInOutForm({
     setError(null);
     const value = odometer.trim();
     if (!value) {
-      setError('Ingresa el odómetro en km');
+      setError('Ingresa el kilometraje en km');
       return;
     }
     const km = parseInt(value, 10);
     if (Number.isNaN(km) || km < 0) {
-      setError('El odómetro debe ser un número mayor o igual a 0');
+      setError('El kilometraje debe ser un número mayor o igual a 0');
       return;
     }
     if (action === 'checkout' && reservation.checkinOdometer != null && km < reservation.checkinOdometer) {
-      setError('El odómetro de regreso no puede ser menor que el de salida');
+      setError('El kilometraje de regreso no puede ser menor que el de salida');
       return;
     }
     mutation.mutate({
@@ -227,7 +227,7 @@ function CheckInOutForm({
     action === 'checkin' && reservation.vehicle?.currentOdometer != null
       ? `Último registro: ${reservation.vehicle.currentOdometer} km`
       : action === 'checkout' && reservation.checkinOdometer != null
-        ? `Odómetro al salir: ${reservation.checkinOdometer} km`
+        ? `Kilometraje al salir: ${reservation.checkinOdometer} km`
         : null;
 
   return (
@@ -259,7 +259,7 @@ function CheckInOutForm({
         )}
         <div className="mb-4">
           <label htmlFor="odometer" className="block text-sm font-medium text-slate-700 mb-2">
-            Odómetro (km) *
+            Kilometraje (km) *
           </label>
           <input
             id="odometer"

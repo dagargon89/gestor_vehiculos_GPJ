@@ -138,7 +138,7 @@ function MaintenanceFormModal({
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Odómetro al servicio (km)</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Kilometraje al servicio (km)</label>
             <input
               type="number"
               min="0"
