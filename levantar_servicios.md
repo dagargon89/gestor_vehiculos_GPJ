@@ -46,7 +46,7 @@ El frontend llama al backend usando la variable **`VITE_API_URL`** en `frontend/
 
 **Antes de usar la app**, comprueba que el backend responde:
 
-- Con `curl` (usa **127.0.0.1** para evitar problemas IPv6): **`curl http://127.0.0.1:3000/api/health`**
+- Con `curl` (usa **127.0.0.1** para evitar problemas IPv6): **`curl http://127.0.0.1:3001/api/health`**
 - Debe devolver algo como: `{"status":"ok","timestamp":"..."}`
 - Si con `localhost` ves "Connection reset by peer", prueba `127.0.0.1`; el backend en Docker está publicado en IPv4.
 
@@ -79,7 +79,7 @@ docker compose stop backend
 cd backend && npm run start:dev
 ```
 
-Si al arrancar el backend en local ves **EADDRINUSE (puerto 3000 en uso)**, libera el puerto: `kill $(lsof -t -i:3000)` o cierra cualquier otra instancia del backend / contenedor que use el 3000.
+Si al arrancar el backend en local ves **EADDRINUSE (puerto 3001 en uso)**, libera el puerto: `kill $(lsof -t -i:3001)` o cierra cualquier otra instancia del backend / contenedor que use el 3001.
 
 En `backend/.env` mantén `DB_HOST=localhost` y `REDIS_HOST=localhost` (los puertos 5432 y 6379 están expuestos por Docker). Así el frontend (Vite) y el backend comparten la misma red y no hay ECONNRESET.
 
