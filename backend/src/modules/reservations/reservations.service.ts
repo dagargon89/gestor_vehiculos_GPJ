@@ -4,6 +4,7 @@ import { Repository, FindManyOptions } from 'typeorm';
 import { Reservation } from '../../database/entities/reservation.entity';
 import { Vehicle } from '../../database/entities/vehicle.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { SystemSettingsService } from '../system-settings/system-settings.service';
 
 @Injectable()
 export class ReservationsService {
@@ -13,6 +14,7 @@ export class ReservationsService {
     @InjectRepository(Vehicle)
     private vehicleRepo: Repository<Vehicle>,
     private notificationsService: NotificationsService,
+    private systemSettingsService: SystemSettingsService,
   ) {}
 
   async findAll(filters?: {
@@ -82,8 +84,43 @@ export class ReservationsService {
     if (payload.endDatetime && typeof payload.endDatetime === 'string') {
       payload.endDatetime = new Date(payload.endDatetime as string);
     }
+    // Auto-aprobación: si el ajuste global está activo y la fecha está disponible
+    let autoApproved = false;
+    if (payload.vehicleId && payload.startDatetime && payload.endDatetime) {
+      const autoApproveSetting = await this.systemSettingsService.findByKey('auto_approve_reservations');
+      if (autoApproveSetting?.value === 'true') {
+        const conflicts = await this.repo
+          .createQueryBuilder('r')
+          .where('r.vehicleId = :vehicleId', { vehicleId: payload.vehicleId })
+          .andWhere('r.status IN (:...statuses)', { statuses: ['pending', 'active'] })
+          .andWhere('r.startDatetime < :end', { end: payload.endDatetime })
+          .andWhere('r.endDatetime > :start', { start: payload.startDatetime })
+          .getCount();
+        if (conflicts === 0) {
+          payload.status = 'active';
+          autoApproved = true;
+        }
+      }
+    }
+
     const r = this.repo.create(payload as Partial<Reservation>);
-    return this.repo.save(r);
+    const saved = await this.repo.save(r);
+
+    if (autoApproved) {
+      const full = await this.findOne(saved.id);
+      const vehicleLabel = full.vehicle
+        ? `${full.vehicle.plate} – ${full.vehicle.brand} ${full.vehicle.model}`
+        : 'vehículo';
+      await this.notificationsService.notifyUser(
+        full.userId,
+        'reservation_approved',
+        'Reserva aprobada automáticamente',
+        `Tu solicitud de ${vehicleLabel} ha sido aprobada automáticamente. Ya puedes hacer check-in cuando retires el vehículo.`,
+        '/mis-solicitudes',
+      );
+    }
+
+    return saved;
   }
 
   async update(id: string, data: Partial<Reservation>): Promise<Reservation> {

@@ -12,6 +12,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const reservation_entity_1 = require("../../database/entities/reservation.entity");
 const vehicle_entity_1 = require("../../database/entities/vehicle.entity");
 const notifications_module_1 = require("../notifications/notifications.module");
+const system_settings_module_1 = require("../system-settings/system-settings.module");
 const reservations_service_1 = require("./reservations.service");
 const reservations_controller_1 = require("./reservations.controller");
 let ReservationsModule = class ReservationsModule {
@@ -22,6 +23,7 @@ exports.ReservationsModule = ReservationsModule = __decorate([
         imports: [
             typeorm_1.TypeOrmModule.forFeature([reservation_entity_1.Reservation, vehicle_entity_1.Vehicle]),
             notifications_module_1.NotificationsModule,
+            system_settings_module_1.SystemSettingsModule,
         ],
         controllers: [reservations_controller_1.ReservationsController],
         providers: [reservations_service_1.ReservationsService],

@@ -2,11 +2,13 @@ import { Repository } from 'typeorm';
 import { Reservation } from '../../database/entities/reservation.entity';
 import { Vehicle } from '../../database/entities/vehicle.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { SystemSettingsService } from '../system-settings/system-settings.service';
 export declare class ReservationsService {
     private repo;
     private vehicleRepo;
     private notificationsService;
-    constructor(repo: Repository<Reservation>, vehicleRepo: Repository<Vehicle>, notificationsService: NotificationsService);
+    private systemSettingsService;
+    constructor(repo: Repository<Reservation>, vehicleRepo: Repository<Vehicle>, notificationsService: NotificationsService, systemSettingsService: SystemSettingsService);
     findAll(filters?: {
         status?: string;
         vehicleId?: string;

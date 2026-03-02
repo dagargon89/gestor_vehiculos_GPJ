@@ -108,10 +108,13 @@ function SettingFormModal({
   );
 }
 
+const AUTO_APPROVE_KEY = 'auto_approve_reservations';
+
 export function SystemSettingsPage() {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSetting, setEditingSetting] = useState<SystemSetting | null>(null);
+  const [togglingAutoApprove, setTogglingAutoApprove] = useState(false);
 
   const { data: settings = [], isLoading } = useQuery({
     queryKey: ['system-settings'],
@@ -120,6 +123,26 @@ export function SystemSettingsPage() {
       return res.data;
     },
   });
+
+  const autoApproveSetting: SystemSetting | undefined = settings.find(
+    (s: SystemSetting) => s.key === AUTO_APPROVE_KEY,
+  );
+  const autoApproveEnabled = autoApproveSetting?.value === 'true';
+
+  const handleToggleAutoApprove = async () => {
+    setTogglingAutoApprove(true);
+    try {
+      const newValue = autoApproveEnabled ? 'false' : 'true';
+      if (autoApproveSetting) {
+        await apiClient.put(`/system-settings/${autoApproveSetting.id}`, { value: newValue });
+      } else {
+        await apiClient.post('/system-settings', { key: AUTO_APPROVE_KEY, value: newValue });
+      }
+      queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+    } finally {
+      setTogglingAutoApprove(false);
+    }
+  };
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/system-settings/${id}`),
@@ -170,6 +193,52 @@ export function SystemSettingsPage() {
         >
           Nueva configuración
         </button>
+      </div>
+
+      {/* Opciones rápidas */}
+      <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 p-6">
+        <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <span className="material-icons text-primary text-xl">tune</span>
+          Comportamiento de reservas
+        </h3>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-slate-800">Auto-aprobación de reservas</p>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Cuando está activo, las solicitudes de reserva se aprueban automáticamente si el
+              vehículo está disponible en las fechas solicitadas. Si hay conflicto, la reserva
+              queda en estado pendiente para revisión manual.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleToggleAutoApprove}
+            disabled={togglingAutoApprove}
+            className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+              autoApproveEnabled ? 'bg-primary' : 'bg-slate-200'
+            }`}
+            role="switch"
+            aria-checked={autoApproveEnabled}
+          >
+            <span
+              className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                autoApproveEnabled ? 'translate-x-5' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
+        <div className="mt-3">
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+              autoApproveEnabled
+                ? 'bg-green-100 text-green-700'
+                : 'bg-slate-100 text-slate-500'
+            }`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${autoApproveEnabled ? 'bg-green-500' : 'bg-slate-400'}`} />
+            {autoApproveEnabled ? 'Activo' : 'Inactivo — aprobación manual requerida'}
+          </span>
+        </div>
       </div>
 
       <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
