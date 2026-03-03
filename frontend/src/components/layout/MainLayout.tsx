@@ -86,6 +86,11 @@ export function MainLayout() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Cerrar menú móvil al cambiar de ruta (evita que el body quede con overflow:hidden)
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden';

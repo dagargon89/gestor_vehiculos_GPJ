@@ -22,10 +22,32 @@ let ReportsController = class ReportsController {
     constructor(reportsService) {
         this.reportsService = reportsService;
     }
-    getVehicleUsage(startDate, endDate) {
-        const start = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    parseDates(startDate, endDate) {
+        const start = startDate
+            ? new Date(startDate)
+            : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const end = endDate ? new Date(endDate) : new Date();
+        return [start, end];
+    }
+    getVehicleUsage(startDate, endDate) {
+        const [start, end] = this.parseDates(startDate, endDate);
         return this.reportsService.getVehicleUsageReport(start, end);
+    }
+    getDriverActivity(startDate, endDate) {
+        const [start, end] = this.parseDates(startDate, endDate);
+        return this.reportsService.getDriverActivityReport(start, end);
+    }
+    getReservationsHistory(startDate, endDate) {
+        const [start, end] = this.parseDates(startDate, endDate);
+        return this.reportsService.getReservationsHistoryReport(start, end);
+    }
+    getFuel(startDate, endDate) {
+        const [start, end] = this.parseDates(startDate, endDate);
+        return this.reportsService.getFuelReport(start, end);
+    }
+    getMaintenance(startDate, endDate) {
+        const [start, end] = this.parseDates(startDate, endDate);
+        return this.reportsService.getMaintenanceReport(start, end);
     }
 };
 exports.ReportsController = ReportsController;
@@ -38,6 +60,42 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "getVehicleUsage", null);
+__decorate([
+    (0, common_1.Get)('driver-activity'),
+    (0, permissions_decorator_1.RequirePermission)('reports', 'read'),
+    __param(0, (0, common_1.Query)('startDate')),
+    __param(1, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ReportsController.prototype, "getDriverActivity", null);
+__decorate([
+    (0, common_1.Get)('reservations-history'),
+    (0, permissions_decorator_1.RequirePermission)('reports', 'read'),
+    __param(0, (0, common_1.Query)('startDate')),
+    __param(1, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ReportsController.prototype, "getReservationsHistory", null);
+__decorate([
+    (0, common_1.Get)('fuel'),
+    (0, permissions_decorator_1.RequirePermission)('reports', 'read'),
+    __param(0, (0, common_1.Query)('startDate')),
+    __param(1, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ReportsController.prototype, "getFuel", null);
+__decorate([
+    (0, common_1.Get)('maintenance'),
+    (0, permissions_decorator_1.RequirePermission)('reports', 'read'),
+    __param(0, (0, common_1.Query)('startDate')),
+    __param(1, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ReportsController.prototype, "getMaintenance", null);
 exports.ReportsController = ReportsController = __decorate([
     (0, common_1.Controller)('reports'),
     (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard, permissions_guard_1.PermissionsGuard),
