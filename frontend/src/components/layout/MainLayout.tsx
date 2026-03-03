@@ -240,7 +240,7 @@ export function MainLayout() {
                 <span className="material-icons text-lg">{adminMenuOpen ? 'expand_less' : 'expand_more'}</span>
               </button>
               {adminMenuOpen && (
-                <div className="absolute left-0 top-full mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 max-h-[calc(100vh-5rem)] overflow-y-auto">
                   {adminRoutesByCategory.map(({ key: categoryKey, label: categoryLabel, items }) => (
                     <div key={categoryKey} className={categoryKey !== adminRoutesByCategory[0]?.key ? 'border-t border-slate-100 pt-2 mt-2' : ''}>
                       <p className="px-4 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wide">{categoryLabel}</p>
