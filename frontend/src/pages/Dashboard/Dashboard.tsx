@@ -61,75 +61,79 @@ export function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <span className="material-icons text-6xl text-primary">directions_bus</span>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {/* Total flota */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-inset ring-indigo-200 flex flex-col gap-4 transition-shadow hover:shadow-md">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-indigo-50">
+              <span className="material-icons text-xl text-indigo-600">directions_bus</span>
+            </div>
+            <span className="text-3xl font-extrabold tracking-tight text-indigo-600">{totalFleet}</span>
           </div>
-          <div className="flex flex-col h-full justify-between relative z-10">
-            <div>
-              <p className="text-sm font-medium text-slate-500 mb-1">Total flota</p>
-              <h3 className="text-3xl font-bold text-slate-900">{totalFleet}</h3>
-            </div>
-            <div className="flex items-center gap-2 mt-4">
-              <span className="text-xs text-slate-400">vehículos registrados</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full shrink-0 bg-indigo-500" />
+            <span className="text-sm font-semibold text-slate-700">Total flota</span>
           </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <span className="material-icons text-6xl text-blue-500">event</span>
-          </div>
-          <div className="flex flex-col h-full justify-between relative z-10">
-            <div>
-              <p className="text-sm font-medium text-slate-500 mb-1">Reservas este mes</p>
-              <h3 className="text-3xl font-bold text-slate-900">{reservationsThisMonth}</h3>
-            </div>
-            <div className="flex items-center gap-2 mt-4">
-              <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded-full">
-                Activas
-              </span>
-            </div>
+          <div className="border-t border-slate-100 pt-3">
+            <span className="text-xs text-slate-400">vehículos registrados</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <span className="material-icons text-6xl text-indigo-500">check_circle</span>
+        {/* Reservas este mes */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-inset ring-blue-200 flex flex-col gap-4 transition-shadow hover:shadow-md">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-50">
+              <span className="material-icons text-xl text-blue-600">event</span>
+            </div>
+            <span className="text-3xl font-extrabold tracking-tight text-blue-600">{reservationsThisMonth}</span>
           </div>
-          <div className="flex flex-col h-full justify-between relative z-10">
-            <div>
-              <p className="text-sm font-medium text-slate-500 mb-1">Disponibilidad</p>
-              <h3 className="text-3xl font-bold text-slate-900">{utilization}%</h3>
-            </div>
-            <div className="flex items-center gap-2 mt-4">
-              <span className="text-xs text-slate-400">{activeCount} en operación</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full shrink-0 bg-blue-500" />
+            <span className="text-sm font-semibold text-slate-700">Reservas este mes</span>
+          </div>
+          <div className="border-t border-slate-100 pt-3">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Activas</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <span className="material-icons text-6xl text-rose-500">warning</span>
+        {/* Disponibilidad */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-inset ring-emerald-200 flex flex-col gap-4 transition-shadow hover:shadow-md">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-50">
+              <span className="material-icons text-xl text-emerald-600">check_circle</span>
+            </div>
+            <span className="text-3xl font-extrabold tracking-tight text-emerald-600">{utilization}%</span>
           </div>
-          <div className="flex flex-col h-full justify-between relative z-10">
-            <div>
-              <p className="text-sm font-medium text-slate-500 mb-1">Alertas mantenimiento</p>
-              <h3 className="text-3xl font-bold text-slate-900">—</h3>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full shrink-0 bg-emerald-500" />
+            <span className="text-sm font-semibold text-slate-700">Disponibilidad</span>
+          </div>
+          <div className="border-t border-slate-100 pt-3">
+            <span className="text-xs text-slate-400">{activeCount} en operación</span>
+          </div>
+        </div>
+
+        {/* Alertas mantenimiento */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-inset ring-rose-200 flex flex-col gap-4 transition-shadow hover:shadow-md">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-rose-50">
+              <span className="material-icons text-xl text-rose-600">warning</span>
             </div>
-            <div className="flex items-center gap-2 mt-4">
-              <span className="bg-rose-100 text-rose-700 text-xs font-semibold px-2 py-1 rounded-full">
-                Próximamente
-              </span>
-              <Link to="/reports" className="text-xs text-primary hover:underline">Ver reportes</Link>
-            </div>
+            <span className="text-3xl font-extrabold tracking-tight text-rose-400">—</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full shrink-0 bg-rose-400" />
+            <span className="text-sm font-semibold text-slate-700">Alertas mantenimiento</span>
+          </div>
+          <div className="border-t border-slate-100 pt-3 flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-700">Próximamente</span>
+            <Link to="/reports" className="text-xs text-primary hover:underline">Ver reportes</Link>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm ring-1 ring-inset ring-slate-200 p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h3 className="text-lg font-bold text-slate-900">Tendencias de uso</h3>
@@ -149,7 +153,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col">
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-inset ring-slate-200 p-6 flex flex-col">
           <h3 className="text-lg font-bold text-slate-900 mb-6">Estado de la flota</h3>
           <div className="relative flex-1 flex items-center justify-center min-h-[200px]">
             <svg className="w-48 h-48 transform -rotate-90" viewBox="0 0 100 100">
@@ -191,7 +195,7 @@ export function Dashboard() {
       </div>
 
       <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-3">
           <h3 className="text-lg font-bold text-slate-900">Calendario de reservas</h3>
           <Link to="/reservations" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
             Ver todas las reservas
@@ -204,7 +208,7 @@ export function Dashboard() {
         />
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+      <div className="bg-white rounded-2xl shadow-sm ring-1 ring-inset ring-slate-200 p-6">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-slate-900">Actividad reciente</h3>
           <Link to="/reservations" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">

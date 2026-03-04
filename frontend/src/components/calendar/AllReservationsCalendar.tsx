@@ -235,7 +235,7 @@ export function AllReservationsCalendar({
   );
 
   return (
-    <div className={`bg-white rounded-[16px] border border-slate-200 overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-2xl shadow-sm ring-1 ring-inset ring-slate-200 overflow-hidden ${className}`}>
       {isMobile ? (
         <MobileCalendar
           events={events}
@@ -244,11 +244,16 @@ export function AllReservationsCalendar({
         />
       ) : (
         <>
-          <div className="px-4 py-2 border-b border-slate-200 bg-slate-50">
-            <p className="text-sm text-slate-600">
-              <span className="inline-block w-3 h-3 rounded bg-amber-500 mr-1" /> Pendiente
-              <span className="inline-block w-3 h-3 rounded bg-red-600 ml-3 mr-1" /> Activa
-            </p>
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-4">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Leyenda</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-amber-400 shrink-0" />
+              <span className="text-xs font-medium text-slate-600">Pendiente</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-red-500 shrink-0" />
+              <span className="text-xs font-medium text-slate-600">Activa</span>
+            </div>
           </div>
           <div className="p-4 rbc-calendar-wrapper rbc-readonly" style={{ minHeight: `${minHeight}px`, height: `${minHeight}px` }}>
             <Calendar
