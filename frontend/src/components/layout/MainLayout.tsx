@@ -168,7 +168,7 @@ export function MainLayout() {
           <div className="shrink-0">
             <NavLink to="/" className="flex items-center gap-2 text-white font-bold text-lg tracking-tight hover:opacity-90">
               <span className="material-icons text-2xl">local_shipping</span>
-              Gestión de Flota
+              Gestión de Vehículos Institucionales
             </NavLink>
           </div>
 
@@ -589,7 +589,7 @@ export function MainLayout() {
 
       <footer className="max-w-7xl mx-auto px-6 py-8 border-t border-slate-200 mt-8">
         <div className="flex flex-col md:flex-row justify-between items-center text-xs text-slate-400">
-          <p>© {new Date().getFullYear()} Gestión de Flota. Todos los derechos reservados.</p>
+          <p>© {new Date().getFullYear()} Gestión de Vehículos Institucionales. Todos los derechos reservados.</p>
           <div className="flex gap-4 mt-4 md:mt-0">
             <a className="hover:text-primary transition-colors" href="#">Privacidad</a>
             <a className="hover:text-primary transition-colors" href="#">Términos</a>

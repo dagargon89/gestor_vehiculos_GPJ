@@ -65,8 +65,8 @@ export function Login() {
             <span className="material-icons text-2xl">local_shipping</span>
           </div>
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900">Gestión de Flota</h2>
-            <p className="text-xs text-primary font-bold uppercase tracking-wider mt-1">Gestión de Flota</p>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900">Gestión de Vehículos Institucionales</h2>
+            <p className="text-xs text-primary font-bold uppercase tracking-wider mt-1">Gestión de Vehículos Institucionales</p>
           </div>
         </div>
 
@@ -96,7 +96,7 @@ export function Login() {
               type="button"
               onClick={handleGoogle}
               disabled={loading}
-              className="w-full flex justify-center items-center gap-3 py-3.5 px-4 border border-slate-200 rounded-[16px] shadow-lg shadow-primary/20 bg-white text-base font-bold text-slate-700 hover:bg-slate-50 hover:text-primary hover:border-primary/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full flex justify-center items-center gap-3 py-3.5 px-6 border border-slate-200 rounded-[16px] bg-white text-base font-semibold text-slate-700 shadow-md hover:shadow-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
             >
               {loading ? (
                 <>
@@ -105,8 +105,11 @@ export function Login() {
                 </>
               ) : (
                 <>
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12.0003 20.45c4.656 0 8.556-3.21 9.97-7.66h-9.97v-4.22h14.4c.144.75.22 1.54.22 2.34 0 7.39-5.36 12.66-12.62 12.66-6.99 0-12.66-5.67-12.66-12.66s5.67-12.66 12.66-12.66c3.39 0 6.47 1.25 8.87 3.49l-3.32 3.32c-1.39-1.34-3.36-2.18-5.55-2.18-4.57 0-8.28 3.71-8.28 8.28s3.71 8.28 8.28 8.28z" fill="currentColor" />
+                  <svg className="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                   </svg>
                   Continuar con Google
                 </>
@@ -117,19 +120,25 @@ export function Login() {
 
         <div className="text-xs text-slate-400 font-semibold flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-          Gestión de Flota v3.1
+          Gestión de Vehículos Institucionales v3.1
         </div>
       </div>
 
-      <div className="hidden lg:flex lg:w-1/2 relative bg-background-light overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-indigo-900/90 mix-blend-multiply" />
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        {/* Fondo de vehículos con desenfoque */}
+        <div
+          className="absolute inset-0 bg-cover bg-center scale-105"
+          style={{ backgroundImage: "url('/fleet-bg.jpg')", filter: 'blur(3px)' }}
+        />
+        {/* Overlay oscuro */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/75 to-indigo-900/85" />
         <div className="relative z-10 h-full flex flex-col justify-center px-16 text-white max-w-2xl mx-auto">
           <div className="bg-white/10 backdrop-blur-md rounded-[24px] p-10 border border-white/20 shadow-2xl">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 border border-white/30 text-xs font-bold uppercase tracking-wider mb-6 text-white backdrop-blur-sm">
               <span className="material-icons text-sm">security</span>
               Acceso seguro
             </div>
-            <h2 className="text-4xl font-extrabold mb-4 font-display leading-tight tracking-tight">Gestión de Flota</h2>
+            <h2 className="text-4xl font-extrabold mb-4 font-display leading-tight tracking-tight">Gestión de Vehículos Institucionales</h2>
             <p className="text-lg text-indigo-50 mb-8 leading-relaxed opacity-90">
               Plataforma centralizada para la gestión eficiente de vehículos y reservas. Supervise el estado de la flota y programe mantenimientos.
             </p>
