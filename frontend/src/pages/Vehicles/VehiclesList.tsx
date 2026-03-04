@@ -397,7 +397,8 @@ export function VehiclesList() {
             onExportExcel={() => exportToExcel(exportHeaders, getExportRows(filteredVehicles), 'vehiculos.xlsx', 'Vehículos')}
             onExportPDF={() => exportToPDF(exportHeaders, getExportRows(filteredVehicles), 'vehiculos.pdf', 'Vehículos')}
           />
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Placa</th>
@@ -444,6 +445,7 @@ export function VehiclesList() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
       {view === 'cards' && (

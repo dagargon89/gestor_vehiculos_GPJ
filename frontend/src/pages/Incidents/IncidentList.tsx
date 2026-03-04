@@ -327,7 +327,8 @@ export function IncidentList() {
             onExportExcel={() => exportToExcel(exportHeaders, getExportRows(incidentList), 'incidentes.xlsx', 'Incidentes')}
             onExportPDF={() => exportToPDF(exportHeaders, getExportRows(incidentList), 'incidentes.pdf', 'Incidentes')}
           />
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Vehículo</th>
@@ -368,6 +369,7 @@ export function IncidentList() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

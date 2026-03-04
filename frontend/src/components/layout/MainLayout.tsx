@@ -163,12 +163,14 @@ export function MainLayout() {
 
       {/* Barra superior oscura (estilo Flotilla) */}
       <nav className="sticky top-0 z-50 bg-primary-dark shadow-md">
-        <div className="w-full px-4 py-3 flex items-center">
+        <div className="w-full px-4 py-3 flex items-center min-w-0">
           {/* Logo: pegado a la izquierda */}
-          <div className="shrink-0">
-            <NavLink to="/" className="flex items-center gap-2 text-white font-bold text-lg tracking-tight hover:opacity-90">
-              <span className="material-icons text-2xl">local_shipping</span>
-              Gestión de Vehículos Institucionales
+          <div className="shrink-0 min-w-0">
+            <NavLink to="/" className="flex items-center gap-2 text-white font-bold tracking-tight hover:opacity-90">
+              <span className="material-icons text-2xl shrink-0">local_shipping</span>
+              {/* Nombre corto en móvil, completo en desktop */}
+              <span className="hidden sm:inline text-lg leading-tight">Gestión de Vehículos Institucionales</span>
+              <span className="sm:hidden text-base leading-tight">Vehículos Inst.</span>
             </NavLink>
           </div>
 
@@ -583,11 +585,11 @@ export function MainLayout() {
         </>
       )}
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <Outlet />
       </main>
 
-      <footer className="max-w-7xl mx-auto px-6 py-8 border-t border-slate-200 mt-8">
+      <footer className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 border-t border-slate-200 mt-6 sm:mt-8">
         <div className="flex flex-col md:flex-row justify-between items-center text-xs text-slate-400">
           <p>© {new Date().getFullYear()} Gestión de Vehículos Institucionales. Todos los derechos reservados.</p>
           <div className="flex gap-4 mt-4 md:mt-0">

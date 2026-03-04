@@ -268,7 +268,8 @@ export function UsersList() {
             onExportExcel={() => exportToExcel(exportHeaders, getExportRows(filteredUsers), 'usuarios.xlsx', 'Usuarios')}
             onExportPDF={() => exportToPDF(exportHeaders, getExportRows(filteredUsers), 'usuarios.pdf', 'Usuarios')}
           />
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Email</th>
@@ -320,6 +321,7 @@ export function UsersList() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
       {view === 'cards' && (

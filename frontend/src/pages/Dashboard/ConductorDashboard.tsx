@@ -97,8 +97,8 @@ export function ConductorDashboard() {
 
   return (
     <>
-      <h2 className="text-2xl font-bold text-slate-900 mb-2">
-        Bienvenido al Dashboard, {userName}
+      <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-4 leading-snug">
+        Bienvenido, {userName}
       </h2>
 
 

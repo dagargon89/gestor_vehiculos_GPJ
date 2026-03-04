@@ -256,7 +256,8 @@ export function SystemSettingsPage() {
           onExportExcel={() => exportToExcel(exportHeaders, getExportRows(settings), 'configuracion-sistema.xlsx', 'Configuración')}
           onExportPDF={() => exportToPDF(exportHeaders, getExportRows(settings), 'configuracion-sistema.pdf', 'Configuración del sistema')}
         />
-        <table className="w-full">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px]">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
               <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Clave</th>
@@ -297,6 +298,7 @@ export function SystemSettingsPage() {
             )}
           </tbody>
         </table>
+          </div>
       </div>
 
       {modalOpen && (

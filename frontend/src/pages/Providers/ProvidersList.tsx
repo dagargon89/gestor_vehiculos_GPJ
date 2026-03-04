@@ -244,7 +244,8 @@ export function ProvidersList() {
             onExportExcel={() => exportToExcel(exportHeaders, getExportRows(filteredProviders), 'proveedores.xlsx', 'Proveedores')}
             onExportPDF={() => exportToPDF(exportHeaders, getExportRows(filteredProviders), 'proveedores.pdf', 'Proveedores')}
           />
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Nombre</th>
@@ -287,6 +288,7 @@ export function ProvidersList() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
       {view === 'cards' && (

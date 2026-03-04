@@ -35,10 +35,10 @@ export function Dashboard() {
 
   return (
     <>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Resumen del panel</h2>
-          <p className="text-slate-500 mt-1">Métricas de la flota en tiempo real.</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Resumen del panel</h2>
+          <p className="text-slate-500 mt-1 text-sm sm:text-base">Métricas de la flota en tiempo real.</p>
         </div>
         <div className="flex items-center gap-3">
           <button
