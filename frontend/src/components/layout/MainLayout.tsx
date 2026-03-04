@@ -172,8 +172,59 @@ export function MainLayout() {
             </NavLink>
           </div>
 
-          {/* En móvil/tablet: espaciador + hamburguesa a la derecha */}
-          <div className="flex flex-1 justify-end lg:hidden">
+          {/* En móvil/tablet: notificaciones + hamburguesa a la derecha */}
+          <div className="flex flex-1 justify-end items-center gap-1 lg:hidden">
+            {canReadNotifications && (
+              <div className="relative" ref={notificationsRef}>
+                <button
+                  type="button"
+                  onClick={() => setNotificationsOpen((prev) => !prev)}
+                  className="relative p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+                  aria-label="Notificaciones"
+                >
+                  <span className="material-icons">notifications_none</span>
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                {notificationsOpen && (
+                  <div className="fixed left-2 right-2 top-14 max-h-[70vh] overflow-auto bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center shrink-0">
+                      <span className="text-sm font-bold text-slate-900">Notificaciones</span>
+                      {unreadCount > 0 && (
+                        <span className="text-xs text-slate-500">{unreadCount} sin leer</span>
+                      )}
+                    </div>
+                    <div className="divide-y divide-slate-100">
+                      {notifications.length === 0 ? (
+                        <div className="px-4 py-6 text-center text-slate-500 text-sm">No hay notificaciones.</div>
+                      ) : (
+                        notifications.map((n: { id: string; title: string; message: string; read: boolean; createdAt: string; actionUrl?: string }) => (
+                          <button
+                            key={n.id}
+                            type="button"
+                            onClick={() => {
+                              if (!n.read) markAsReadMutation.mutate(n.id);
+                              if (n.actionUrl) navigate(n.actionUrl);
+                              setNotificationsOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
+                          >
+                            <p className="text-sm font-medium text-slate-900 break-words">{n.title}</p>
+                            <p className="text-xs text-slate-600 mt-0.5 line-clamp-2 break-words">{n.message}</p>
+                            <p className="text-xs text-slate-400 mt-1">
+                              {new Date(n.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
@@ -452,40 +503,6 @@ export function MainLayout() {
                   Cerrar sesión
                 </button>
               </div>
-              {/* Notificaciones dentro del drawer (solo si tiene permiso) */}
-              {canReadNotifications && (
-              <div className="px-4 py-2 border-t border-slate-100">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center gap-2">
-                  <span className="material-icons text-lg">notifications_none</span>
-                  Notificaciones {unreadCount > 0 && (
-                    <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
-                  )}
-                </p>
-                <div className="mt-2 max-h-48 overflow-auto divide-y divide-slate-100 rounded-lg border border-slate-100">
-                  {notifications.length === 0 ? (
-                    <div className="px-3 py-4 text-center text-slate-500 text-sm">No hay notificaciones.</div>
-                  ) : (
-                    notifications.slice(0, 10).map((n: { id: string; title: string; message: string; read: boolean; createdAt: string; actionUrl?: string }) => (
-                      <button
-                        key={n.id}
-                        type="button"
-                        onClick={() => {
-                          if (!n.read) markAsReadMutation.mutate(n.id);
-                          if (n.actionUrl) navigate(n.actionUrl);
-                          setMobileMenuOpen(false);
-                        }}
-                        className={`w-full text-left px-3 py-2.5 hover:bg-slate-50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
-                      >
-                        <p className="text-sm font-medium text-slate-900 break-words">{n.title}</p>
-                        <p className="text-xs text-slate-500 mt-0.5 line-clamp-1 break-words">{n.message}</p>
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
-              )}
             </div>
 
             <nav className="flex-1 overflow-auto py-2">
