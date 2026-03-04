@@ -9,6 +9,9 @@ export default defineConfig({
     alias: { '@': '/src' },
   },
   server: {
+    host: true,
+    port: 5173,
+    allowedHosts: ['vehiculos.participajuarez.org'],
     proxy: {
       // En desarrollo, las peticiones a /api se reenvían al backend (evita CORS).
       // Si ves ECONNRESET, comprueba que el backend esté en marcha: cd backend && npm run start:dev
