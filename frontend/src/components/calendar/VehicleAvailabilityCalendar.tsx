@@ -6,6 +6,7 @@ import { es } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { MobileCalendar } from './MobileCalendar';
 
 const localizer = dateFnsLocalizer({
   format,
@@ -130,6 +131,18 @@ export function VehicleAvailabilityCalendar({
   className = '',
   minHeight = 400,
 }: VehicleAvailabilityCalendarProps) {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 1023px)').matches : false,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
   const monthStart = useMemo(() => {
     const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     d.setHours(0, 0, 0, 0);
@@ -185,18 +198,7 @@ export function VehicleAvailabilityCalendar({
   }, [reservations, monthStart, monthEnd]);
 
   type ViewType = 'month' | 'week' | 'day' | 'agenda' | 'work_week';
-  const [view, setView] = useState<ViewType>(() => {
-    if (typeof window === 'undefined') return 'month';
-    return window.matchMedia('(max-width: 767px)').matches ? 'agenda' : 'month';
-  });
-
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)');
-    const update = () => setView(mq.matches ? 'agenda' : 'month');
-    update();
-    mq.addEventListener('change', update);
-    return () => mq.removeEventListener('change', update);
-  }, []);
+  const [view, setView] = useState<ViewType>('month');
 
   const eventStyleGetter = (event: ReservationEvent) => {
     const isPending = event.status === 'pending';
@@ -241,35 +243,47 @@ export function VehicleAvailabilityCalendar({
 
   return (
     <div className={`bg-white rounded-[16px] border border-slate-200 overflow-hidden ${className}`}>
-      <div className="px-4 py-2 border-b border-slate-200 bg-slate-50">
-        <p className="text-sm text-slate-600">
-          <span className="inline-block w-3 h-3 rounded bg-amber-500 mr-1" /> Pendiente
-          <span className="inline-block w-3 h-3 rounded bg-red-600 ml-3 mr-1" /> Activa
-        </p>
-      </div>
-      <div className="p-4 rbc-calendar-wrapper" style={{ minHeight: `${minHeight}px`, height: `${minHeight}px` }}>
-        <Calendar
-          localizer={localizer}
+      {isMobile ? (
+        <MobileCalendar
           events={events}
-          startAccessor="start"
-          endAccessor="end"
-          titleAccessor="title"
-          tooltipAccessor={() => ''}
-          view={view}
-          onView={(v: ViewType) => setView(v)}
-          date={currentDate}
+          currentDate={currentDate}
           onNavigate={onNavigate}
           onSelectSlot={onSelectSlot}
-          selectable
-          eventPropGetter={eventStyleGetter}
-          messages={messages}
-          culture="es"
-          popup
-          components={{
-            event: EventWithTooltip,
-          }}
+          selectable={!!onSelectSlot}
         />
-      </div>
+      ) : (
+        <>
+          <div className="px-4 py-2 border-b border-slate-200 bg-slate-50">
+            <p className="text-sm text-slate-600">
+              <span className="inline-block w-3 h-3 rounded bg-amber-500 mr-1" /> Pendiente
+              <span className="inline-block w-3 h-3 rounded bg-red-600 ml-3 mr-1" /> Activa
+            </p>
+          </div>
+          <div className="p-4 rbc-calendar-wrapper" style={{ minHeight: `${minHeight}px`, height: `${minHeight}px` }}>
+            <Calendar
+              localizer={localizer}
+              events={events}
+              startAccessor="start"
+              endAccessor="end"
+              titleAccessor="title"
+              tooltipAccessor={() => ''}
+              view={view}
+              onView={(v: ViewType) => setView(v)}
+              date={currentDate}
+              onNavigate={onNavigate}
+              onSelectSlot={onSelectSlot}
+              selectable
+              eventPropGetter={eventStyleGetter}
+              messages={messages}
+              culture="es"
+              popup
+              components={{
+                event: EventWithTooltip,
+              }}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
