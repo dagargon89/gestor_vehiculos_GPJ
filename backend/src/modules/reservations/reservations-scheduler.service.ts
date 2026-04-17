@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
@@ -18,7 +18,7 @@ function formatDateEs(date: Date): string {
 }
 
 @Injectable()
-export class ReservationsSchedulerService {
+export class ReservationsSchedulerService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ReservationsSchedulerService.name);
 
   constructor(
@@ -27,6 +27,10 @@ export class ReservationsSchedulerService {
     private notificationsService: NotificationsService,
     private mailService: MailService,
   ) {}
+
+  async onApplicationBootstrap() {
+    await this.markOverdueReservations();
+  }
 
   @Cron('*/10 * * * *') // Every 10 minutes
   async markOverdueReservations(): Promise<void> {
