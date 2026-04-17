@@ -94,9 +94,8 @@ function VehicleFormModal({
   const handleEditExisting = async (i: number) => {
     setFetchingExisting(true);
     try {
-      const res = await fetch(existingPhotos[i]);
-      const blob = await res.blob();
-      const objectUrl = URL.createObjectURL(blob);
+      const res = await apiClient.get(`/storage/proxy?url=${encodeURIComponent(existingPhotos[i])}`, { responseType: 'blob' });
+      const objectUrl = URL.createObjectURL(res.data as Blob);
       setCropFileName(`foto_${i + 1}.jpg`);
       setCropExistingIndex(i);
       setCropSrc(objectUrl);

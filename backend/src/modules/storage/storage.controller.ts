@@ -4,12 +4,15 @@ import {
   Get,
   Delete,
   Param,
+  Query,
   Body,
+  Res,
   UseGuards,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { StorageService } from './storage.service';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
@@ -39,6 +42,18 @@ export class StorageController {
       user.id,
     );
     return { firebaseUrl: result.firebaseUrl, id: result.id };
+  }
+
+  @Get('proxy')
+  async proxyImage(
+    @Query('url') url: string,
+    @Res() res: Response,
+  ) {
+    if (!url) throw new BadRequestException('Falta parámetro url');
+    const { buffer, contentType } = await this.storageService.fetchRemoteImage(decodeURIComponent(url));
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+    res.send(buffer);
   }
 
   @Get('record/:id')
