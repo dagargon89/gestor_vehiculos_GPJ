@@ -13,9 +13,6 @@ type SearchSelectProps = {
   id?: string;
 };
 
-const baseInputClass =
-  'w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-white text-left';
-
 export function SearchSelect({
   options,
   value,
@@ -77,34 +74,38 @@ export function SearchSelect({
       }
       return;
     }
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      setOpen(false);
-      return;
-    }
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setHighlightIndex((i) => (i < filteredOptions.length - 1 ? i + 1 : 0));
-      return;
-    }
-    if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setHighlightIndex((i) => (i > 0 ? i - 1 : filteredOptions.length - 1));
-      return;
-    }
+    if (e.key === 'Escape') { e.preventDefault(); setOpen(false); return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlightIndex((i) => (i < filteredOptions.length - 1 ? i + 1 : 0)); return; }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); setHighlightIndex((i) => (i > 0 ? i - 1 : filteredOptions.length - 1)); return; }
     if (e.key === 'Enter') {
       e.preventDefault();
       const opt = filteredOptions[highlightIndex];
-      if (opt) {
-        onChange(opt.value);
-        setOpen(false);
-      }
+      if (opt) { onChange(opt.value); setOpen(false); }
       return;
     }
   }
 
-  const displayText = selectedLabel || placeholder;
+  const displayText   = selectedLabel || placeholder;
   const showPlaceholder = !selectedLabel;
+
+  const triggerStyle: React.CSSProperties = {
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '10px 14px',
+    background: 'var(--color-input-bg)',
+    color: showPlaceholder ? 'var(--color-text-muted)' : 'var(--color-text)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 10,
+    fontSize: 13,
+    fontFamily: "'DM Sans', sans-serif",
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.6 : 1,
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+    outline: 'none',
+    textAlign: 'left',
+  };
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
@@ -118,13 +119,16 @@ export function SearchSelect({
         aria-invalid={required && !value}
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={handleKeyDown}
-        className={`${baseInputClass} flex items-center justify-between ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'} ${showPlaceholder ? 'text-slate-400' : 'text-slate-900'}`}
+        style={triggerStyle}
+        onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,132,255,0.45)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 3px rgba(99,132,255,0.10)'; }}
+        onBlur={e  => { (e.currentTarget as HTMLElement).style.borderColor = ''; (e.currentTarget as HTMLElement).style.boxShadow = ''; }}
       >
         <span className="truncate">{displayText}</span>
-        <span className="material-icons text-slate-500 text-lg shrink-0 ml-1" aria-hidden>
+        <span className="material-icons shrink-0 ml-1" style={{ fontSize: 18, color: 'var(--color-text-muted)' }} aria-hidden>
           {open ? 'expand_less' : 'expand_more'}
         </span>
       </button>
+
       {required && !value && (
         <input
           tabIndex={-1}
@@ -135,46 +139,51 @@ export function SearchSelect({
           onChange={() => {}}
         />
       )}
+
       {open && (
         <div
-          className="absolute left-0 right-0 top-full mt-1 z-50 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden"
+          className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl overflow-hidden"
+          style={{
+            background: 'var(--color-menu-bg)',
+            border: '1px solid var(--color-border)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            backdropFilter: 'blur(20px)',
+          }}
           role="listbox"
         >
-          <div className="p-2 border-b border-slate-100">
+          <div className="p-2" style={{ borderBottom: '1px solid var(--color-border)' }}>
             <input
               ref={searchInputRef}
               type="text"
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setHighlightIndex(0);
-              }}
+              onChange={(e) => { setSearch(e.target.value); setHighlightIndex(0); }}
               onKeyDown={handleKeyDown}
               placeholder="Buscar…"
-              className={`${baseInputClass} py-1.5 text-sm`}
+              className="input-field"
+              style={{ padding: '6px 12px', fontSize: 13 }}
               aria-label="Buscar opciones"
             />
           </div>
           <ul ref={listRef} className="max-h-60 overflow-auto py-1" role="listbox">
             {filteredOptions.length === 0 ? (
-              <li className="px-3 py-2 text-sm text-slate-500">Sin resultados</li>
+              <li className="px-3 py-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>Sin resultados</li>
             ) : (
               filteredOptions.map((opt, i) => (
                 <li key={opt.value} role="option" aria-selected={opt.value === value}>
                   <button
                     type="button"
-                    onClick={() => {
-                      onChange(opt.value);
-                      setOpen(false);
-                    }}
+                    onClick={() => { onChange(opt.value); setOpen(false); }}
                     onMouseEnter={() => setHighlightIndex(i)}
-                    className={`w-full text-left px-3 py-2 text-sm transition-colors ${
-                      opt.value === value
-                        ? 'bg-primary/10 text-primary font-medium'
+                    className="w-full text-left px-3 py-2 text-sm transition-colors"
+                    style={{
+                      color: opt.value === value ? '#818cf8' : 'var(--color-text-soft)',
+                      background: opt.value === value
+                        ? 'rgba(99,132,255,0.10)'
                         : i === highlightIndex
-                          ? 'bg-slate-100 text-slate-900'
-                          : 'text-slate-700 hover:bg-slate-50'
-                    }`}
+                        ? 'rgba(99,132,255,0.07)'
+                        : 'transparent',
+                      fontWeight: opt.value === value ? 600 : 400,
+                    }}
                   >
                     {opt.label}
                   </button>

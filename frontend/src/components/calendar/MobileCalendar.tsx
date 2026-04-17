@@ -87,28 +87,34 @@ export function MobileCalendar({
         <button
           type="button"
           onClick={() => onNavigate?.(subMonths(currentDate, 1))}
-          className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+          className="p-2 rounded-lg transition-colors"
+          style={{ color: 'var(--color-text-muted)' }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,132,255,0.08)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           aria-label="Mes anterior"
         >
-          <span className="material-icons text-slate-600">chevron_left</span>
+          <span className="material-icons">chevron_left</span>
         </button>
-        <span className="text-base font-bold text-slate-900 capitalize">
+        <span className="text-base font-bold capitalize" style={{ color: 'var(--color-text)' }}>
           {format(currentDate, 'MMMM yyyy', { locale: es })}
         </span>
         <button
           type="button"
           onClick={() => onNavigate?.(addMonths(currentDate, 1))}
-          className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+          className="p-2 rounded-lg transition-colors"
+          style={{ color: 'var(--color-text-muted)' }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,132,255,0.08)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           aria-label="Mes siguiente"
         >
-          <span className="material-icons text-slate-600">chevron_right</span>
+          <span className="material-icons">chevron_right</span>
         </button>
       </div>
 
       {/* Encabezados de días */}
       <div className="grid grid-cols-7 text-center">
         {WEEK_HEADERS.map((wd) => (
-          <div key={wd} className="text-xs font-semibold text-slate-400 py-1">
+          <div key={wd} className="text-xs font-semibold py-1" style={{ color: 'var(--color-text-muted)' }}>
             {wd}
           </div>
         ))}
@@ -129,36 +135,45 @@ export function MobileCalendar({
               key={i}
               type="button"
               onClick={() => handleDayClick(d)}
-              className={`flex flex-col items-center justify-center py-1.5 rounded-lg transition-colors ${
+              className="flex flex-col items-center justify-center py-1.5 rounded-lg transition-colors"
+              style={
                 selected
-                  ? 'bg-primary text-white'
+                  ? { background: 'linear-gradient(135deg,#6384ff,#5a6fff)', color: '#fff' }
                   : today
-                  ? 'ring-2 ring-primary ring-inset'
-                  : inMonth
-                  ? 'hover:bg-slate-100'
-                  : ''
-              }`}
+                  ? { outline: '2px solid #6384ff', outlineOffset: '-2px' }
+                  : {}
+              }
+              onMouseEnter={e => {
+                if (!selected) (e.currentTarget as HTMLElement).style.background = 'rgba(99,132,255,0.08)';
+              }}
+              onMouseLeave={e => {
+                if (!selected) (e.currentTarget as HTMLElement).style.background = '';
+              }}
             >
               <span
-                className={`text-sm font-medium leading-none ${
-                  inMonth
-                    ? selected
-                      ? 'text-white'
-                      : 'text-slate-800'
-                    : 'text-slate-300'
-                }`}
+                className="text-sm font-medium leading-none"
+                style={{
+                  color: selected
+                    ? '#fff'
+                    : inMonth
+                    ? 'var(--color-text)'
+                    : 'var(--color-text-muted)',
+                  opacity: inMonth ? 1 : 0.4,
+                }}
               >
                 {format(d, 'd')}
               </span>
               <div className="flex gap-0.5 mt-1 h-1.5">
                 {hasPending && (
                   <span
-                    className={`w-1.5 h-1.5 rounded-full ${selected ? 'bg-white' : 'bg-amber-400'}`}
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ background: selected ? '#fff' : '#f59e0b' }}
                   />
                 )}
                 {hasActive && (
                   <span
-                    className={`w-1.5 h-1.5 rounded-full ${selected ? 'bg-white' : 'bg-red-500'}`}
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ background: selected ? '#fff' : '#ef4444' }}
                   />
                 )}
               </div>
@@ -169,21 +184,21 @@ export function MobileCalendar({
 
       {/* Leyenda */}
       <div className="flex items-center gap-4 px-1">
-        <span className="flex items-center gap-1.5 text-xs text-slate-500">
-          <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" /> Pendiente
+        <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: '#f59e0b' }} /> Pendiente
         </span>
-        <span className="flex items-center gap-1.5 text-xs text-slate-500">
-          <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" /> Activa
+        <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: '#ef4444' }} /> Activa
         </span>
       </div>
 
       {/* Eventos del día seleccionado */}
-      <div className="border-t border-slate-100 pt-3">
-        <p className="text-sm font-semibold text-slate-700 mb-2 capitalize px-1">
+      <div className="pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+        <p className="text-sm font-semibold mb-2 capitalize px-1" style={{ color: 'var(--color-text-soft)' }}>
           {format(selectedDate, "EEEE d 'de' MMMM", { locale: es })}
         </p>
         {dayEvents.length === 0 ? (
-          <p className="text-center py-5 text-slate-400 text-sm">
+          <p className="text-center py-5 text-sm" style={{ color: 'var(--color-text-muted)' }}>
             {selectable ? 'Día disponible. Toca para seleccionar.' : 'Sin reservas este día.'}
           </p>
         ) : (
@@ -191,31 +206,31 @@ export function MobileCalendar({
             {dayEvents.map((e) => (
               <div
                 key={e.id}
-                className={`rounded-lg px-3 py-2.5 border-l-4 ${
-                  e.status === 'pending'
-                    ? 'bg-amber-50 border-amber-400'
-                    : 'bg-red-50 border-red-500'
-                }`}
+                className="rounded-lg px-3 py-2.5"
+                style={{
+                  background: e.status === 'pending' ? 'rgba(245,158,11,0.10)' : 'rgba(239,68,68,0.10)',
+                  borderLeft: `4px solid ${e.status === 'pending' ? '#f59e0b' : '#ef4444'}`,
+                }}
               >
-                <p className="text-sm font-medium text-slate-900 truncate">{e.title}</p>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{e.title}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                   {format(e.start, 'HH:mm')} – {format(e.end, 'HH:mm')}
                   {e.vehiclePlate && ` · ${e.vehiclePlate}`}
                 </p>
                 {e.reservedBy && (
-                  <p className="text-xs text-slate-400 mt-0.5">{e.reservedBy}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{e.reservedBy}</p>
                 )}
                 {(e.destination || e.description) && (
-                  <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
+                  <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--color-text-muted)' }}>
                     {e.destination || e.description}
                   </p>
                 )}
                 <span
-                  className={`inline-block text-xs font-semibold mt-1.5 px-2 py-0.5 rounded-full ${
-                    e.status === 'pending'
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-red-100 text-red-700'
-                  }`}
+                  className="inline-block text-xs font-semibold mt-1.5 px-2 py-0.5 rounded-full"
+                  style={{
+                    background: e.status === 'pending' ? 'rgba(245,158,11,0.18)' : 'rgba(239,68,68,0.18)',
+                    color: e.status === 'pending' ? '#fbbf24' : '#f87171',
+                  }}
                 >
                   {e.status === 'pending' ? 'Pendiente' : 'Activa'}
                 </span>

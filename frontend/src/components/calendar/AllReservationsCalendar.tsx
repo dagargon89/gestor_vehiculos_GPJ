@@ -235,7 +235,10 @@ export function AllReservationsCalendar({
   );
 
   return (
-    <div className={`bg-white rounded-2xl shadow-sm ring-1 ring-inset ring-slate-200 overflow-hidden ${className}`}>
+    <div
+      className={`rounded-2xl overflow-hidden ${className}`}
+      style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
+    >
       {isMobile ? (
         <MobileCalendar
           events={events}
@@ -244,15 +247,18 @@ export function AllReservationsCalendar({
         />
       ) : (
         <>
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-4">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Leyenda</span>
+          <div
+            className="px-5 py-3 flex items-center gap-4"
+            style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-table-head-bg)' }}
+          >
+            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>Leyenda</span>
             <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-amber-400 shrink-0" />
-              <span className="text-xs font-medium text-slate-600">Pendiente</span>
+              <span className="w-3 h-3 rounded-full shrink-0" style={{ background: '#f59e0b' }} />
+              <span className="text-xs font-medium" style={{ color: 'var(--color-text-soft)' }}>Pendiente</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-red-500 shrink-0" />
-              <span className="text-xs font-medium text-slate-600">Activa</span>
+              <span className="w-3 h-3 rounded-full shrink-0" style={{ background: '#ef4444' }} />
+              <span className="text-xs font-medium" style={{ color: 'var(--color-text-soft)' }}>Activa</span>
             </div>
           </div>
           <div className="p-4 rbc-calendar-wrapper rbc-readonly" style={{ minHeight: `${minHeight}px`, height: `${minHeight}px` }}>

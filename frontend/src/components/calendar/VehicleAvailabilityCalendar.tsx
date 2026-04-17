@@ -233,8 +233,11 @@ export function VehicleAvailabilityCalendar({
 
   if (!vehicleId) {
     return (
-      <div className={`bg-white rounded-[16px] border border-slate-200 p-6 ${className}`}>
-        <p className="text-slate-500 text-center py-8">
+      <div
+        className={`rounded-[16px] p-6 ${className}`}
+        style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
+      >
+        <p className="text-center py-8" style={{ color: 'var(--color-text-muted)' }}>
           Selecciona un vehículo para ver su disponibilidad.
         </p>
       </div>
@@ -242,7 +245,10 @@ export function VehicleAvailabilityCalendar({
   }
 
   return (
-    <div className={`bg-white rounded-[16px] border border-slate-200 overflow-hidden ${className}`}>
+    <div
+      className={`rounded-[16px] overflow-hidden ${className}`}
+      style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
+    >
       {isMobile ? (
         <MobileCalendar
           events={events}
@@ -253,10 +259,13 @@ export function VehicleAvailabilityCalendar({
         />
       ) : (
         <>
-          <div className="px-4 py-2 border-b border-slate-200 bg-slate-50">
-            <p className="text-sm text-slate-600">
-              <span className="inline-block w-3 h-3 rounded bg-amber-500 mr-1" /> Pendiente
-              <span className="inline-block w-3 h-3 rounded bg-red-600 ml-3 mr-1" /> Activa
+          <div
+            className="px-4 py-2"
+            style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-table-head-bg)' }}
+          >
+            <p className="text-sm flex items-center gap-1" style={{ color: 'var(--color-text-soft)' }}>
+              <span className="inline-block w-3 h-3 rounded" style={{ background: '#f59e0b' }} /> Pendiente
+              <span className="inline-block w-3 h-3 rounded ml-3" style={{ background: '#ef4444' }} /> Activa
             </p>
           </div>
           <div className="p-4 rbc-calendar-wrapper" style={{ minHeight: `${minHeight}px`, height: `${minHeight}px` }}>

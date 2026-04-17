@@ -127,13 +127,13 @@ export function Dashboard() {
             </div>
             <div className="flex gap-1">
               <button type="button" className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--color-text-muted)' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.08)')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,132,255,0.08)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <span className="material-icons text-base">download</span>
               </button>
               <button type="button" className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--color-text-muted)' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.08)')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,132,255,0.08)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <span className="material-icons text-base">more_horiz</span>
@@ -141,7 +141,7 @@ export function Dashboard() {
             </div>
           </div>
           <div className="relative h-64 w-full flex items-center justify-center rounded-xl"
-            style={{ border: '2px dashed var(--color-border)', background: 'rgba(99,102,241,0.02)' }}
+            style={{ border: '2px dashed var(--color-border)', background: 'rgba(99,132,255,0.02)' }}
           >
             <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Gráfico de tendencias (integrar con datos reales)</p>
           </div>
@@ -155,7 +155,7 @@ export function Dashboard() {
               <circle cx="50" cy="50" fill="transparent" r="40" stroke="var(--color-border)" strokeWidth="12" />
               <circle
                 cx="50" cy="50" fill="transparent" r="40"
-                stroke="#6366f1"
+                stroke="#6384ff"
                 strokeDasharray={totalFleet > 0 ? `${(utilization / 100) * 251.2} 251.2` : '0 251.2'}
                 strokeDashoffset="0"
                 strokeLinecap="round"
@@ -172,7 +172,7 @@ export function Dashboard() {
           <div className="mt-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#6366f1' }} />
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#6384ff' }} />
                 <span className="text-sm" style={{ color: 'var(--color-text-soft)' }}>Disponibles</span>
               </div>
               <span className="text-sm font-semibold font-mono-data" style={{ color: 'var(--color-text)' }}>{activeCount}</span>
@@ -217,7 +217,7 @@ export function Dashboard() {
           ) : (
             reservations.slice(0, 4).map((r: { id: string; vehicle?: { plate: string }; startDatetime: string; endDatetime: string; status: string; user?: { displayName?: string } }) => (
               <div key={r.id} className="flex gap-4">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}>
+                <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,132,255,0.12)', color: '#818cf8' }}>
                   <span className="material-icons" style={{ fontSize: 18 }}>directions_car</span>
                 </div>
                 <div className="flex-1 min-w-0">

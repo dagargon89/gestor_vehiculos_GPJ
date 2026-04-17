@@ -38,6 +38,12 @@ function getFirstPhotoUrl(photoUrls: string | null | undefined): string | null {
   }
 }
 
+function statusBadgeStyle(status: string): React.CSSProperties {
+  if (status === 'available') return { background: 'rgba(34,197,94,0.18)', color: '#4ade80' };
+  if (status === 'in_use') return { background: 'rgba(245,158,11,0.18)', color: '#fbbf24' };
+  return { background: 'rgba(148,163,184,0.18)', color: 'var(--color-text-muted)' };
+}
+
 function ReserveVehicleModal({
   vehicle,
   onClose,
@@ -130,17 +136,24 @@ function ReserveVehicleModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto" onClick={onClose}>
       <div
-        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-[90rem] min-h-[90vh] max-h-[98vh] overflow-y-auto my-2 flex flex-col"
+        className="w-full max-w-[90rem] min-h-[90vh] max-h-[98vh] overflow-y-auto my-2 flex flex-col rounded-[16px]"
+        style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)', boxShadow: '0 24px 64px rgba(0,0,0,0.4)' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-4 py-3 md:px-6 md:py-4 border-b border-slate-200 flex justify-between items-center">
-          <h3 className="text-lg font-bold text-slate-900">
+        <div
+          className="px-4 py-3 md:px-6 md:py-4 flex justify-between items-center"
+          style={{ borderBottom: '1px solid var(--color-border)' }}
+        >
+          <h3 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
             Reservar: {vehicle.plate} – {vehicle.brand} {vehicle.model}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100"
+            className="p-2 rounded-lg transition-colors"
+            style={{ color: 'var(--color-text-muted)' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,132,255,0.08)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             aria-label="Cerrar"
           >
             <span className="material-icons">close</span>
@@ -149,8 +162,8 @@ function ReserveVehicleModal({
         <form onSubmit={handleSubmit} className="p-4 md:p-6 flex-1 flex flex-col min-h-0">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
             <div className="lg:col-span-2 space-y-4 flex flex-col min-h-0 order-2 lg:order-1">
-              <h4 className="text-sm font-bold text-slate-700">Calendario de disponibilidad</h4>
-              <p className="text-xs text-slate-500">
+              <h4 className="text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Calendario de disponibilidad</h4>
+              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                 Los días en naranja/rojo tienen reservas. Selecciona un hueco para elegir fecha y hora.
               </p>
               <div className="flex-1 min-h-[320px] md:min-h-[560px]">
@@ -165,37 +178,45 @@ function ReserveVehicleModal({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Fecha y hora de salida *</label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Fecha y hora de salida *</label>
                   <input
                     type="datetime-local"
                     required
                     value={startDatetime}
                     onChange={(e) => setStartDatetime(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    className="input-field w-full"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Fecha y hora de regreso *</label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Fecha y hora de regreso *</label>
                   <input
                     type="datetime-local"
                     required
                     value={endDatetime}
                     onChange={(e) => setEndDatetime(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    className="input-field w-full"
                   />
                 </div>
               </div>
             </div>
             <div className="lg:col-span-1 space-y-4 order-1 lg:order-2 min-w-0">
-              <h4 className="text-sm font-bold text-slate-700">Datos de la solicitud</h4>
+              <h4 className="text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Datos de la solicitud</h4>
               {error && (
-                <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
+                <div
+                  className="p-3 rounded-lg text-sm"
+                  style={{ background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.20)' }}
+                >
+                  {error}
+                </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Solicitar para usuario *</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Solicitar para usuario *</label>
                 {esConductor ? (
-                  <div className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 font-medium flex items-center gap-2">
-                    <span className="material-icons text-slate-400 text-base">person</span>
+                  <div
+                    className="w-full px-3 py-2 rounded-lg font-medium flex items-center gap-2"
+                    style={{ border: '1px solid var(--color-border)', background: 'var(--color-input-bg)', color: 'var(--color-text-soft)' }}
+                  >
+                    <span className="material-icons text-base" style={{ color: 'var(--color-text-muted)' }}>person</span>
                     {userData?.displayName || userData?.email || 'Usuario actual'}
                   </div>
                 ) : (
@@ -210,40 +231,40 @@ function ReserveVehicleModal({
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Evento</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Evento</label>
                 <input
                   type="text"
                   value={eventName}
                   onChange={(e) => setEventName(e.target.value)}
                   placeholder="Nombre del evento o propósito del viaje"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                  className="input-field w-full"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Descripción del viaje</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Descripción del viaje</label>
                 <textarea
                   rows={2}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Breve descripción"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                  className="input-field w-full"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Destino / Ruta</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Destino / Ruta</label>
                 <input
                   type="text"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder="Destino o ruta prevista"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                  className="input-field w-full"
                 />
               </div>
               <div className="pt-2">
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full px-4 py-3 bg-primary-dark text-white rounded-lg hover:opacity-90 font-medium disabled:opacity-50"
+                  className="btn-primary w-full py-3 disabled:opacity-50"
                 >
                   {submitting ? 'Enviando...' : 'Enviar solicitud'}
                 </button>
@@ -273,29 +294,36 @@ export function VehicleRequestPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-slate-900">Solicitud de vehículos</h2>
-      <p className="text-slate-600">Elige un vehículo y haz clic en Reservar para ver disponibilidad y enviar tu solicitud.</p>
+      <div>
+        <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Solicitud de vehículos</h2>
+        <p className="mt-1" style={{ color: 'var(--color-text-muted)' }}>
+          Elige un vehículo y haz clic en Reservar para ver disponibilidad y enviar tu solicitud.
+        </p>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {vehicles.length === 0 ? (
-          <div className="col-span-full bg-white rounded-[16px] shadow-sm border border-slate-200 px-6 py-12 text-center text-slate-500">
+          <div
+            className="col-span-full rounded-[16px] px-6 py-12 text-center"
+            style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+          >
             No hay vehículos registrados.
           </div>
         ) : (
           vehicles.map((v: Vehicle) => {
             const photoUrl = getFirstPhotoUrl(v.photoUrls);
             const statusLabel = VEHICLE_STATUS_OPTIONS[v.status] ?? v.status;
-            const statusColor =
-              v.status === 'available'
-                ? 'bg-green-100 text-green-800'
-                : v.status === 'in_use'
-                  ? 'bg-amber-100 text-amber-800'
-                  : 'bg-slate-100 text-slate-700';
             return (
               <div
                 key={v.id}
-                className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow"
+                className="rounded-[16px] overflow-hidden flex flex-col transition-shadow"
+                style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
+                onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 8px 32px rgba(99,132,255,0.12)')}
+                onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}
               >
-                <div className="aspect-[4/3] bg-slate-100 relative">
+                <div
+                  className="aspect-[4/3] relative"
+                  style={{ background: 'var(--color-table-head-bg)' }}
+                >
                   {photoUrl ? (
                     <img
                       src={photoUrl}
@@ -303,36 +331,37 @@ export function VehicleRequestPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-400">
+                    <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--color-text-muted)' }}>
                       <span className="material-icons text-6xl">directions_car</span>
                     </div>
                   )}
                   <span
-                    className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}
+                    className="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium"
+                    style={statusBadgeStyle(v.status)}
                   >
                     {statusLabel}
                   </span>
                 </div>
                 <div className="p-4 flex-1 flex flex-col">
-                  <div className="font-bold text-slate-900 text-lg">{v.plate}</div>
-                  <div className="text-slate-600 text-sm">
+                  <div className="font-bold text-lg font-mono-data" style={{ color: 'var(--color-text)' }}>{v.plate}</div>
+                  <div className="text-sm" style={{ color: 'var(--color-text-soft)' }}>
                     {v.brand} {v.model}
                     {v.year != null && ` (${v.year})`}
                   </div>
                   {v.color && (
-                    <div className="text-slate-500 text-xs mt-0.5">{v.color}</div>
+                    <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{v.color}</div>
                   )}
                   {v.currentOdometer != null && (
-                    <div className="text-slate-500 text-xs">Kilometraje: {v.currentOdometer.toLocaleString()} km</div>
+                    <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Kilometraje: {v.currentOdometer.toLocaleString()} km</div>
                   )}
-                  <div className="text-slate-500 text-xs">Gasolina: {v.lastFuelLevel ?? '—'}</div>
-                  <div className="text-slate-500 text-xs">Último uso: {v.lastUsedByUser ?? '—'}</div>
-                  <div className="mt-4 pt-4 border-t border-slate-100">
+                  <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Gasolina: {v.lastFuelLevel ?? '—'}</div>
+                  <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Último uso: {v.lastUsedByUser ?? '—'}</div>
+                  <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--color-border)' }}>
                     <button
                       type="button"
                       onClick={() => setReserveVehicle(v)}
                       disabled={v.status === 'maintenance'}
-                      className="w-full px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium text-sm disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
+                      className="btn-primary w-full py-2.5 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {v.status === 'maintenance' ? 'En mantenimiento' : 'Reservar'}
                     </button>
