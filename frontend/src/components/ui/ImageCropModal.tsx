@@ -32,6 +32,7 @@ async function getCroppedBlob(imageSrc: string, pixelCrop: Area): Promise<Blob> 
 type Props = {
   imageSrc: string;
   fileName: string;
+  title?: string;
   aspect?: number;
   onConfirm: (file: File) => void;
   onCancel: () => void;
@@ -40,6 +41,7 @@ type Props = {
 export function ImageCropModal({
   imageSrc,
   fileName,
+  title = 'Recortar foto',
   aspect = 4 / 3,
   onConfirm,
   onCancel,
@@ -87,7 +89,7 @@ export function ImageCropModal({
         >
           <div>
             <h3 className="font-bold text-base" style={{ color: 'var(--color-text)' }}>
-              Recortar foto
+              {title}
             </h3>
             <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
               Ajusta el encuadre 4:3 para la tarjeta del vehículo

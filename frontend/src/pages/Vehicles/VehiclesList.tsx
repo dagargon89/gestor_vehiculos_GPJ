@@ -70,6 +70,8 @@ function VehicleFormModal({
   const [cropQueue, setCropQueue] = useState<File[]>([]);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [cropFileName, setCropFileName] = useState('');
+  const [cropExistingIndex, setCropExistingIndex] = useState<number | null>(null);
+  const [fetchingExisting, setFetchingExisting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -79,28 +81,54 @@ function VehicleFormModal({
     return () => { pendingPreviews.forEach(URL.revokeObjectURL); };
   }, [pendingPreviews]);
 
-  // Process crop queue: show modal for next file
+  // Process crop queue: show modal for next new file
   useEffect(() => {
     if (cropQueue.length > 0 && !cropSrc) {
       const next = cropQueue[0];
       setCropFileName(next.name);
+      setCropExistingIndex(null);
       setCropSrc(URL.createObjectURL(next));
     }
   }, [cropQueue, cropSrc]);
 
+  const handleEditExisting = async (i: number) => {
+    setFetchingExisting(true);
+    try {
+      const res = await fetch(existingPhotos[i]);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      setCropFileName(`foto_${i + 1}.jpg`);
+      setCropExistingIndex(i);
+      setCropSrc(objectUrl);
+    } catch {
+      setError('No se pudo cargar la foto para editar. Revisa la conexión.');
+    } finally {
+      setFetchingExisting(false);
+    }
+  };
+
   const handleCropConfirm = (croppedFile: File) => {
     const preview = URL.createObjectURL(croppedFile);
-    setPendingPhotos((prev) => [...prev, croppedFile]);
-    setPendingPreviews((prev) => [...prev, preview]);
     if (cropSrc) URL.revokeObjectURL(cropSrc);
     setCropSrc(null);
-    setCropQueue((prev) => prev.slice(1));
+
+    if (cropExistingIndex !== null) {
+      // Replace existing: remove old URL, add cropped file to pending
+      setExistingPhotos((prev) => prev.filter((_, idx) => idx !== cropExistingIndex));
+      setCropExistingIndex(null);
+    } else {
+      // New from queue
+      setCropQueue((prev) => prev.slice(1));
+    }
+    setPendingPhotos((prev) => [...prev, croppedFile]);
+    setPendingPreviews((prev) => [...prev, preview]);
   };
 
   const handleCropCancel = () => {
     if (cropSrc) URL.revokeObjectURL(cropSrc);
     setCropSrc(null);
-    setCropQueue((prev) => prev.slice(1));
+    setCropExistingIndex(null);
+    setCropQueue((prev) => (cropExistingIndex !== null ? prev : prev.slice(1)));
   };
 
   const removePending = (i: number) => {
@@ -264,19 +292,38 @@ function VehicleFormModal({
                   {existingPhotos.map((url, i) => (
                     <div
                       key={url}
-                      className="relative w-20 h-20 rounded-lg overflow-hidden"
+                      className="relative w-20 h-20 rounded-lg overflow-hidden group"
                       style={{ border: '1px solid var(--color-border)' }}
                     >
                       <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setExistingPhotos((prev) => prev.filter((_, idx) => idx !== i))}
-                        className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center rounded-bl-lg text-xs font-bold"
-                        style={{ background: 'rgba(220,38,38,0.90)', color: '#fff' }}
-                        title="Eliminar foto"
+                      {/* Hover overlay with actions */}
+                      <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: 'rgba(0,0,0,0.55)' }}
                       >
-                        <span className="material-icons" style={{ fontSize: 14 }}>close</span>
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => handleEditExisting(i)}
+                          disabled={fetchingExisting}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                          style={{ background: 'rgba(99,132,255,0.85)', color: '#fff' }}
+                          title="Recortar foto"
+                        >
+                          {fetchingExisting ? (
+                            <span className="material-icons animate-spin" style={{ fontSize: 14 }}>refresh</span>
+                          ) : (
+                            <span className="material-icons" style={{ fontSize: 14 }}>crop</span>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setExistingPhotos((prev) => prev.filter((_, idx) => idx !== i))}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                          style={{ background: 'rgba(220,38,38,0.85)', color: '#fff' }}
+                          title="Eliminar foto"
+                        >
+                          <span className="material-icons" style={{ fontSize: 14 }}>delete</span>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -355,6 +402,7 @@ function VehicleFormModal({
             <ImageCropModal
               imageSrc={cropSrc}
               fileName={cropFileName}
+              title={cropExistingIndex !== null ? 'Editar foto existente' : 'Recortar foto nueva'}
               aspect={4 / 3}
               onConfirm={handleCropConfirm}
               onCancel={handleCropCancel}
