@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/usePermissions';
+import { useTheme } from '../../theme/ThemeContext';
 import {
   ADMIN_MENU_CATEGORIES,
   ADMIN_ROUTE_ITEMS,
@@ -16,6 +17,8 @@ export function MainLayout() {
   const { userData, signOut, authSyncError, refreshUserData } = useAuth();
   const [retryingSync, setRetryingSync] = useState(false);
   const { can } = usePermissions();
+  const { theme, toggleTheme } = useTheme();
+
   const adminRoutes = isConductor(userData?.role?.name)
     ? []
     : ADMIN_ROUTE_ITEMS.filter((r) => can(r.resource, r.action));
@@ -23,9 +26,11 @@ export function MainLayout() {
     ...cat,
     items: adminRoutes.filter((r) => r.category === cat.key),
   })).filter((group) => group.items.length > 0);
+
   const showDashboard = canAccessDashboard(userData?.permissions, userData?.role?.name);
   const showConductorHome = isConductor(userData?.role?.name);
   const showReservationRequests = canAccessReservationRequests(userData?.permissions, userData?.role?.name);
+
   const navigate = useNavigate();
   const location = useLocation();
   const [syncBannerDismissed, setSyncBannerDismissed] = useState(false);
@@ -54,7 +59,6 @@ export function MainLayout() {
   });
 
   const unreadCount = notifications.filter((n: { read: boolean }) => !n.read).length;
-
   const isAdminRoute = adminRoutes.some((r) => location.pathname === r.to || (r.to !== '/' && location.pathname.startsWith(r.to)));
 
   useEffect(() => {
@@ -72,34 +76,19 @@ export function MainLayout() {
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       const target = e.target as Node;
-      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
-        setUserMenuOpen(false);
-      }
-      if (adminMenuRef.current && !adminMenuRef.current.contains(target)) {
-        setAdminMenuOpen(false);
-      }
-      if (notificationsRef.current && !notificationsRef.current.contains(target)) {
-        setNotificationsOpen(false);
-      }
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) setUserMenuOpen(false);
+      if (adminMenuRef.current && !adminMenuRef.current.contains(target)) setAdminMenuOpen(false);
+      if (notificationsRef.current && !notificationsRef.current.contains(target)) setNotificationsOpen(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Cerrar menú móvil al cambiar de ruta (evita que el body quede con overflow:hidden)
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [location.pathname]);
+  useEffect(() => { setMobileMenuOpen(false); }, [location.pathname]);
 
   useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
   }, [mobileMenuOpen]);
 
   const handleSignOut = async () => {
@@ -107,21 +96,9 @@ export function MainLayout() {
     await signOut();
     navigate('/login');
   };
-
-  const handleGoToProfile = () => {
-    setUserMenuOpen(false);
-    navigate('/profile');
-  };
-
-  const handleGoToMyRequests = () => {
-    setUserMenuOpen(false);
-    navigate('/mis-solicitudes');
-  };
-
-  const handleAdminLink = (to: string) => {
-    setAdminMenuOpen(false);
-    navigate(to);
-  };
+  const handleGoToProfile = () => { setUserMenuOpen(false); navigate('/profile'); };
+  const handleGoToMyRequests = () => { setUserMenuOpen(false); navigate('/mis-solicitudes'); };
+  const handleAdminLink = (to: string) => { setAdminMenuOpen(false); navigate(to); };
 
   const showSyncBanner = authSyncError && !syncBannerDismissed;
   const userName = userData?.displayName?.split(' ').slice(0, 2).join(' ') || userData?.email?.split('@')[0] || 'Usuario';
@@ -129,53 +106,163 @@ export function MainLayout() {
 
   const handleRetrySync = async () => {
     setRetryingSync(true);
-    try {
-      await refreshUserData();
-    } finally {
-      setRetryingSync(false);
-    }
+    try { await refreshUserData(); } finally { setRetryingSync(false); }
   };
 
+  /* ── estilos reutilizables ── */
+  const dropdownStyle: React.CSSProperties = {
+    background: 'var(--color-menu-bg)',
+    border: '1px solid var(--color-border)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+  };
+  const menuItemBase = 'w-full flex items-center gap-3 text-left px-4 py-2.5 text-sm font-medium transition-colors';
+
   return (
-    <div className="min-h-screen bg-background-light font-display text-slate-800">
+    <div
+      className="min-h-screen"
+      style={{ background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: "'DM Sans', 'Segoe UI', system-ui, sans-serif" }}
+    >
+      {/* Banner de error de sincronización */}
       {showSyncBanner && (
-        <div className="sticky top-0 z-[60] bg-amber-50 border-b border-amber-200 px-4 py-3 flex flex-wrap items-center gap-3">
-          <span className="material-icons text-amber-600 shrink-0">warning</span>
-          <p className="flex-1 text-sm text-amber-900 font-medium min-w-0">{authSyncError}</p>
+        <div className="sticky top-0 z-[60] px-4 py-3 flex flex-wrap items-center gap-3"
+          style={{ background: 'rgba(245,158,11,0.12)', borderBottom: '1px solid rgba(245,158,11,0.3)' }}>
+          <span className="material-icons shrink-0" style={{ color: '#f59e0b' }}>warning</span>
+          <p className="flex-1 text-sm font-medium min-w-0" style={{ color: 'var(--color-text)' }}>{authSyncError}</p>
           <button
             type="button"
             onClick={handleRetrySync}
             disabled={retryingSync}
-            className="shrink-0 px-3 py-1.5 text-sm font-medium text-amber-800 bg-amber-100 rounded-lg hover:bg-amber-200 disabled:opacity-50"
+            className="shrink-0 px-3 py-1.5 text-sm font-medium rounded-lg disabled:opacity-50"
+            style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}
           >
             {retryingSync ? 'Conectando…' : 'Reintentar'}
           </button>
           <button
             type="button"
             onClick={() => setSyncBannerDismissed(true)}
-            className="shrink-0 p-1 text-amber-600 hover:text-amber-800 rounded"
+            className="shrink-0 p-1 rounded"
             aria-label="Cerrar aviso"
+            style={{ color: '#f59e0b' }}
           >
             <span className="material-icons">close</span>
           </button>
         </div>
       )}
 
-      {/* Barra superior oscura (estilo Flotilla) */}
-      <nav className="sticky top-0 z-50 bg-primary-dark shadow-md">
-        <div className="w-full px-4 py-3 flex items-center min-w-0">
-          {/* Logo: pegado a la izquierda */}
+      {/* ── Navbar ── */}
+      <nav
+        className="sticky top-0 z-50"
+        style={{
+          background: 'var(--color-header-bg)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          boxShadow: '0 1px 20px rgba(99,102,241,0.15)',
+        }}
+      >
+        <div className="w-full px-4 sm:px-6 py-3 flex items-center min-w-0 gap-2">
+
+          {/* Logo */}
           <div className="shrink-0 min-w-0">
-            <NavLink to="/" className="flex items-center gap-2 text-white font-bold tracking-tight hover:opacity-90">
-              <span className="material-icons text-2xl shrink-0">local_shipping</span>
-              {/* Nombre corto en móvil, completo en desktop */}
-              <span className="hidden sm:inline text-lg leading-tight">Gestión de Vehículos Institucionales</span>
-              <span className="sm:hidden text-base leading-tight">Vehículos Inst.</span>
+            <NavLink to="/" className="flex items-center gap-2.5 text-white font-bold hover:opacity-90 transition-opacity" style={{ letterSpacing: '-0.3px' }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                background: 'rgba(255,255,255,0.15)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 12px rgba(99,102,241,0.2)',
+              }}>
+                <span className="material-icons" style={{ fontSize: 20, color: '#ffffff' }}>local_shipping</span>
+              </div>
+              <span className="hidden sm:inline text-base leading-tight font-bold">Gestión de Vehículos Institucionales</span>
+              <span className="sm:hidden text-sm leading-tight font-bold">Vehículos Inst.</span>
             </NavLink>
           </div>
 
-          {/* En móvil/tablet: notificaciones + hamburguesa a la derecha */}
-          <div className="flex flex-1 justify-end items-center gap-1 lg:hidden">
+          {/* Menú central (solo desktop) */}
+          <div className="hidden lg:flex flex-1 justify-center">
+            <div className="flex items-center gap-1">
+              {showDashboard && (
+                <NavLink
+                  to="/"
+                  end
+                  className={({ isActive }) => `nav-btn${isActive ? ' active' : ''}`}
+                >
+                  Dashboard
+                </NavLink>
+              )}
+              {showConductorHome && (
+                <NavLink
+                  to="/"
+                  end
+                  className={({ isActive }) => `nav-btn${isActive ? ' active' : ''}`}
+                >
+                  Inicio
+                </NavLink>
+              )}
+              {showReservationRequests && (
+                <NavLink
+                  to="/solicitud-vehiculos"
+                  className={({ isActive }) => `nav-btn${isActive ? ' active' : ''}`}
+                >
+                  Solicitud de vehículos
+                </NavLink>
+              )}
+              {adminRoutes.length > 0 && (
+                <div className="relative" ref={adminMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setAdminMenuOpen((prev) => !prev)}
+                    className={`nav-btn${isAdminRoute ? ' active' : ''}`}
+                  >
+                    Administración
+                    <span className="material-icons text-lg">{adminMenuOpen ? 'expand_less' : 'expand_more'}</span>
+                  </button>
+                  {adminMenuOpen && (
+                    <div
+                      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 rounded-xl py-2 z-50 max-h-[calc(100vh-5rem)] overflow-y-auto"
+                      style={dropdownStyle}
+                    >
+                      {adminRoutesByCategory.map(({ key: categoryKey, label: categoryLabel, items }, idx) => (
+                        <div key={categoryKey} className={idx > 0 ? 'border-t pt-2 mt-2' : ''} style={{ borderColor: 'var(--color-border)' }}>
+                          <p className="px-4 py-1 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)', letterSpacing: '1.2px' }}>{categoryLabel}</p>
+                          {items.map(({ to, label, icon }) => (
+                            <button
+                              key={to}
+                              type="button"
+                              onClick={() => handleAdminLink(to)}
+                              className={`${menuItemBase} rounded-lg mx-1`}
+                              style={{
+                                color: location.pathname === to ? '#6366f1' : 'var(--color-text-soft)',
+                                background: location.pathname === to ? 'rgba(99,102,241,0.08)' : 'transparent',
+                              }}
+                            >
+                              <span className="material-icons text-lg" style={{ color: 'var(--color-text-muted)' }}>{icon}</span>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Derecha: toggle tema + notificaciones + perfil (desktop) */}
+          <div className="hidden lg:flex shrink-0 items-center gap-1 ml-auto">
+
+            {/* Toggle de tema */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+              aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            >
+              <span className="material-icons text-xl">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
+            </button>
+
+            {/* Notificaciones */}
             {canReadNotifications && (
               <div className="relative" ref={notificationsRef}>
                 <button
@@ -186,22 +273,23 @@ export function MainLayout() {
                 >
                   <span className="material-icons">notifications_none</span>
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
+                    <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white font-mono-data" style={{ fontSize: 10 }}>
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                   )}
                 </button>
                 {notificationsOpen && (
-                  <div className="fixed left-2 right-2 top-14 max-h-[70vh] overflow-auto bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
-                    <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center shrink-0">
-                      <span className="text-sm font-bold text-slate-900">Notificaciones</span>
-                      {unreadCount > 0 && (
-                        <span className="text-xs text-slate-500">{unreadCount} sin leer</span>
-                      )}
+                  <div
+                    className="absolute right-0 top-full mt-2 w-80 max-h-[400px] overflow-auto rounded-xl py-2 z-50"
+                    style={dropdownStyle}
+                  >
+                    <div className="px-4 py-2 flex justify-between items-center shrink-0" style={{ borderBottom: '1px solid var(--color-border)' }}>
+                      <span className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>Notificaciones</span>
+                      {unreadCount > 0 && <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{unreadCount} sin leer</span>}
                     </div>
-                    <div className="divide-y divide-slate-100">
+                    <div>
                       {notifications.length === 0 ? (
-                        <div className="px-4 py-6 text-center text-slate-500 text-sm">No hay notificaciones.</div>
+                        <div className="px-4 py-6 text-center text-sm" style={{ color: 'var(--color-text-muted)' }}>No hay notificaciones.</div>
                       ) : (
                         notifications.map((n: { id: string; title: string; message: string; read: boolean; createdAt: string; actionUrl?: string }) => (
                           <button
@@ -212,11 +300,136 @@ export function MainLayout() {
                               if (n.actionUrl) navigate(n.actionUrl);
                               setNotificationsOpen(false);
                             }}
-                            className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
+                            className="w-full text-left px-4 py-3 transition-colors"
+                            style={{
+                              background: !n.read ? 'rgba(99,102,241,0.06)' : 'transparent',
+                              borderBottom: '1px solid var(--color-border)',
+                            }}
                           >
-                            <p className="text-sm font-medium text-slate-900 break-words">{n.title}</p>
-                            <p className="text-xs text-slate-600 mt-0.5 line-clamp-2 break-words">{n.message}</p>
-                            <p className="text-xs text-slate-400 mt-1">
+                            <p className="text-sm font-medium break-words" style={{ color: 'var(--color-text)' }}>{n.title}</p>
+                            <p className="text-xs mt-0.5 line-clamp-2 break-words" style={{ color: 'var(--color-text-soft)' }}>{n.message}</p>
+                            <p className="text-xs mt-1 font-mono-data" style={{ color: 'var(--color-text-muted)' }}>
+                              {new Date(n.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Menú de usuario */}
+            <div className="relative" ref={userMenuRef}>
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((prev) => !prev)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+              >
+                <span className="hidden xl:inline text-sm font-medium">
+                  Hola, {userName} ({roleName})
+                </span>
+                {userData?.photoUrl ? (
+                  <img src={userData.photoUrl} alt="" className="w-8 h-8 rounded-full object-cover" style={{ border: '2px solid rgba(255,255,255,0.4)' }} />
+                ) : (
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>
+                    <span className="material-icons text-white" style={{ fontSize: 18 }}>person</span>
+                  </div>
+                )}
+                <span className="material-icons text-white/80">{userMenuOpen ? 'expand_less' : 'expand_more'}</span>
+              </button>
+              {userMenuOpen && (
+                <div
+                  className="absolute right-0 top-full mt-2 w-56 rounded-xl py-2 z-50"
+                  style={dropdownStyle}
+                >
+                  <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--color-border)' }}>
+                    <p className="text-sm font-bold truncate" style={{ color: 'var(--color-text)' }}>{userData?.displayName || 'Usuario'}</p>
+                    <p className="text-xs truncate break-all" style={{ color: 'var(--color-text-muted)' }}>{userData?.email}</p>
+                  </div>
+                  <div className="py-1">
+                    <button type="button" onClick={handleGoToMyRequests} className={menuItemBase} style={{ color: 'var(--color-text-soft)' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.06)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <span className="material-icons text-lg" style={{ color: 'var(--color-text-muted)' }}>assignment</span>
+                      Mis solicitudes
+                    </button>
+                    <button type="button" onClick={handleGoToProfile} className={menuItemBase} style={{ color: 'var(--color-text-soft)' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.06)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <span className="material-icons text-lg" style={{ color: 'var(--color-text-muted)' }}>person_outline</span>
+                      Mi perfil
+                    </button>
+                    <div style={{ borderTop: '1px solid var(--color-border)', margin: '4px 0' }} />
+                    <button type="button" onClick={handleSignOut} className={menuItemBase} style={{ color: '#f87171' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.06)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <span className="material-icons text-lg">logout</span>
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Móvil/tablet: toggle tema + notificaciones + hamburguesa */}
+          <div className="flex flex-1 justify-end items-center gap-1 lg:hidden">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+              aria-label={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            >
+              <span className="material-icons text-xl">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
+            </button>
+            {canReadNotifications && (
+              <div className="relative" ref={notificationsRef}>
+                <button
+                  type="button"
+                  onClick={() => setNotificationsOpen((prev) => !prev)}
+                  className="relative p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+                  aria-label="Notificaciones"
+                >
+                  <span className="material-icons">notifications_none</span>
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white font-mono-data" style={{ fontSize: 10 }}>
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                {notificationsOpen && (
+                  <div
+                    className="fixed left-2 right-2 top-14 max-h-[70vh] overflow-auto rounded-xl py-2 z-50"
+                    style={dropdownStyle}
+                  >
+                    <div className="px-4 py-2 flex justify-between items-center" style={{ borderBottom: '1px solid var(--color-border)' }}>
+                      <span className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>Notificaciones</span>
+                      {unreadCount > 0 && <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{unreadCount} sin leer</span>}
+                    </div>
+                    <div>
+                      {notifications.length === 0 ? (
+                        <div className="px-4 py-6 text-center text-sm" style={{ color: 'var(--color-text-muted)' }}>No hay notificaciones.</div>
+                      ) : (
+                        notifications.map((n: { id: string; title: string; message: string; read: boolean; createdAt: string; actionUrl?: string }) => (
+                          <button
+                            key={n.id}
+                            type="button"
+                            onClick={() => {
+                              if (!n.read) markAsReadMutation.mutate(n.id);
+                              if (n.actionUrl) navigate(n.actionUrl);
+                              setNotificationsOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-3 transition-colors"
+                            style={{ background: !n.read ? 'rgba(99,102,241,0.06)' : 'transparent', borderBottom: '1px solid var(--color-border)' }}
+                          >
+                            <p className="text-sm font-medium break-words" style={{ color: 'var(--color-text)' }}>{n.title}</p>
+                            <p className="text-xs mt-0.5 line-clamp-2 break-words" style={{ color: 'var(--color-text-soft)' }}>{n.message}</p>
+                            <p className="text-xs mt-1 font-mono-data" style={{ color: 'var(--color-text-muted)' }}>
                               {new Date(n.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                             </p>
                           </button>
@@ -236,270 +449,77 @@ export function MainLayout() {
               <span className="material-icons text-2xl">menu</span>
             </button>
           </div>
-
-          {/* Menú central: Dashboard, Solicitud, Administración (solo desktop) */}
-          <div className="hidden lg:flex flex-1 justify-center">
-            <div className="flex items-center gap-1">
-            {showDashboard && (
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                `px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors ${
-                  isActive ? 'bg-white/20' : 'hover:bg-white/10'
-                }`
-              }
-            >
-              Dashboard
-            </NavLink>
-            )}
-            {showConductorHome && (
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                `px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors ${
-                  isActive ? 'bg-white/20' : 'hover:bg-white/10'
-                }`
-              }
-            >
-              Inicio
-            </NavLink>
-            )}
-            {showReservationRequests && (
-            <NavLink
-              to="/solicitud-vehiculos"
-              className={({ isActive }) =>
-                `px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors ${
-                  isActive ? 'bg-white/20' : 'hover:bg-white/10'
-                }`
-              }
-            >
-              Solicitud de vehículos
-            </NavLink>
-            )}
-
-            {/* Dropdown Administración */}
-            {adminRoutes.length > 0 && (
-            <div className="relative" ref={adminMenuRef}>
-              <button
-                type="button"
-                onClick={() => setAdminMenuOpen((prev) => !prev)}
-                className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors ${
-                  isAdminRoute ? 'bg-white/20' : 'hover:bg-white/10'
-                }`}
-              >
-                Administración
-                <span className="material-icons text-lg">{adminMenuOpen ? 'expand_less' : 'expand_more'}</span>
-              </button>
-              {adminMenuOpen && (
-                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 max-h-[calc(100vh-5rem)] overflow-y-auto">
-                  {adminRoutesByCategory.map(({ key: categoryKey, label: categoryLabel, items }) => (
-                    <div key={categoryKey} className={categoryKey !== adminRoutesByCategory[0]?.key ? 'border-t border-slate-100 pt-2 mt-2' : ''}>
-                      <p className="px-4 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wide">{categoryLabel}</p>
-                      {items.map(({ to, label, icon }) => (
-                        <button
-                          key={to}
-                          type="button"
-                          onClick={() => handleAdminLink(to)}
-                          className={`w-full flex items-center gap-3 text-left px-4 py-2.5 text-sm font-medium transition-colors ${
-                            location.pathname === to ? 'text-primary bg-primary/5' : 'text-slate-700 hover:bg-slate-50'
-                          }`}
-                        >
-                          <span className="material-icons text-lg text-slate-500">{icon}</span>
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            )}
-            </div>
-          </div>
-
-          {/* Derecha: notificaciones + perfil (solo desktop; en móvil/tablet van dentro del drawer) */}
-          <div className="hidden lg:flex shrink-0 items-center gap-2 ml-4">
-            {/* Notificaciones (solo si tiene permiso) */}
-            {canReadNotifications && (
-            <div className="relative" ref={notificationsRef}>
-              <button
-                type="button"
-                onClick={() => setNotificationsOpen((prev) => !prev)}
-                className="relative p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
-                aria-label="Notificaciones"
-              >
-                <span className="material-icons">notifications_none</span>
-                {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                )}
-              </button>
-              {notificationsOpen && (
-                <div className="fixed left-2 right-2 top-14 max-h-[70vh] overflow-auto bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-1 lg:w-80 lg:max-h-[400px]">
-                  <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center shrink-0">
-                    <span className="text-sm font-bold text-slate-900">Notificaciones</span>
-                    {unreadCount > 0 && (
-                      <span className="text-xs text-slate-500">{unreadCount} sin leer</span>
-                    )}
-                  </div>
-                  <div className="divide-y divide-slate-100">
-                    {notifications.length === 0 ? (
-                      <div className="px-4 py-6 text-center text-slate-500 text-sm">No hay notificaciones.</div>
-                    ) : (
-                      notifications.map((n: { id: string; title: string; message: string; read: boolean; createdAt: string; actionUrl?: string }) => (
-                        <button
-                          key={n.id}
-                          type="button"
-                          onClick={() => {
-                            if (!n.read) markAsReadMutation.mutate(n.id);
-                            if (n.actionUrl) navigate(n.actionUrl);
-                            setNotificationsOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
-                        >
-                          <p className="text-sm font-medium text-slate-900 break-words">{n.title}</p>
-                          <p className="text-xs text-slate-600 mt-0.5 line-clamp-2 break-words">{n.message}</p>
-                          <p className="text-xs text-slate-400 mt-1">
-                            {new Date(n.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-            )}
-
-            {/* Usuario: "Hola, Nombre (rol)" + dropdown */}
-            <div className="relative" ref={userMenuRef}>
-            <button
-              type="button"
-              onClick={() => setUserMenuOpen((prev) => !prev)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-colors"
-            >
-              <span className="hidden xl:inline text-sm font-medium">
-                Hola, {userName} ({roleName})
-              </span>
-              {userData?.photoUrl ? (
-                <img
-                  src={userData.photoUrl}
-                  alt=""
-                  className="w-9 h-9 rounded-full object-cover border-2 border-white/50"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
-                  <span className="material-icons text-white text-xl">person</span>
-                </div>
-              )}
-              <span className="material-icons text-white/90">{userMenuOpen ? 'expand_less' : 'expand_more'}</span>
-            </button>
-            {userMenuOpen && (
-              <div className="fixed left-2 right-2 top-14 w-auto max-w-xs bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-1 lg:w-56">
-                <div className="px-4 py-3 border-b border-slate-100">
-                  <p className="text-sm font-bold text-slate-900 truncate">{userData?.displayName || 'Usuario'}</p>
-                  <p className="text-xs text-slate-500 truncate break-all">{userData?.email}</p>
-                </div>
-                <div className="py-1">
-                  <button
-                    type="button"
-                    onClick={handleGoToMyRequests}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-primary/5 hover:text-primary transition-colors"
-                  >
-                    <span className="material-icons text-lg">assignment</span>
-                    Mis solicitudes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleGoToProfile}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-primary/5 hover:text-primary transition-colors"
-                  >
-                    <span className="material-icons text-lg">person_outline</span>
-                    Mi perfil
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSignOut}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                  >
-                    <span className="material-icons text-lg">logout</span>
-                    Cerrar sesión
-                  </button>
-                </div>
-              </div>
-            )}
-            </div>
-          </div>
         </div>
       </nav>
 
-      {/* Drawer menú móvil */}
+      {/* ── Drawer móvil ── */}
       {mobileMenuOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            className="fixed inset-0 z-40 lg:hidden"
+            style={{ background: 'var(--color-modal-overlay)', backdropFilter: 'blur(4px)' }}
             aria-hidden
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-xl z-50 flex flex-col lg:hidden">
-            <div className="flex items-center justify-between p-4 border-b border-slate-200">
-              <span className="font-bold text-slate-900">Menú</span>
+          <div
+            className="fixed inset-y-0 left-0 w-72 max-w-[85vw] shadow-xl z-50 flex flex-col lg:hidden"
+            style={{ background: 'var(--color-bg-soft)', borderRight: '1px solid var(--color-border)' }}
+          >
+            {/* Header drawer */}
+            <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
+              <span className="font-bold" style={{ color: 'var(--color-text)' }}>Menú</span>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+                className="p-2 rounded-lg transition-colors"
+                style={{ color: 'var(--color-text-muted)' }}
                 aria-label="Cerrar menú"
               >
                 <span className="material-icons">close</span>
               </button>
             </div>
 
-            {/* En móvil/tablet: perfil y notificaciones dentro del drawer */}
-            <div className="lg:hidden border-b border-slate-200">
-              {/* Bloque usuario: foto + nombre + opciones */}
-              <div className="p-4 flex items-center gap-3 border-b border-slate-100">
+            {/* Bloque usuario en drawer */}
+            <div style={{ borderBottom: '1px solid var(--color-border)' }}>
+              <div className="p-4 flex items-center gap-3" style={{ borderBottom: '1px solid var(--color-border)' }}>
                 {userData?.photoUrl ? (
-                  <img
-                    src={userData.photoUrl}
-                    alt=""
-                    className="w-14 h-14 rounded-full object-cover border-2 border-slate-200 shrink-0"
-                  />
+                  <img src={userData.photoUrl} alt="" className="w-12 h-12 rounded-full object-cover shrink-0" style={{ border: '2px solid var(--color-border-strong)' }} />
                 ) : (
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <span className="material-icons text-primary text-2xl">person</span>
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>
+                    <span className="material-icons text-white" style={{ fontSize: 22 }}>person</span>
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-slate-900 truncate">{userData?.displayName || 'Usuario'}</p>
-                  <p className="text-xs text-slate-500 truncate">Hola, {userName} ({roleName})</p>
+                  <p className="text-sm font-bold truncate" style={{ color: 'var(--color-text)' }}>{userData?.displayName || 'Usuario'}</p>
+                  <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>Hola, {userName} ({roleName})</p>
                 </div>
               </div>
-              <div className="py-2">
+              <div className="py-1">
                 {showReservationRequests && (
-                <button
-                  type="button"
-                  onClick={() => { setMobileMenuOpen(false); navigate('/mis-solicitudes'); }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                >
-                  <span className="material-icons text-lg">assignment</span>
-                  Mis solicitudes
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => { setMobileMenuOpen(false); navigate('/mis-solicitudes'); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors"
+                    style={{ color: 'var(--color-text-soft)' }}
+                  >
+                    <span className="material-icons text-lg" style={{ color: 'var(--color-text-muted)' }}>assignment</span>
+                    Mis solicitudes
+                  </button>
                 )}
                 <button
                   type="button"
                   onClick={() => { setMobileMenuOpen(false); navigate('/profile'); }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors"
+                  style={{ color: 'var(--color-text-soft)' }}
                 >
-                  <span className="material-icons text-lg">person_outline</span>
+                  <span className="material-icons text-lg" style={{ color: 'var(--color-text-muted)' }}>person_outline</span>
                   Mi perfil
                 </button>
                 <button
                   type="button"
                   onClick={() => { setMobileMenuOpen(false); handleSignOut(); }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors"
+                  style={{ color: '#f87171' }}
                 >
                   <span className="material-icons text-lg">logout</span>
                   Cerrar sesión
@@ -507,95 +527,99 @@ export function MainLayout() {
               </div>
             </div>
 
+            {/* Navegación en drawer */}
             <nav className="flex-1 overflow-auto py-2">
               {showDashboard && (
-              <NavLink
-                to="/"
-                end
-                onClick={() => setMobileMenuOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
-                    isActive ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'
-                  }`
-                }
-              >
-                <span className="material-icons text-xl">dashboard</span>
-                Dashboard
-              </NavLink>
+                <NavLink
+                  to="/"
+                  end
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isActive ? '' : ''}`
+                  }
+                  style={({ isActive }) => ({
+                    color: isActive ? '#6366f1' : 'var(--color-text-soft)',
+                    background: isActive ? 'rgba(99,102,241,0.08)' : 'transparent',
+                  })}
+                >
+                  <span className="material-icons text-xl" style={{ color: 'var(--color-text-muted)' }}>dashboard</span>
+                  Dashboard
+                </NavLink>
               )}
               {showConductorHome && (
-              <NavLink
-                to="/"
-                end
-                onClick={() => setMobileMenuOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
-                    isActive ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'
-                  }`
-                }
-              >
-                <span className="material-icons text-xl">home</span>
-                Inicio
-              </NavLink>
+                <NavLink
+                  to="/"
+                  end
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors"
+                  style={({ isActive }) => ({
+                    color: isActive ? '#6366f1' : 'var(--color-text-soft)',
+                    background: isActive ? 'rgba(99,102,241,0.08)' : 'transparent',
+                  })}
+                >
+                  <span className="material-icons text-xl" style={{ color: 'var(--color-text-muted)' }}>home</span>
+                  Inicio
+                </NavLink>
               )}
               {showReservationRequests && (
-              <NavLink
-                to="/solicitud-vehiculos"
-                onClick={() => setMobileMenuOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
-                    isActive ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'
-                  }`
-                }
-              >
-                <span className="material-icons text-xl">directions_car</span>
-                Solicitud de vehículos
-              </NavLink>
+                <NavLink
+                  to="/solicitud-vehiculos"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors"
+                  style={({ isActive }) => ({
+                    color: isActive ? '#6366f1' : 'var(--color-text-soft)',
+                    background: isActive ? 'rgba(99,102,241,0.08)' : 'transparent',
+                  })}
+                >
+                  <span className="material-icons text-xl" style={{ color: 'var(--color-text-muted)' }}>directions_car</span>
+                  Solicitud de vehículos
+                </NavLink>
               )}
               {adminRoutes.length > 0 && (
-              <>
-              <div className="px-4 py-2 mt-2">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Administración</p>
-              </div>
-              {adminRoutesByCategory.map(({ key: categoryKey, label: categoryLabel, items }) => (
-                <div key={categoryKey} className="mt-2">
-                  <p className="px-4 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">{categoryLabel}</p>
-                  {items.map(({ to, label, icon }) => (
-                    <button
-                      key={to}
-                      type="button"
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        navigate(to);
-                      }}
-                      className={`flex items-center gap-3 w-full px-4 py-3 text-left text-sm font-medium transition-colors ${
-                        location.pathname === to ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      <span className="material-icons text-xl text-slate-400">{icon}</span>
-                      {label}
-                    </button>
+                <>
+                  <div className="px-4 py-2 mt-2">
+                    <p className="text-xs font-semibold uppercase" style={{ color: 'var(--color-text-muted)', letterSpacing: '1.2px' }}>Administración</p>
+                  </div>
+                  {adminRoutesByCategory.map(({ key: categoryKey, label: categoryLabel, items }, idx) => (
+                    <div key={categoryKey} className={idx > 0 ? 'mt-2' : ''}>
+                      <p className="px-4 py-1.5 text-xs font-semibold uppercase" style={{ color: 'var(--color-text-muted)', letterSpacing: '1px' }}>{categoryLabel}</p>
+                      {items.map(({ to, label, icon }) => (
+                        <button
+                          key={to}
+                          type="button"
+                          onClick={() => { setMobileMenuOpen(false); navigate(to); }}
+                          className="flex items-center gap-3 w-full px-4 py-3 text-left text-sm font-medium transition-colors"
+                          style={{
+                            color: location.pathname === to ? '#6366f1' : 'var(--color-text-soft)',
+                            background: location.pathname === to ? 'rgba(99,102,241,0.08)' : 'transparent',
+                          }}
+                        >
+                          <span className="material-icons text-xl" style={{ color: 'var(--color-text-muted)' }}>{icon}</span>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
                   ))}
-                </div>
-              ))}
-              </>
+                </>
               )}
             </nav>
           </div>
         </>
       )}
 
+      {/* ── Contenido principal ── */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <Outlet />
       </main>
 
-      <footer className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 border-t border-slate-200 mt-6 sm:mt-8">
-        <div className="flex flex-col md:flex-row justify-between items-center text-xs text-slate-400">
+      {/* ── Footer ── */}
+      <footer className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 mt-6 sm:mt-8" style={{ borderTop: '1px solid var(--color-border)' }}>
+        <div className="flex flex-col md:flex-row justify-between items-center" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
           <p>© {new Date().getFullYear()} Gestión de Vehículos Institucionales. Todos los derechos reservados.</p>
           <div className="flex gap-4 mt-4 md:mt-0">
-            <a className="hover:text-primary transition-colors" href="#">Privacidad</a>
-            <a className="hover:text-primary transition-colors" href="#">Términos</a>
-            <a className="hover:text-primary transition-colors" href="#">Ayuda</a>
+            <a className="hover:opacity-80 transition-opacity" href="#">Privacidad</a>
+            <a className="hover:opacity-80 transition-opacity" href="#">Términos</a>
+            <a className="hover:opacity-80 transition-opacity" href="#">Ayuda</a>
           </div>
         </div>
       </footer>

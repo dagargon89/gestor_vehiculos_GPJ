@@ -18,47 +18,12 @@ const VEHICLE_STATUS_CONFIG: {
   key: string;
   label: string;
   icon: string;
-  color: string;
-  bg: string;
-  ring: string;
-  dot: string;
+  variant: 'green' | 'blue' | 'amber' | 'slate';
 }[] = [
-  {
-    key: 'available',
-    label: 'Disponibles',
-    icon: 'check_circle',
-    color: 'text-emerald-600',
-    bg: 'bg-emerald-50',
-    ring: 'ring-emerald-200',
-    dot: 'bg-emerald-500',
-  },
-  {
-    key: 'in_use',
-    label: 'En Uso',
-    icon: 'directions_car',
-    color: 'text-blue-600',
-    bg: 'bg-blue-50',
-    ring: 'ring-blue-200',
-    dot: 'bg-blue-500',
-  },
-  {
-    key: 'maintenance',
-    label: 'Mantenimiento',
-    icon: 'build',
-    color: 'text-amber-600',
-    bg: 'bg-amber-50',
-    ring: 'ring-amber-200',
-    dot: 'bg-amber-500',
-  },
-  {
-    key: 'inactive',
-    label: 'Inactivos',
-    icon: 'do_not_disturb_on',
-    color: 'text-slate-500',
-    bg: 'bg-slate-50',
-    ring: 'ring-slate-200',
-    dot: 'bg-slate-400',
-  },
+  { key: 'available',   label: 'Disponibles',   icon: 'check_circle',       variant: 'green' },
+  { key: 'in_use',      label: 'En Uso',         icon: 'directions_car',     variant: 'blue'  },
+  { key: 'maintenance', label: 'Mantenimiento',  icon: 'build',              variant: 'amber' },
+  { key: 'inactive',    label: 'Inactivos',      icon: 'do_not_disturb_on',  variant: 'slate' },
 ];
 
 export function ConductorDashboard() {
@@ -97,91 +62,78 @@ export function ConductorDashboard() {
 
   return (
     <>
-      <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-4 leading-snug">
+      <h2
+        className="text-xl sm:text-2xl font-bold mb-6 leading-snug"
+        style={{ color: 'var(--color-text)', letterSpacing: '-0.3px' }}
+      >
         Bienvenido, {userName}
       </h2>
 
-
+      {/* Cards de acción rápida */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {/* Vehículos disponibles */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-inset ring-emerald-200 flex flex-col gap-4 transition-shadow hover:shadow-md">
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-50">
-              <span className="material-icons text-xl text-emerald-600">directions_car</span>
+        <div className="stat-card green">
+          <div className="flex items-center justify-between mb-3">
+            <div className="stat-card__icon">
+              <span className="material-icons" style={{ fontSize: 20 }}>directions_car</span>
             </div>
-            <span className="text-3xl font-extrabold tracking-tight text-emerald-600">{availableCount}</span>
+            <span className="stat-card__value">{availableCount}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full shrink-0 bg-emerald-500" />
-            <span className="text-sm font-semibold text-slate-700">Vehículos Disponibles</span>
-          </div>
-          <div className="border-t border-slate-100 pt-3">
+          <div className="stat-card__label">Vehículos disponibles</div>
+          <div className="stat-card__sub" style={{ marginTop: 12 }}>
             <Link
               to="/solicitud-vehiculos"
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow-sm hover:bg-emerald-600 transition-colors"
+              className="btn-primary inline-flex items-center gap-1.5 px-3 py-2 text-xs"
             >
-              <span className="material-icons text-base">add</span>
+              <span className="material-icons text-sm">add</span>
               Solicitar vehículo
             </Link>
           </div>
         </div>
 
-        {/* Mis solicitudes pendientes */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-inset ring-amber-200 flex flex-col gap-4 transition-shadow hover:shadow-md">
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-50">
-              <span className="material-icons text-xl text-amber-600">event_note</span>
+        {/* Solicitudes pendientes */}
+        <div className="stat-card amber">
+          <div className="flex items-center justify-between mb-3">
+            <div className="stat-card__icon">
+              <span className="material-icons" style={{ fontSize: 20 }}>event_note</span>
             </div>
-            <span className="text-3xl font-extrabold tracking-tight text-amber-600">{pendingCount}</span>
+            <span className="stat-card__value">{pendingCount}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full shrink-0 bg-amber-500" />
-            <span className="text-sm font-semibold text-slate-700">Mis Solicitudes Pendientes</span>
-          </div>
-          <div className="border-t border-slate-100 pt-3">
+          <div className="stat-card__label">Mis solicitudes pendientes</div>
+          <div className="stat-card__sub" style={{ marginTop: 12 }}>
             <Link
               to="/mis-solicitudes"
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-50 text-amber-700 border border-amber-300 rounded-lg text-xs font-semibold hover:bg-amber-100 transition-colors"
+              className="btn-ghost inline-flex items-center gap-1.5 px-3 py-2 text-xs"
             >
-              <span className="material-icons text-base">list</span>
+              <span className="material-icons text-sm">list</span>
               Ver mis solicitudes
             </Link>
           </div>
         </div>
       </div>
 
+      {/* Estado de flota por categoría */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {VEHICLE_STATUS_CONFIG.map(({ key, label, icon, color, bg, ring, dot }) => {
+        {VEHICLE_STATUS_CONFIG.map(({ key, label, icon, variant }) => {
           const list = vehiclesByStatus(key);
           return (
-            <div
-              key={key}
-              className={`bg-white rounded-2xl p-5 shadow-sm ring-1 ring-inset flex flex-col gap-4 transition-shadow hover:shadow-md ${ring}`}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${bg}`}>
-                  <span className={`material-icons text-xl ${color}`}>{icon}</span>
+            <div key={key} className={`stat-card ${variant}`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="stat-card__icon">
+                  <span className="material-icons" style={{ fontSize: 20 }}>{icon}</span>
                 </div>
-                <span className={`text-3xl font-extrabold tracking-tight ${color}`}>{list.length}</span>
+                <span className="stat-card__value">{list.length}</span>
               </div>
-
-              {/* Label + dot */}
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
-                <span className="text-sm font-semibold text-slate-700">{label}</span>
-              </div>
-
-              {/* Vehicle list */}
-              <div className="border-t border-slate-100 pt-3 flex-1">
+              <div className="stat-card__label">{label}</div>
+              <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 12, paddingTop: 10, flex: 1 }}>
                 {list.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic">Sin vehículos</p>
+                  <p className="text-xs italic" style={{ color: 'var(--color-text-muted)' }}>Sin vehículos</p>
                 ) : (
                   <ul className="space-y-1.5">
                     {list.map((v) => (
                       <li key={v.id} className="flex items-center gap-1.5 min-w-0">
-                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
-                        <span className="text-xs text-slate-600 truncate">{vehicleLabel(v)}</span>
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'currentColor', opacity: 0.6 }} />
+                        <span className="text-xs truncate font-mono-data" style={{ color: 'var(--color-text-soft)' }}>{vehicleLabel(v)}</span>
                       </li>
                     ))}
                   </ul>
@@ -192,9 +144,10 @@ export function ConductorDashboard() {
         })}
       </div>
 
+      {/* Calendario */}
       <div className="mb-8">
-        <h3 className="text-lg font-bold text-slate-900 mb-3">
-          Calendario de Disponibilidad de Vehículos
+        <h3 className="text-base font-bold mb-3" style={{ color: 'var(--color-text)' }}>
+          Calendario de disponibilidad de vehículos
         </h3>
         <AllReservationsCalendar
           currentDate={calendarDate}
