@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
+import { ImageCropModal } from '../../components/ui/ImageCropModal';
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
@@ -65,8 +66,48 @@ function VehicleFormModal({
     parsePhotoUrls(vehicle?.photoUrls),
   );
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
+  const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
+  const [cropQueue, setCropQueue] = useState<File[]>([]);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropFileName, setCropFileName] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Revoke object URLs on unmount
+  useEffect(() => {
+    return () => { pendingPreviews.forEach(URL.revokeObjectURL); };
+  }, [pendingPreviews]);
+
+  // Process crop queue: show modal for next file
+  useEffect(() => {
+    if (cropQueue.length > 0 && !cropSrc) {
+      const next = cropQueue[0];
+      setCropFileName(next.name);
+      setCropSrc(URL.createObjectURL(next));
+    }
+  }, [cropQueue, cropSrc]);
+
+  const handleCropConfirm = (croppedFile: File) => {
+    const preview = URL.createObjectURL(croppedFile);
+    setPendingPhotos((prev) => [...prev, croppedFile]);
+    setPendingPreviews((prev) => [...prev, preview]);
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+    setCropQueue((prev) => prev.slice(1));
+  };
+
+  const handleCropCancel = () => {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+    setCropQueue((prev) => prev.slice(1));
+  };
+
+  const removePending = (i: number) => {
+    URL.revokeObjectURL(pendingPreviews[i]);
+    setPendingPhotos((prev) => prev.filter((_, idx) => idx !== i));
+    setPendingPreviews((prev) => prev.filter((_, idx) => idx !== i));
+  };
 
   const uploadVehiclePhoto = async (vehicleId: string, file: File): Promise<void> => {
     const formData = new FormData();
@@ -127,134 +168,201 @@ function VehicleFormModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="rounded-[16px] w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)', boxShadow: '0 24px 64px rgba(0,0,0,0.4)' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-bold text-slate-900">
+        <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
+          <h3 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
             {vehicle ? 'Editar vehículo' : 'Nuevo vehículo'}
           </h3>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
+            <div
+              className="p-3 rounded-lg text-sm"
+              style={{ background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.20)' }}
+            >
+              {error}
+            </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Placa *</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Placa *</label>
             <input
               type="text"
               required
               value={form.plate}
               onChange={(e) => setForm((f) => ({ ...f, plate: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              className="input-field w-full"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Marca *</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Marca *</label>
               <input
                 type="text"
                 required
                 value={form.brand}
                 onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                className="input-field w-full"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Modelo *</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Modelo *</label>
               <input
                 type="text"
                 required
                 value={form.model}
                 onChange={(e) => setForm((f) => ({ ...f, model: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                className="input-field w-full"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Año</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Año</label>
               <input
                 type="number"
                 min="1990"
                 max="2030"
                 value={form.year}
                 onChange={(e) => setForm((f) => ({ ...f, year: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                className="input-field w-full"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Color</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Color</label>
               <input
                 type="text"
                 value={form.color}
                 onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                className="input-field w-full"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">VIN</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>VIN</label>
             <input
               type="text"
               value={form.vin}
               onChange={(e) => setForm((f) => ({ ...f, vin: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              className="input-field w-full"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Foto(s) del vehículo</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>
+              Foto(s) del vehículo
+            </label>
+
+            {/* Existing photos */}
             {existingPhotos.length > 0 && (
               <div className="mb-3">
-                <p className="text-xs text-slate-500 mb-2">Fotos actuales (haz clic en X para eliminar):</p>
+                <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                  Fotos actuales (X para eliminar):
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {existingPhotos.map((url, i) => (
-                    <div key={url} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-slate-200">
+                    <div
+                      key={url}
+                      className="relative w-20 h-20 rounded-lg overflow-hidden"
+                      style={{ border: '1px solid var(--color-border)' }}
+                    >
                       <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => setExistingPhotos((prev) => prev.filter((_, idx) => idx !== i))}
-                        className="absolute top-0 right-0 w-6 h-6 bg-red-600 text-white flex items-center justify-center rounded-bl-lg text-xs font-bold opacity-80 hover:opacity-100"
+                        className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center rounded-bl-lg text-xs font-bold"
+                        style={{ background: 'rgba(220,38,38,0.90)', color: '#fff' }}
                         title="Eliminar foto"
                       >
-                        X
+                        <span className="material-icons" style={{ fontSize: 14 }}>close</span>
                       </button>
                     </div>
                   ))}
                 </div>
               </div>
             )}
+
+            {/* Pending (cropped) photos */}
+            {pendingPhotos.length > 0 && (
+              <div className="mb-3">
+                <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                  Fotos nuevas (por subir):
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {pendingPreviews.map((src, i) => (
+                    <div
+                      key={i}
+                      className="relative w-20 h-[60px] rounded-lg overflow-hidden"
+                      style={{ border: '1px solid var(--color-border)' }}
+                    >
+                      <img src={src} alt={`Nueva ${i + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removePending(i)}
+                        className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center rounded-bl-lg"
+                        style={{ background: 'rgba(220,38,38,0.90)', color: '#fff' }}
+                        title="Quitar"
+                      >
+                        <span className="material-icons" style={{ fontSize: 14 }}>close</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* File input trigger */}
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               multiple
+              className="hidden"
               onChange={(e) => {
                 const files = Array.from(e.target.files ?? []);
-                setPendingPhotos((prev) => [...prev, ...files]);
+                if (files.length > 0) setCropQueue((prev) => [...prev, ...files]);
                 e.target.value = '';
               }}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
             />
-            {pendingPhotos.length > 0 && (
-              <ul className="mt-2 space-y-1 text-sm text-slate-600">
-                {pendingPhotos.map((f, i) => (
-                  <li key={i} className="flex items-center justify-between gap-2">
-                    <span className="truncate">{f.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => setPendingPhotos((prev) => prev.filter((_, idx) => idx !== i))}
-                      className="text-red-600 hover:underline shrink-0"
-                    >
-                      Quitar
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors w-full justify-center"
+              style={{
+                border: '2px dashed var(--color-border)',
+                color: 'var(--color-text-muted)',
+                background: 'transparent',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = '#6384ff';
+                e.currentTarget.style.color = '#818cf8';
+                e.currentTarget.style.background = 'rgba(99,132,255,0.05)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = '';
+                e.currentTarget.style.color = 'var(--color-text-muted)';
+                e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              <span className="material-icons text-xl">add_photo_alternate</span>
+              Agregar foto
+            </button>
           </div>
+
+          {/* Crop modal */}
+          {cropSrc && (
+            <ImageCropModal
+              imageSrc={cropSrc}
+              fileName={cropFileName}
+              aspect={4 / 3}
+              onConfirm={handleCropConfirm}
+              onCancel={handleCropCancel}
+            />
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Estado</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Estado</label>
               <SearchSelect
                 options={STATUS_OPTIONS}
                 value={form.status}
@@ -264,13 +372,13 @@ function VehicleFormModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Kilometraje (km)</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Kilometraje (km)</label>
               <input
                 type="number"
                 min="0"
                 value={form.currentOdometer}
                 onChange={(e) => setForm((f) => ({ ...f, currentOdometer: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                className="input-field w-full"
               />
             </div>
           </div>
@@ -278,14 +386,14 @@ function VehicleFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50"
+              className="btn-ghost flex-1 py-2"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
+              className="btn-primary flex-1 py-2 disabled:opacity-50"
             >
               {submitting ? 'Guardando...' : vehicle ? 'Guardar cambios' : 'Crear vehículo'}
             </button>
