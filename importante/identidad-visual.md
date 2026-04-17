@@ -68,10 +68,10 @@ Las fuentes de verdad en código son `frontend/src/index.css` (variables CSS por
 
 | Token visual | Valor | Uso |
 |--------------|--------|-----|
-| **Primario** | `#6366f1` | Botones primarios, estados activos, indicadores, FAB. |
-| **Primario oscuro** | `#4f46e5` | Fondo de navbar, secciones prominentes. |
-| **Gradiente primario** | `linear-gradient(135deg, #6366f1, #4f46e5)` | Botones CTA, burbujas usuario, acento de cards. |
-| **Acento RGBA** | `rgba(99, 102, 241, …)` | Bordes foco, hovers de nav, sombras, anillos. |
+| **Primario** | `#6384ff` | Botones primarios, estados activos, indicadores, FAB. |
+| **Primario oscuro** | `#5a6fff` | Gradiente secundario, sombras. |
+| **Gradiente primario** | `linear-gradient(135deg, #6384ff, #5a6fff)` | Botones CTA, burbujas usuario, acento de cards. |
+| **Acento RGBA** | `rgba(99, 132, 255, …)` | Bordes foco, hovers de nav, sombras, anillos. |
 
 ### 3.2 Escala semántica
 
@@ -393,7 +393,7 @@ Evitar duraciones > 400ms en interacciones frecuentes. Mantener `cubic-bezier(0.
 | **Gradiente primario** | `linear-gradient(135deg, #6366f1, #4f46e5)` |
 | **Estética** | Glass morphism, blur 20px, fondos semitransparentes |
 | **Tipografía** | DM Sans (UI) + JetBrains Mono (datos/placas/folios) |
-| **Temas** | **Light por defecto** (app institucional), Dark disponible vía `data-theme` + `localStorage` (`vehicles-theme`) |
+| **Temas** | **Dark por defecto** (igual que ControlAsistencias), Light disponible vía `data-theme` + `localStorage` (`vehicles-theme`) |
 | **Radios predominantes** | 10px (controles) / 16px (panels) / 20px (modales/badges) |
 | **Implementación** | Variables CSS en `index.css`, componentes con clases + inline styles coherentes |
 

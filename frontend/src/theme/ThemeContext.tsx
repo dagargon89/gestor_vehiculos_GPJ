@@ -8,14 +8,15 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: 'light',
+  theme: 'dark',
   toggleTheme: () => {},
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     const stored = localStorage.getItem('vehicles-theme');
-    return stored === 'dark' ? 'dark' : 'light';
+    // Oscuro por defecto (igual que ControlAsistencias)
+    return stored === 'light' ? 'light' : 'dark';
   });
 
   useEffect(() => {

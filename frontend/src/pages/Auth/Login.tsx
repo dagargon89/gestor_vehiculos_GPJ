@@ -50,7 +50,7 @@ export function Login() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
-        <span className="font-mono-data font-bold" style={{ color: '#6366f1' }}>Cargando...</span>
+        <span className="font-mono-data font-bold" style={{ color: '#6384ff' }}>Cargando...</span>
       </div>
     );
   }
@@ -73,17 +73,17 @@ export function Login() {
           <div className="flex items-center gap-3">
             <div style={{
               width: 48, height: 48, borderRadius: 16, flexShrink: 0,
-              background: 'rgba(99,102,241,0.1)',
+              background: 'rgba(99,132,255,0.1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 2px 12px rgba(99,102,241,0.2)',
+              boxShadow: '0 2px 12px rgba(99,132,255,0.2)',
             }}>
-              <span className="material-icons" style={{ fontSize: 26, color: '#6366f1' }}>local_shipping</span>
+              <span className="material-icons" style={{ fontSize: 26, color: '#6384ff' }}>local_shipping</span>
             </div>
             <div>
               <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)', letterSpacing: '-0.3px' }}>
                 Gestión de Vehículos Institucionales
               </h2>
-              <p className="text-xs font-semibold uppercase mt-0.5" style={{ color: '#6366f1', letterSpacing: '0.8px' }}>
+              <p className="text-xs font-semibold uppercase mt-0.5" style={{ color: '#6384ff', letterSpacing: '0.8px' }}>
                 Poder Judicial
               </p>
             </div>
@@ -114,7 +114,7 @@ export function Login() {
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
                 className="h-5 w-5 cursor-pointer"
-                style={{ accentColor: '#6366f1' }}
+                style={{ accentColor: '#6384ff' }}
               />
               <span className="text-sm font-medium" style={{ color: 'var(--color-text-soft)' }}>Mantener sesión iniciada</span>
             </label>
@@ -170,7 +170,7 @@ export function Login() {
 
         {/* Footer del panel */}
         <div className="flex items-center gap-2" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-          <span className="w-2 h-2 rounded-full pulse" style={{ background: '#6366f1' }} />
+          <span className="w-2 h-2 rounded-full pulse" style={{ background: '#6384ff' }} />
           Gestión de Vehículos Institucionales v3.1
         </div>
       </div>
@@ -181,7 +181,7 @@ export function Login() {
           className="absolute inset-0 bg-cover bg-center scale-105"
           style={{ backgroundImage: "url('/fleet-bg.jpg')", filter: 'blur(3px)' }}
         />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.75), rgba(49,46,129,0.88))' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(99,132,255,0.78), rgba(90,111,255,0.88))' }} />
         <div className="relative z-10 h-full flex flex-col justify-center px-16 text-white max-w-2xl mx-auto">
           <div
             className="p-10"

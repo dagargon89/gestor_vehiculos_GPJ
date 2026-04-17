@@ -118,6 +118,13 @@ export function MainLayout() {
   };
   const menuItemBase = 'w-full flex items-center gap-3 text-left px-4 py-2.5 text-sm font-medium transition-colors';
 
+  // En claro el header es blanco/azul hielo → texto oscuro; en oscuro → texto blanco
+  const navText    = theme === 'dark' ? '#ffffff'              : 'var(--color-text)';
+  const navMuted   = theme === 'dark' ? 'rgba(255,255,255,0.7)' : 'var(--color-text-muted)';
+  const navHoverBg = theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(99,132,255,0.08)';
+  const logoIconBg = theme === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(99,132,255,0.10)';
+  const logoIconColor = theme === 'dark' ? '#ffffff' : '#6384ff';
+
   return (
     <div
       className="min-h-screen"
@@ -164,14 +171,14 @@ export function MainLayout() {
 
           {/* Logo */}
           <div className="shrink-0 min-w-0">
-            <NavLink to="/" className="flex items-center gap-2.5 text-white font-bold hover:opacity-90 transition-opacity" style={{ letterSpacing: '-0.3px' }}>
+            <NavLink to="/" className="flex items-center gap-2.5 font-bold hover:opacity-90 transition-opacity" style={{ letterSpacing: '-0.3px', color: navText }}>
               <div style={{
                 width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                background: 'rgba(255,255,255,0.15)',
+                background: logoIconBg,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 2px 12px rgba(99,102,241,0.2)',
+                boxShadow: '0 2px 12px rgba(99,132,255,0.25)',
               }}>
-                <span className="material-icons" style={{ fontSize: 20, color: '#ffffff' }}>local_shipping</span>
+                <span className="material-icons" style={{ fontSize: 20, color: logoIconColor }}>local_shipping</span>
               </div>
               <span className="hidden sm:inline text-base leading-tight font-bold">Gestión de Vehículos Institucionales</span>
               <span className="sm:hidden text-sm leading-tight font-bold">Vehículos Inst.</span>
@@ -256,7 +263,10 @@ export function MainLayout() {
             <button
               type="button"
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+              className="p-2 rounded-lg transition-colors"
+              style={{ color: navMuted }}
+              onMouseEnter={e => (e.currentTarget.style.background = navHoverBg)}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
             >
               <span className="material-icons text-xl">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
@@ -268,7 +278,10 @@ export function MainLayout() {
                 <button
                   type="button"
                   onClick={() => setNotificationsOpen((prev) => !prev)}
-                  className="relative p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+                  className="relative p-2 rounded-lg transition-colors"
+                  style={{ color: navMuted }}
+                  onMouseEnter={e => (e.currentTarget.style.background = navHoverBg)}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   aria-label="Notificaciones"
                 >
                   <span className="material-icons">notifications_none</span>
@@ -325,19 +338,22 @@ export function MainLayout() {
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((prev) => !prev)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors"
+              style={{ color: navText }}
+              onMouseEnter={e => (e.currentTarget.style.background = navHoverBg)}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <span className="hidden xl:inline text-sm font-medium">
                   Hola, {userName} ({roleName})
                 </span>
                 {userData?.photoUrl ? (
-                  <img src={userData.photoUrl} alt="" className="w-8 h-8 rounded-full object-cover" style={{ border: '2px solid rgba(255,255,255,0.4)' }} />
+                  <img src={userData.photoUrl} alt="" className="w-8 h-8 rounded-full object-cover" style={{ border: '2px solid rgba(99,132,255,0.4)' }} />
                 ) : (
                   <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>
                     <span className="material-icons text-white" style={{ fontSize: 18 }}>person</span>
                   </div>
                 )}
-                <span className="material-icons text-white/80">{userMenuOpen ? 'expand_less' : 'expand_more'}</span>
+                <span className="material-icons" style={{ color: navMuted }}>{userMenuOpen ? 'expand_less' : 'expand_more'}</span>
               </button>
               {userMenuOpen && (
                 <div
@@ -382,7 +398,10 @@ export function MainLayout() {
             <button
               type="button"
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+              className="p-2 rounded-lg transition-colors"
+              style={{ color: navMuted }}
+              onMouseEnter={e => (e.currentTarget.style.background = navHoverBg)}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               aria-label={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
             >
               <span className="material-icons text-xl">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
@@ -392,7 +411,10 @@ export function MainLayout() {
                 <button
                   type="button"
                   onClick={() => setNotificationsOpen((prev) => !prev)}
-                  className="relative p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+                  className="relative p-2 rounded-lg transition-colors"
+                  style={{ color: navMuted }}
+                  onMouseEnter={e => (e.currentTarget.style.background = navHoverBg)}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   aria-label="Notificaciones"
                 >
                   <span className="material-icons">notifications_none</span>
@@ -443,7 +465,10 @@ export function MainLayout() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+              className="p-2 rounded-lg transition-colors"
+              style={{ color: navText }}
+              onMouseEnter={e => (e.currentTarget.style.background = navHoverBg)}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               aria-label="Abrir menú"
             >
               <span className="material-icons text-2xl">menu</span>
