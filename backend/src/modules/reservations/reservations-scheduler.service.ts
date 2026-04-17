@@ -8,6 +8,7 @@ import { MailService } from '../mail/mail.service';
 
 function formatDateEs(date: Date): string {
   return date.toLocaleDateString('es-MX', {
+    timeZone: 'America/Mexico_City',
     weekday: 'long',
     year: 'numeric',
     month: 'long',
