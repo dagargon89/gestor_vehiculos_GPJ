@@ -29,62 +29,108 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: 'Cancelada',
 };
 
-const STATUS_STYLE: Record<string, string> = {
-  pending: 'bg-amber-100 text-amber-800',
-  active: 'bg-green-100 text-green-800',
-  completed: 'bg-slate-100 text-slate-700',
-  overdue: 'bg-red-100 text-red-800',
-  cancelled: 'bg-slate-100 text-slate-500',
-};
+function statusBadgeStyle(status: string): React.CSSProperties {
+  switch (status) {
+    case 'pending':  return { background: 'rgba(245,158,11,0.15)', color: '#fbbf24' };
+    case 'active':   return { background: 'rgba(34,197,94,0.15)',  color: '#4ade80' };
+    case 'completed':return { background: 'rgba(148,163,184,0.15)',color: 'var(--color-text-muted)' };
+    case 'overdue':  return { background: 'rgba(239,68,68,0.15)',  color: '#f87171' };
+    case 'cancelled':return { background: 'rgba(148,163,184,0.12)',color: 'var(--color-text-muted)' };
+    default:         return { background: 'rgba(148,163,184,0.12)',color: 'var(--color-text-muted)' };
+  }
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-MX', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });
 }
+
+// ─── Simple reservation card (pending / history) ────────────────────────────
 
 function ReservationCard({ r }: { r: Reservation }) {
   const vehicleLabel = r.vehicle
     ? `${r.vehicle.plate} – ${r.vehicle.brand} ${r.vehicle.model}`
     : 'Vehículo';
-  const statusStyle = STATUS_STYLE[r.status] ?? 'bg-slate-100 text-slate-700';
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+    <div
+      className="rounded-xl p-4 transition-shadow"
+      style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
+      onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 20px rgba(99,132,255,0.10)')}
+      onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h4 className="font-semibold text-slate-900">{r.eventName || 'Reserva'}</h4>
-          <p className="text-sm text-slate-600 mt-0.5">{vehicleLabel}</p>
+          <h4 className="font-semibold" style={{ color: 'var(--color-text)' }}>{r.eventName || 'Reserva'}</h4>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-soft)' }}>{vehicleLabel}</p>
         </div>
-        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusStyle}`}>
+        <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={statusBadgeStyle(r.status)}>
           {STATUS_LABELS[r.status] ?? r.status}
         </span>
       </div>
-      <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm text-slate-600">
-        <div>
-          <span className="text-slate-400">Salida:</span>{' '}
-          {formatDate(r.startDatetime)}
-        </div>
-        <div>
-          <span className="text-slate-400">Regreso:</span>{' '}
-          {formatDate(r.endDatetime)}
-        </div>
+      <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm" style={{ color: 'var(--color-text-soft)' }}>
+        <div><span style={{ color: 'var(--color-text-muted)' }}>Salida:</span> {formatDate(r.startDatetime)}</div>
+        <div><span style={{ color: 'var(--color-text-muted)' }}>Regreso:</span> {formatDate(r.endDatetime)}</div>
         {r.destination && (
-          <div className="sm:col-span-2">
-            <span className="text-slate-400">Destino:</span> {r.destination}
-          </div>
+          <div className="sm:col-span-2"><span style={{ color: 'var(--color-text-muted)' }}>Destino:</span> {r.destination}</div>
         )}
       </dl>
       {r.description && (
-        <p className="mt-2 text-sm text-slate-500 line-clamp-2">{r.description}</p>
+        <p className="mt-2 text-sm line-clamp-2" style={{ color: 'var(--color-text-muted)' }}>{r.description}</p>
       )}
     </div>
   );
 }
+
+// ─── Overdue warning card ────────────────────────────────────────────────────
+
+function OverdueCard({ r }: { r: Reservation }) {
+  const vehicleLabel = r.vehicle
+    ? `${r.vehicle.plate} – ${r.vehicle.brand} ${r.vehicle.model}`
+    : 'Vehículo';
+  const noCheckin  = r.checkinOdometer == null;
+  const noCheckout = r.checkinOdometer != null && r.checkoutOdometer == null;
+
+  return (
+    <div
+      className="rounded-xl p-4"
+      style={{
+        background: 'rgba(239,68,68,0.06)',
+        border: '1px solid rgba(239,68,68,0.25)',
+      }}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h4 className="font-semibold" style={{ color: '#f87171' }}>{r.eventName || 'Reserva'}</h4>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-soft)' }}>{vehicleLabel}</p>
+        </div>
+        <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={statusBadgeStyle('overdue')}>
+          Vencida
+        </span>
+      </div>
+      <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm" style={{ color: 'var(--color-text-soft)' }}>
+        <div><span style={{ color: 'var(--color-text-muted)' }}>Salida:</span> {formatDate(r.startDatetime)}</div>
+        <div><span style={{ color: 'var(--color-text-muted)' }}>Regreso:</span> {formatDate(r.endDatetime)}</div>
+      </dl>
+      <div
+        className="mt-3 flex items-start gap-2 rounded-lg px-3 py-2 text-sm"
+        style={{ background: 'rgba(239,68,68,0.10)', color: '#fca5a5' }}
+      >
+        <span className="material-icons text-base shrink-0 mt-0.5">warning</span>
+        <span>
+          {noCheckin
+            ? 'No se registró check-in ni check-out. Comunícate con administración para regularizar.'
+            : noCheckout
+            ? 'Se registró check-in pero falta el check-out. Ingresa y completa la devolución del vehículo.'
+            : 'Esta reserva venció sin completarse. Revisa con el área de administración.'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Active reservation card with check-in / check-out ──────────────────────
 
 async function uploadReservationPhoto(file: File, reservationId: string): Promise<string> {
   const formData = new FormData();
@@ -137,10 +183,8 @@ function CheckInOutForm({
       await apiClient.post(url, {
         odometer: payload.odometer,
         ...(payload.fuelPhotoUrl && { fuelPhotoUrl: payload.fuelPhotoUrl }),
-        ...(payload.fuelLevel && payload.fuelLevel.trim() && { fuelLevel: payload.fuelLevel.trim() }),
-        ...(payload.conditionPhotoUrls?.length
-          ? { conditionPhotoUrls: payload.conditionPhotoUrls }
-          : {}),
+        ...(payload.fuelLevel?.trim() && { fuelLevel: payload.fuelLevel.trim() }),
+        ...(payload.conditionPhotoUrls?.length ? { conditionPhotoUrls: payload.conditionPhotoUrls } : {}),
       });
     },
     onSuccess: () => {
@@ -163,14 +207,9 @@ function CheckInOutForm({
     if (!file || !file.type.startsWith('image/')) return;
     setFuelUploading(true);
     setError(null);
-    try {
-      const url = await uploadReservationPhoto(file, reservation.id);
-      setFuelPhotoUrl(url);
-    } catch (err) {
-      setError('Error al subir la foto de gasolina');
-    } finally {
-      setFuelUploading(false);
-    }
+    try { setFuelPhotoUrl(await uploadReservationPhoto(file, reservation.id)); }
+    catch { setError('Error al subir la foto de gasolina'); }
+    finally { setFuelUploading(false); }
   };
 
   const handleConditionChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,30 +225,16 @@ function CheckInOutForm({
           .map((f) => uploadReservationPhoto(f, reservation.id)),
       );
       setConditionPhotoUrls((prev) => [...prev, ...urls]);
-    } catch {
-      setError('Error al subir fotos del estado del auto');
-    } finally {
-      setConditionUploading(false);
-    }
-  };
-
-  const removeConditionPhoto = (url: string) => {
-    setConditionPhotoUrls((prev) => prev.filter((u) => u !== url));
+    } catch { setError('Error al subir fotos del estado del auto'); }
+    finally { setConditionUploading(false); }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const value = odometer.trim();
-    if (!value) {
-      setError('Ingresa el kilometraje en km');
-      return;
-    }
-    const km = parseInt(value, 10);
-    if (Number.isNaN(km) || km < 0) {
-      setError('El kilometraje debe ser un número mayor o igual a 0');
-      return;
-    }
+    const km = parseInt(odometer.trim(), 10);
+    if (!odometer.trim()) { setError('Ingresa el kilometraje en km'); return; }
+    if (Number.isNaN(km) || km < 0) { setError('El kilometraje debe ser un número mayor o igual a 0'); return; }
     if (action === 'checkout' && reservation.checkinOdometer != null && km < reservation.checkinOdometer) {
       setError('El kilometraje de regreso no puede ser menor que el de salida');
       return;
@@ -217,7 +242,7 @@ function CheckInOutForm({
     mutation.mutate({
       odometer: km,
       fuelPhotoUrl: fuelPhotoUrl || undefined,
-      ...(action === 'checkout' && fuelLevel.trim() && { fuelLevel: fuelLevel.trim() }),
+      ...(action === 'checkout' && fuelLevel.trim() && { fuelLevel }),
       conditionPhotoUrls: conditionPhotoUrls.length ? conditionPhotoUrls : undefined,
     });
   };
@@ -227,8 +252,8 @@ function CheckInOutForm({
     action === 'checkin' && reservation.vehicle?.currentOdometer != null
       ? `Último registro: ${reservation.vehicle.currentOdometer} km`
       : action === 'checkout' && reservation.checkinOdometer != null
-        ? `Kilometraje al salir: ${reservation.checkinOdometer} km`
-        : null;
+      ? `Kilometraje al salir: ${reservation.checkinOdometer} km`
+      : null;
 
   return (
     <div
@@ -239,166 +264,140 @@ function CheckInOutForm({
       aria-labelledby="checkinout-title"
     >
       <div
-        className="flex flex-col w-full max-w-lg max-h-[90vh] bg-white rounded-2xl shadow-xl overflow-hidden"
+        className="flex flex-col w-full max-w-lg max-h-[90vh] rounded-2xl overflow-hidden"
+        style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)', boxShadow: '0 24px 64px rgba(0,0,0,0.4)' }}
         onClick={(e) => e.stopPropagation()}
       >
-      <div className="flex items-center justify-between px-4 py-4 border-b border-slate-200 shrink-0">
-        <h3 id="checkinout-title" className="text-lg font-bold text-slate-900">{title}</h3>
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
-          aria-label="Cerrar"
+        <div
+          className="flex items-center justify-between px-4 py-4 shrink-0"
+          style={{ borderBottom: '1px solid var(--color-border)' }}
         >
-          <span className="material-icons">close</span>
-        </button>
-      </div>
-      <form onSubmit={handleSubmit} className="flex-1 flex flex-col p-6 min-h-0 overflow-y-auto">
-        {error && (
-          <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
-        )}
-        <div className="mb-4">
-          <label htmlFor="odometer" className="block text-sm font-medium text-slate-700 mb-2">
-            Kilometraje (km) *
-          </label>
-          <input
-            id="odometer"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            step={1}
-            value={odometer}
-            onChange={(e) => setOdometer(e.target.value)}
-            placeholder="Ej. 45200"
-            className="w-full px-4 py-4 text-lg border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
-            autoFocus
-          />
-          {hint && <p className="mt-2 text-sm text-slate-500">{hint}</p>}
+          <h3 id="checkinout-title" className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>{title}</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-lg transition-colors"
+            style={{ color: 'var(--color-text-muted)' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,132,255,0.08)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            aria-label="Cerrar"
+          >
+            <span className="material-icons">close</span>
+          </button>
         </div>
 
-        {action === 'checkout' && (
-        <div className="mb-4">
-          <label htmlFor="fuel-level" className="block text-sm font-medium text-slate-700 mb-2">
-            Nivel de gasolina (opcional)
-          </label>
-          <select
-            id="fuel-level"
-            value={fuelLevel}
-            onChange={(e) => setFuelLevel(e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary text-slate-700"
-          >
-            <option value="">Seleccionar…</option>
-            <option value="Vacío">Vacío</option>
-            <option value="1/4">1/4</option>
-            <option value="1/2">1/2</option>
-            <option value="3/4">3/4</option>
-            <option value="Lleno">Lleno</option>
-          </select>
-        </div>
-        )}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Foto del nivel de gasolina (opcional)
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handleFuelChange}
-            disabled={fuelUploading}
-            className="hidden"
-            id="fuel-photo"
-          />
-          <label
-            htmlFor="fuel-photo"
-            className="flex items-center justify-center gap-2 min-h-[48px] w-full py-3 px-4 border-2 border-dashed border-slate-300 rounded-xl text-slate-600 hover:border-primary hover:bg-primary/5 cursor-pointer disabled:opacity-50"
-          >
-            {fuelUploading ? (
-              'Subiendo…'
-            ) : fuelPhotoUrl ? (
-              <>
-                <span className="material-icons text-green-600">check_circle</span>
-                Foto de gasolina lista
-              </>
-            ) : (
-              <>
-                <span className="material-icons">add_photo_alternate</span>
-                Añadir foto de gasolina
-              </>
-            )}
-          </label>
-          {fuelPhotoUrl && (
-            <div className="mt-2 flex items-center gap-2">
-              <img src={fuelPhotoUrl} alt="Gasolina" className="h-16 w-16 object-cover rounded-lg border border-slate-200" />
-              <button
-                type="button"
-                onClick={() => setFuelPhotoUrl(null)}
-                className="text-sm text-red-600 hover:underline"
-              >
-                Quitar
-              </button>
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col p-6 min-h-0 overflow-y-auto gap-4">
+          {error && (
+            <div className="p-3 rounded-lg text-sm" style={{ background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.20)' }}>
+              {error}
             </div>
           )}
-        </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Fotos del estado del auto (opcional)
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            multiple
-            onChange={handleConditionChange}
-            disabled={conditionUploading}
-            className="hidden"
-            id="condition-photos"
-          />
-          <label
-            htmlFor="condition-photos"
-            className="flex items-center justify-center gap-2 min-h-[48px] w-full py-3 px-4 border-2 border-dashed border-slate-300 rounded-xl text-slate-600 hover:border-primary hover:bg-primary/5 cursor-pointer disabled:opacity-50"
-          >
-            {conditionUploading ? (
-              'Subiendo…'
-            ) : (
-              <>
-                <span className="material-icons">photo_library</span>
-                Añadir fotos del estado del auto
-              </>
-            )}
-          </label>
-          {conditionPhotoUrls.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {conditionPhotoUrls.map((url) => (
-                <div key={url} className="relative">
-                  <img src={url} alt="Estado" className="h-16 w-16 object-cover rounded-lg border border-slate-200" />
-                  <button
-                    type="button"
-                    onClick={() => removeConditionPhoto(url)}
-                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center"
-                    aria-label="Quitar foto"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
+          <div>
+            <label htmlFor="odometer" className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-soft)' }}>
+              Kilometraje (km) *
+            </label>
+            <input
+              id="odometer"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={1}
+              value={odometer}
+              onChange={(e) => setOdometer(e.target.value)}
+              placeholder="Ej. 45200"
+              className="input-field w-full text-lg py-4"
+              autoFocus
+            />
+            {hint && <p className="mt-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>{hint}</p>}
+          </div>
+
+          {action === 'checkout' && (
+            <div>
+              <label htmlFor="fuel-level" className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-soft)' }}>
+                Nivel de gasolina (opcional)
+              </label>
+              <select id="fuel-level" value={fuelLevel} onChange={(e) => setFuelLevel(e.target.value)} className="input-field w-full">
+                <option value="">Seleccionar…</option>
+                <option value="Vacío">Vacío</option>
+                <option value="1/4">1/4</option>
+                <option value="1/2">1/2</option>
+                <option value="3/4">3/4</option>
+                <option value="Lleno">Lleno</option>
+              </select>
             </div>
           )}
-        </div>
 
-        <button
-          type="submit"
-          disabled={mutation.isPending}
-          className="w-full py-4 min-h-[48px] rounded-xl bg-primary-dark text-white font-semibold text-base hover:opacity-90 disabled:opacity-50 transition-opacity mt-auto shrink-0"
-        >
-          {mutation.isPending ? 'Guardando…' : action === 'checkin' ? 'Confirmar check-in' : 'Confirmar check-out'}
-        </button>
-      </form>
+          {/* Fuel photo */}
+          <div>
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-soft)' }}>
+              Foto del nivel de gasolina (opcional)
+            </label>
+            <input type="file" accept="image/*" capture="environment" onChange={handleFuelChange} disabled={fuelUploading} className="hidden" id="fuel-photo" />
+            <label
+              htmlFor="fuel-photo"
+              className="flex items-center justify-center gap-2 min-h-[48px] w-full py-3 px-4 rounded-xl cursor-pointer transition-colors"
+              style={{ border: '2px dashed var(--color-border)', color: 'var(--color-text-muted)' }}
+            >
+              {fuelUploading ? 'Subiendo…' : fuelPhotoUrl ? (
+                <><span className="material-icons" style={{ color: '#4ade80' }}>check_circle</span> Foto de gasolina lista</>
+              ) : (
+                <><span className="material-icons">add_photo_alternate</span> Añadir foto de gasolina</>
+              )}
+            </label>
+            {fuelPhotoUrl && (
+              <div className="mt-2 flex items-center gap-2">
+                <img src={fuelPhotoUrl} alt="Gasolina" className="h-16 w-16 object-cover rounded-lg" style={{ border: '1px solid var(--color-border)' }} />
+                <button type="button" onClick={() => setFuelPhotoUrl(null)} className="text-sm" style={{ color: '#f87171' }}>Quitar</button>
+              </div>
+            )}
+          </div>
+
+          {/* Condition photos */}
+          <div>
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-soft)' }}>
+              Fotos del estado del auto (opcional)
+            </label>
+            <input type="file" accept="image/*" capture="environment" multiple onChange={handleConditionChange} disabled={conditionUploading} className="hidden" id="condition-photos" />
+            <label
+              htmlFor="condition-photos"
+              className="flex items-center justify-center gap-2 min-h-[48px] w-full py-3 px-4 rounded-xl cursor-pointer transition-colors"
+              style={{ border: '2px dashed var(--color-border)', color: 'var(--color-text-muted)' }}
+            >
+              {conditionUploading ? 'Subiendo…' : <><span className="material-icons">photo_library</span> Añadir fotos del estado del auto</>}
+            </label>
+            {conditionPhotoUrls.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {conditionPhotoUrls.map((url) => (
+                  <div key={url} className="relative">
+                    <img src={url} alt="Estado" className="h-16 w-16 object-cover rounded-lg" style={{ border: '1px solid var(--color-border)' }} />
+                    <button
+                      type="button"
+                      onClick={() => setConditionPhotoUrls((prev) => prev.filter((u) => u !== url))}
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs"
+                      style={{ background: '#ef4444', color: '#fff' }}
+                      aria-label="Quitar foto"
+                    >×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={mutation.isPending}
+            className="btn-primary w-full py-4 min-h-[48px] text-base font-semibold disabled:opacity-50 mt-auto shrink-0"
+          >
+            {mutation.isPending ? 'Guardando…' : action === 'checkin' ? 'Confirmar check-in' : 'Confirmar check-out'}
+          </button>
+        </form>
       </div>
     </div>
   );
 }
+
+// ─── Active card with check-in / check-out buttons ──────────────────────────
 
 function ActiveReservationCard({
   r,
@@ -412,42 +411,41 @@ function ActiveReservationCard({
   const vehicleLabel = r.vehicle
     ? `${r.vehicle.plate} – ${r.vehicle.brand} ${r.vehicle.model}`
     : 'Vehículo';
-  const needsCheckIn = r.checkinOdometer == null;
+  const needsCheckIn  = r.checkinOdometer == null;
   const needsCheckOut = r.checkinOdometer != null && r.checkoutOdometer == null;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+    <div
+      className="rounded-xl p-4 transition-shadow"
+      style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
+      onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 20px rgba(99,132,255,0.10)')}
+      onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h4 className="font-semibold text-slate-900">{r.eventName || 'Reserva'}</h4>
-          <p className="text-sm text-slate-600 mt-0.5">{vehicleLabel}</p>
+          <h4 className="font-semibold" style={{ color: 'var(--color-text)' }}>{r.eventName || 'Reserva'}</h4>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-soft)' }}>{vehicleLabel}</p>
         </div>
-        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLE[r.status] ?? 'bg-slate-100 text-slate-700'}`}>
+        <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={statusBadgeStyle(r.status)}>
           {STATUS_LABELS[r.status] ?? r.status}
         </span>
       </div>
-      <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm text-slate-600">
-        <div>
-          <span className="text-slate-400">Salida:</span> {formatDate(r.startDatetime)}
-        </div>
-        <div>
-          <span className="text-slate-400">Regreso:</span> {formatDate(r.endDatetime)}
-        </div>
+      <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm" style={{ color: 'var(--color-text-soft)' }}>
+        <div><span style={{ color: 'var(--color-text-muted)' }}>Salida:</span> {formatDate(r.startDatetime)}</div>
+        <div><span style={{ color: 'var(--color-text-muted)' }}>Regreso:</span> {formatDate(r.endDatetime)}</div>
         {r.destination && (
-          <div className="sm:col-span-2">
-            <span className="text-slate-400">Destino:</span> {r.destination}
-          </div>
+          <div className="sm:col-span-2"><span style={{ color: 'var(--color-text-muted)' }}>Destino:</span> {r.destination}</div>
         )}
       </dl>
       {r.description && (
-        <p className="mt-2 text-sm text-slate-500 line-clamp-2">{r.description}</p>
+        <p className="mt-2 text-sm line-clamp-2" style={{ color: 'var(--color-text-muted)' }}>{r.description}</p>
       )}
       <div className="mt-4 flex flex-col gap-2">
         {needsCheckIn && (
           <button
             type="button"
             onClick={onCheckIn}
-            className="w-full min-h-[48px] py-3 px-4 rounded-xl bg-primary-dark text-white font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+            className="btn-primary w-full min-h-[48px] py-3 px-4 flex items-center justify-center gap-2"
           >
             <span className="material-icons">directions_car</span>
             Hacer check-in
@@ -457,7 +455,8 @@ function ActiveReservationCard({
           <button
             type="button"
             onClick={onCheckOut}
-            className="w-full min-h-[48px] py-3 px-4 rounded-xl bg-slate-800 text-white font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+            className="w-full min-h-[48px] py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+            style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
           >
             <span className="material-icons">flag</span>
             Hacer check-out
@@ -468,10 +467,11 @@ function ActiveReservationCard({
   );
 }
 
+// ─── Page ────────────────────────────────────────────────────────────────────
+
 export function MyRequestsPage() {
   const { userData } = useAuth();
   const userId = userData?.id;
-
   const [checkInOut, setCheckInOut] = useState<{ reservation: Reservation; action: 'checkin' | 'checkout' } | null>(null);
 
   const { data: reservations = [], isLoading } = useQuery({
@@ -483,15 +483,14 @@ export function MyRequestsPage() {
     enabled: !!userId,
   });
 
-  const pending = reservations.filter((r: Reservation) => r.status === 'pending');
-  const active = reservations.filter((r: Reservation) => r.status === 'active');
-  const history = reservations.filter(
-    (r: Reservation) => r.status !== 'pending' && r.status !== 'active',
-  );
+  const pending  = reservations.filter((r: Reservation) => r.status === 'pending');
+  const active   = reservations.filter((r: Reservation) => r.status === 'active');
+  const overdue  = reservations.filter((r: Reservation) => r.status === 'overdue');
+  const history  = reservations.filter((r: Reservation) => !['pending', 'active', 'overdue'].includes(r.status));
 
   if (!userId) {
     return (
-      <div className="rounded-xl bg-amber-50 border border-amber-200 p-6 text-amber-800 text-sm">
+      <div className="rounded-xl p-6 text-sm" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}>
         No se pudo cargar tu usuario. Cierra sesión y vuelve a entrar.
       </div>
     );
@@ -500,7 +499,7 @@ export function MyRequestsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <p className="text-slate-500">Cargando tus solicitudes...</p>
+        <p style={{ color: 'var(--color-text-muted)' }}>Cargando tus solicitudes...</p>
       </div>
     );
   }
@@ -518,35 +517,46 @@ export function MyRequestsPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Mis solicitudes</h1>
-          <p className="text-slate-600 mt-1">
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Mis solicitudes</h1>
+          <p className="mt-1" style={{ color: 'var(--color-text-muted)' }}>
             Tus reservas pendientes y el historial de solicitudes de vehículos.
           </p>
         </div>
         <Link
           to="/solicitud-vehiculos"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-dark text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+          className="btn-primary inline-flex items-center gap-2 px-4 py-2.5"
         >
           <span className="material-icons text-lg">add</span>
           Nueva solicitud
         </Link>
       </div>
 
+      {/* Vencidas — aviso prominente */}
+      {overdue.length > 0 && (
+        <section>
+          <h2 className="text-lg font-semibold flex items-center gap-2 mb-4" style={{ color: '#f87171' }}>
+            <span className="material-icons">warning</span>
+            Reservas vencidas ({overdue.length})
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {overdue.map((r: Reservation) => <OverdueCard key={r.id} r={r} />)}
+          </div>
+        </section>
+      )}
+
       {/* Pendientes */}
       <section>
-        <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
-          <span className="material-icons text-amber-600">schedule</span>
+        <h2 className="text-lg font-semibold flex items-center gap-2 mb-4" style={{ color: '#fbbf24' }}>
+          <span className="material-icons">schedule</span>
           Pendientes de aprobación
         </h2>
         {pending.length === 0 ? (
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center text-slate-500">
+          <div className="rounded-xl p-8 text-center" style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
             No tienes solicitudes pendientes.
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {pending.map((r: Reservation) => (
-              <ReservationCard key={r.id} r={r} />
-            ))}
+            {pending.map((r: Reservation) => <ReservationCard key={r.id} r={r} />)}
           </div>
         )}
       </section>
@@ -554,8 +564,8 @@ export function MyRequestsPage() {
       {/* En curso */}
       {active.length > 0 && (
         <section>
-          <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
-            <span className="material-icons text-green-600">directions_car</span>
+          <h2 className="text-lg font-semibold flex items-center gap-2 mb-4" style={{ color: '#4ade80' }}>
+            <span className="material-icons">directions_car</span>
             En curso
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -573,45 +583,41 @@ export function MyRequestsPage() {
 
       {/* Historial */}
       <section>
-        <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
-          <span className="material-icons text-slate-600">history</span>
+        <h2 className="text-lg font-semibold flex items-center gap-2 mb-4" style={{ color: 'var(--color-text-soft)' }}>
+          <span className="material-icons">history</span>
           Historial
         </h2>
         {history.length === 0 ? (
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center text-slate-500">
+          <div className="rounded-xl p-8 text-center" style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
             Aún no tienes reservas en tu historial.
           </div>
         ) : (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Vehículo</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Evento</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Salida</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Regreso</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Estado</th>
+                  <tr style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-table-head-bg)' }}>
+                    <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Vehículo</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Evento</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>Salida</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>Regreso</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Estado</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody>
                   {history.map((r: Reservation) => {
-                    const vehicleLabel = r.vehicle
-                      ? `${r.vehicle.plate} – ${r.vehicle.brand} ${r.vehicle.model}`
-                      : '—';
+                    const vehicleLabel = r.vehicle ? `${r.vehicle.plate} – ${r.vehicle.brand} ${r.vehicle.model}` : '—';
                     return (
-                      <tr key={r.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-slate-700 whitespace-nowrap">{vehicleLabel}</td>
-                        <td className="px-4 py-3 text-slate-600 max-w-[200px]">
+                      <tr key={r.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                        <td className="px-4 py-3 font-medium whitespace-nowrap" style={{ color: 'var(--color-text-soft)' }}>{vehicleLabel}</td>
+                        <td className="px-4 py-3 max-w-[200px]" style={{ color: 'var(--color-text-soft)' }}>
                           <div className="truncate">{r.eventName || '—'}</div>
-                          {r.destination && (
-                            <div className="text-slate-400 text-xs truncate">{r.destination}</div>
-                          )}
+                          {r.destination && <div className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{r.destination}</div>}
                         </td>
-                        <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{formatDate(r.startDatetime)}</td>
-                        <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{formatDate(r.endDatetime)}</td>
+                        <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>{formatDate(r.startDatetime)}</td>
+                        <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>{formatDate(r.endDatetime)}</td>
                         <td className="px-4 py-3">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[r.status] ?? 'bg-slate-100 text-slate-700'}`}>
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={statusBadgeStyle(r.status)}>
                             {STATUS_LABELS[r.status] ?? r.status}
                           </span>
                         </td>

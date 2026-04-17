@@ -6,6 +6,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { SystemSettingsModule } from '../system-settings/system-settings.module';
 import { ReservationsService } from './reservations.service';
 import { ReservationsController } from './reservations.controller';
+import { ReservationsSchedulerService } from './reservations-scheduler.service';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { ReservationsController } from './reservations.controller';
     SystemSettingsModule,
   ],
   controllers: [ReservationsController],
-  providers: [ReservationsService],
+  providers: [ReservationsService, ReservationsSchedulerService],
   exports: [ReservationsService],
 })
 export class ReservationsModule {}
