@@ -181,7 +181,7 @@ export function AllReservationsCalendar({
       const startDt = (r.startDatetime ?? r.start_datetime) as string;
       const endDt = (r.endDatetime ?? r.end_datetime) as string;
       const eventName = (r.eventName ?? r.event_name) as string | undefined;
-      const vehicle = r.vehicle as { plate?: string } | undefined;
+      const vehicle = r.vehicle as { plate?: string; id?: string } | undefined;
       const plate = vehicle?.plate ?? '—';
       const title = eventName?.trim() ? `${plate} – ${eventName}` : `${plate} – Reserva`;
       const desc = (r.description as string) ?? '';
@@ -194,7 +194,7 @@ export function AllReservationsCalendar({
         start: new Date(startDt),
         end: new Date(endDt),
         status: (r.status as string) ?? 'pending',
-        vehicleId: (r.vehicleId ?? (vehicle as { id?: string } | undefined)?.id ?? r.id) as string,
+        vehicleId: ((r.vehicleId as string | undefined) ?? vehicle?.id ?? (r.id as string)),
         description: desc || undefined,
         destination: dest || undefined,
         reservedBy: reservedBy || undefined,

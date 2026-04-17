@@ -18,14 +18,16 @@ const PALETTE = [
   { bg: '#f43f5e', border: '#e11d48' }, // rose
 ];
 
-/** Simple djb2-like hash to get a stable index for any string. */
+/** XOR-chunks hash: splits the UUID into four 8-hex-char segments and
+ *  XORs them together. Distributes UUIDs much better than djb2 because
+ *  it uses all 32 hex digits with equal weight. */
 function hashId(id: string): number {
-  let h = 5381;
-  for (let i = 0; i < id.length; i++) {
-    h = ((h << 5) + h) ^ id.charCodeAt(i);
-    h = h >>> 0; // keep unsigned 32-bit
-  }
-  return h % PALETTE.length;
+  const clean = id.replace(/-/g, '');
+  const a = parseInt(clean.slice(0, 8), 16) || 0;
+  const b = parseInt(clean.slice(8, 16), 16) || 0;
+  const c = parseInt(clean.slice(16, 24), 16) || 0;
+  const d = parseInt(clean.slice(24, 32), 16) || 0;
+  return ((a ^ b ^ c ^ d) >>> 0) % PALETTE.length;
 }
 
 export type VehicleColor = { bg: string; border: string };
