@@ -50,12 +50,13 @@ function ReservationFormModal({
   const esConductor = isConductor(userData?.role?.name);
 
   const [form, setForm] = useState(() => {
-    const start = reservation?.startDatetime
-      ? new Date(reservation.startDatetime).toISOString().slice(0, 16)
-      : '';
-    const end = reservation?.endDatetime
-      ? new Date(reservation.endDatetime).toISOString().slice(0, 16)
-      : '';
+    const toLocal = (iso: string) => {
+      const d = new Date(iso);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+    const start = reservation?.startDatetime ? toLocal(reservation.startDatetime) : '';
+    const end   = reservation?.endDatetime   ? toLocal(reservation.endDatetime)   : '';
     return {
       vehicleId: reservation?.vehicleId ?? '',
       userId: reservation?.userId ?? (esConductor && userData?.id ? userData.id : ''),

@@ -161,10 +161,11 @@ function ReserveVehicleModal({
         </div>
         <form onSubmit={handleSubmit} className="p-4 md:p-6 flex-1 flex flex-col min-h-0">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+            {/* Left column: calendar only */}
             <div className="lg:col-span-2 space-y-4 flex flex-col min-h-0 order-2 lg:order-1">
               <h4 className="text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Calendario de disponibilidad</h4>
               <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                Los días en naranja/rojo tienen reservas. Selecciona un hueco para elegir fecha y hora.
+                Los días en naranja/rojo tienen reservas. Selecciona un hueco para pre-llenar la fecha y hora.
               </p>
               <div className="flex-1 min-h-[320px] md:min-h-[560px]">
                 <VehicleAvailabilityCalendar
@@ -176,29 +177,9 @@ function ReserveVehicleModal({
                   minHeight={620}
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Fecha y hora de salida *</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={startDatetime}
-                    onChange={(e) => setStartDatetime(e.target.value)}
-                    className="input-field w-full"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Fecha y hora de regreso *</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={endDatetime}
-                    onChange={(e) => setEndDatetime(e.target.value)}
-                    className="input-field w-full"
-                  />
-                </div>
-              </div>
             </div>
+
+            {/* Right column: form fields including datetimes */}
             <div className="lg:col-span-1 space-y-4 order-1 lg:order-2 min-w-0">
               <h4 className="text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Datos de la solicitud</h4>
               {error && (
@@ -257,6 +238,26 @@ function ReserveVehicleModal({
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder="Destino o ruta prevista"
+                  className="input-field w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Fecha y hora de salida *</label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={startDatetime}
+                  onChange={(e) => setStartDatetime(e.target.value)}
+                  className="input-field w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Fecha y hora de regreso *</label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={endDatetime}
+                  onChange={(e) => setEndDatetime(e.target.value)}
                   className="input-field w-full"
                 />
               </div>
