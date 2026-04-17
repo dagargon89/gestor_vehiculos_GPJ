@@ -7,6 +7,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { MobileCalendar } from './MobileCalendar';
+import { getVehicleColor, getVehicleColorPending } from '../../utils/vehicleColors';
 
 const localizer = dateFnsLocalizer({
   format,
@@ -22,6 +23,7 @@ type ReservationEvent = {
   start: Date;
   end: Date;
   status: string;
+  vehicleId?: string;
   description?: string;
   destination?: string;
   reservedBy?: string;
@@ -192,6 +194,7 @@ export function AllReservationsCalendar({
         start: new Date(startDt),
         end: new Date(endDt),
         status: (r.status as string) ?? 'pending',
+        vehicleId: (r.vehicleId ?? (vehicle as { id?: string } | undefined)?.id ?? r.id) as string,
         description: desc || undefined,
         destination: dest || undefined,
         reservedBy: reservedBy || undefined,
@@ -200,15 +203,28 @@ export function AllReservationsCalendar({
     });
   }, [reservations, monthStart, monthEnd]);
 
+  // Unique vehicles in current month's events for the legend
+  const vehicleLegend = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const e of events) {
+      if (e.vehicleId && e.vehiclePlate && !seen.has(e.vehicleId)) {
+        seen.set(e.vehicleId, e.vehiclePlate);
+      }
+    }
+    return Array.from(seen.entries()).map(([vehicleId, plate]) => ({ vehicleId, plate }));
+  }, [events]);
+
   type ViewType = 'month' | 'week' | 'day' | 'agenda' | 'work_week';
   const [view, setView] = useState<ViewType>('month');
 
   const eventStyleGetter = (event: ReservationEvent) => {
+    const vid = event.vehicleId ?? event.id;
     const isPending = event.status === 'pending';
+    const c = isPending ? getVehicleColorPending(vid) : getVehicleColor(vid);
     return {
       style: {
-        backgroundColor: isPending ? '#f59e0b' : '#dc2626',
-        borderLeft: `4px solid ${isPending ? '#d97706' : '#b91c1c'}`,
+        backgroundColor: c.bg,
+        borderLeft: `4px solid ${c.border}`,
         color: '#fff',
         borderRadius: '4px',
         marginBottom: '2px',
@@ -248,18 +264,22 @@ export function AllReservationsCalendar({
       ) : (
         <>
           <div
-            className="px-5 py-3 flex items-center gap-4"
+            className="px-5 py-3 flex items-center flex-wrap gap-x-4 gap-y-1.5"
             style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-table-head-bg)' }}
           >
-            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>Leyenda</span>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full shrink-0" style={{ background: '#f59e0b' }} />
-              <span className="text-xs font-medium" style={{ color: 'var(--color-text-soft)' }}>Pendiente</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full shrink-0" style={{ background: '#ef4444' }} />
-              <span className="text-xs font-medium" style={{ color: 'var(--color-text-soft)' }}>Activa</span>
-            </div>
+            <span className="text-xs font-semibold uppercase tracking-wider shrink-0" style={{ color: 'var(--color-text-muted)' }}>Vehículos</span>
+            {vehicleLegend.map(({ vehicleId, plate }) => {
+              const c = getVehicleColor(vehicleId);
+              return (
+                <div key={vehicleId} className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full shrink-0" style={{ background: c.bg }} />
+                  <span className="text-xs font-medium" style={{ color: 'var(--color-text-soft)' }}>{plate}</span>
+                </div>
+              );
+            })}
+            {vehicleLegend.length === 0 && (
+              <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Sin reservas este mes</span>
+            )}
           </div>
           <div className="p-4 rbc-calendar-wrapper rbc-readonly" style={{ minHeight: `${minHeight}px`, height: `${minHeight}px` }}>
             <Calendar

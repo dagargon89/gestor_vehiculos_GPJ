@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { getVehicleColor, getVehicleColorPending } from '../../utils/vehicleColors';
 import {
   format,
   startOfMonth,
@@ -20,6 +21,7 @@ export type MobileCalEvent = {
   start: Date;
   end: Date;
   status: string;
+  vehicleId?: string;
   description?: string;
   destination?: string;
   reservedBy?: string;
@@ -68,6 +70,15 @@ export function MobileCalendar({
   };
 
   const dayEvents = eventsForDay(selectedDate);
+
+  const vehicleLegend = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const e of events) {
+      const vid = e.vehicleId ?? e.id;
+      if (e.vehiclePlate && !seen.has(vid)) seen.set(vid, e.vehiclePlate);
+    }
+    return Array.from(seen.entries()).map(([vehicleId, plate]) => ({ vehicleId, plate }));
+  }, [events]);
 
   const handleDayClick = (d: Date) => {
     setSelectedDate(d);
@@ -127,8 +138,10 @@ export function MobileCalendar({
           const inMonth = isSameMonth(d, currentDate);
           const selected = isSameDay(d, selectedDate);
           const today = isToday(d);
-          const hasPending = dayEvts.some((e) => e.status === 'pending');
-          const hasActive = dayEvts.some((e) => e.status === 'active');
+          // Up to 3 unique vehicle dots
+          const dotVehicles = Array.from(
+            new Map(dayEvts.map(e => [e.vehicleId ?? e.id, e])).values()
+          ).slice(0, 3);
 
           return (
             <button
@@ -164,33 +177,37 @@ export function MobileCalendar({
                 {format(d, 'd')}
               </span>
               <div className="flex gap-0.5 mt-1 h-1.5">
-                {hasPending && (
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: selected ? '#fff' : '#f59e0b' }}
-                  />
-                )}
-                {hasActive && (
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: selected ? '#fff' : '#ef4444' }}
-                  />
-                )}
+                {dotVehicles.map(e => {
+                  const vid = e.vehicleId ?? e.id;
+                  const dotColor = selected ? '#fff' : getVehicleColor(vid).bg;
+                  return (
+                    <span
+                      key={vid}
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ background: dotColor }}
+                    />
+                  );
+                })}
               </div>
             </button>
           );
         })}
       </div>
 
-      {/* Leyenda */}
-      <div className="flex items-center gap-4 px-1">
-        <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: '#f59e0b' }} /> Pendiente
-        </span>
-        <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: '#ef4444' }} /> Activa
-        </span>
-      </div>
+      {/* Leyenda — vehículos presentes en el mes */}
+      {vehicleLegend.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-1">
+          {vehicleLegend.map(({ vehicleId, plate }) => {
+            const c = getVehicleColor(vehicleId);
+            return (
+              <span key={vehicleId} className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: c.bg }} />
+                {plate}
+              </span>
+            );
+          })}
+        </div>
+      )}
 
       {/* Eventos del día seleccionado */}
       <div className="pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
@@ -203,39 +220,47 @@ export function MobileCalendar({
           </p>
         ) : (
           <div className="flex flex-col gap-2">
-            {dayEvents.map((e) => (
-              <div
-                key={e.id}
-                className="rounded-lg px-3 py-2.5"
-                style={{
-                  background: e.status === 'pending' ? 'rgba(245,158,11,0.10)' : 'rgba(239,68,68,0.10)',
-                  borderLeft: `4px solid ${e.status === 'pending' ? '#f59e0b' : '#ef4444'}`,
-                }}
-              >
-                <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{e.title}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                  {format(e.start, 'HH:mm')} – {format(e.end, 'HH:mm')}
-                  {e.vehiclePlate && ` · ${e.vehiclePlate}`}
-                </p>
-                {e.reservedBy && (
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{e.reservedBy}</p>
-                )}
-                {(e.destination || e.description) && (
-                  <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--color-text-muted)' }}>
-                    {e.destination || e.description}
-                  </p>
-                )}
-                <span
-                  className="inline-block text-xs font-semibold mt-1.5 px-2 py-0.5 rounded-full"
+            {dayEvents.map((e) => {
+              const vid = e.vehicleId ?? e.id;
+              const isPending = e.status === 'pending';
+              const c = isPending ? getVehicleColorPending(vid) : getVehicleColor(vid);
+              const r = parseInt(getVehicleColor(vid).bg.slice(1, 3), 16);
+              const g = parseInt(getVehicleColor(vid).bg.slice(3, 5), 16);
+              const b = parseInt(getVehicleColor(vid).bg.slice(5, 7), 16);
+              return (
+                <div
+                  key={e.id}
+                  className="rounded-lg px-3 py-2.5"
                   style={{
-                    background: e.status === 'pending' ? 'rgba(245,158,11,0.18)' : 'rgba(239,68,68,0.18)',
-                    color: e.status === 'pending' ? '#fbbf24' : '#f87171',
+                    background: `rgba(${r},${g},${b},0.10)`,
+                    borderLeft: `4px solid ${c.border}`,
                   }}
                 >
-                  {e.status === 'pending' ? 'Pendiente' : 'Activa'}
-                </span>
-              </div>
-            ))}
+                  <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{e.title}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                    {format(e.start, 'HH:mm')} – {format(e.end, 'HH:mm')}
+                    {e.vehiclePlate && ` · ${e.vehiclePlate}`}
+                  </p>
+                  {e.reservedBy && (
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{e.reservedBy}</p>
+                  )}
+                  {(e.destination || e.description) && (
+                    <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--color-text-muted)' }}>
+                      {e.destination || e.description}
+                    </p>
+                  )}
+                  <span
+                    className="inline-block text-xs font-semibold mt-1.5 px-2 py-0.5 rounded-full"
+                    style={{
+                      background: `rgba(${r},${g},${b},0.18)`,
+                      color: c.bg,
+                    }}
+                  >
+                    {isPending ? 'Pendiente' : 'Activa'}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

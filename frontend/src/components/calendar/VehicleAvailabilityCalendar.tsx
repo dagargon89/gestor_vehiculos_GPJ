@@ -7,6 +7,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { MobileCalendar } from './MobileCalendar';
+import { getVehicleColor, getVehicleColorPending } from '../../utils/vehicleColors';
 
 const localizer = dateFnsLocalizer({
   format,
@@ -201,11 +202,13 @@ export function VehicleAvailabilityCalendar({
   const [view, setView] = useState<ViewType>('month');
 
   const eventStyleGetter = (event: ReservationEvent) => {
+    const vid = vehicleId ?? event.id;
     const isPending = event.status === 'pending';
+    const c = isPending ? getVehicleColorPending(vid) : getVehicleColor(vid);
     return {
       style: {
-        backgroundColor: isPending ? '#f59e0b' : '#dc2626',
-        borderLeft: `4px solid ${isPending ? '#d97706' : '#b91c1c'}`,
+        backgroundColor: c.bg,
+        borderLeft: `4px solid ${c.border}`,
         color: '#fff',
         borderRadius: '4px',
         marginBottom: '2px',
@@ -259,15 +262,25 @@ export function VehicleAvailabilityCalendar({
         />
       ) : (
         <>
-          <div
-            className="px-4 py-2"
-            style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-table-head-bg)' }}
-          >
-            <p className="text-sm flex items-center gap-1" style={{ color: 'var(--color-text-soft)' }}>
-              <span className="inline-block w-3 h-3 rounded" style={{ background: '#f59e0b' }} /> Pendiente
-              <span className="inline-block w-3 h-3 rounded ml-3" style={{ background: '#ef4444' }} /> Activa
-            </p>
-          </div>
+          {vehicleId && (() => {
+            const c = getVehicleColor(vehicleId);
+            const cp = getVehicleColorPending(vehicleId);
+            return (
+              <div
+                className="px-4 py-2 flex items-center gap-4"
+                style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-table-head-bg)' }}
+              >
+                <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-text-soft)' }}>
+                  <span className="inline-block w-3 h-3 rounded-full" style={{ background: cp.bg }} />
+                  Pendiente
+                </div>
+                <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-text-soft)' }}>
+                  <span className="inline-block w-3 h-3 rounded-full" style={{ background: c.bg }} />
+                  Activa
+                </div>
+              </div>
+            );
+          })()}
           <div className="p-4 rbc-calendar-wrapper" style={{ minHeight: `${minHeight}px`, height: `${minHeight}px` }}>
             <Calendar
               localizer={localizer}
