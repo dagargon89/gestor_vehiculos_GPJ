@@ -131,7 +131,7 @@ export function AllReservationsCalendar({
   currentDate,
   onNavigate,
   className = '',
-  minHeight = 400,
+  minHeight = 620,
 }: AllReservationsCalendarProps) {
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== 'undefined' ? window.matchMedia('(max-width: 1023px)').matches : false,

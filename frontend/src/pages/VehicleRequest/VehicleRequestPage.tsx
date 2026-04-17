@@ -160,7 +160,7 @@ function ReserveVehicleModal({
                   onNavigate={(d) => setCalendarDate(d)}
                   onSelectSlot={handleSelectSlot}
                   className="h-full"
-                  minHeight={520}
+                  minHeight={620}
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

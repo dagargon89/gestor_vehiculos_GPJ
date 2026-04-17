@@ -199,7 +199,7 @@ export function ConductorDashboard() {
         <AllReservationsCalendar
           currentDate={calendarDate}
           onNavigate={setCalendarDate}
-          minHeight={420}
+          minHeight={620}
         />
       </div>
     </>
