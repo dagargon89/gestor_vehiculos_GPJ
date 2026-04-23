@@ -59,7 +59,7 @@ export class ReportsService {
       LEFT JOIN reservations r ON u.id = r."user_id"
         AND r."startDatetime" BETWEEN $1 AND $2
         AND r."deletedAt" IS NULL
-      LEFT JOIN incidents i ON u.id = i."userId"
+      LEFT JOIN incidents i ON u.id = i."user_id"
         AND i.date BETWEEN $1 AND $2
         AND i."deletedAt" IS NULL
       WHERE u."deletedAt" IS NULL

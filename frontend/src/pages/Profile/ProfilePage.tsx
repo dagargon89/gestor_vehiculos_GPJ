@@ -12,6 +12,7 @@ interface ProfileData {
   licenseNumber: string;
   licenseType: string;
   licenseExpiry: string;
+  licenseRestrictions: string;
   emergencyContactName: string;
   emergencyContactPhone: string;
   emergencyContactRelationship: string;
@@ -42,6 +43,7 @@ export function ProfilePage() {
     licenseNumber: '',
     licenseType: '',
     licenseExpiry: '',
+    licenseRestrictions: '',
     emergencyContactName: '',
     emergencyContactPhone: '',
     emergencyContactRelationship: '',
@@ -60,6 +62,9 @@ export function ProfilePage() {
         licenseNumber: u.licenseNumber || '',
         licenseType: u.licenseType || '',
         licenseExpiry: u.licenseExpiry ? u.licenseExpiry.slice(0, 10) : '',
+        licenseRestrictions: Array.isArray(u.licenseRestrictions)
+          ? u.licenseRestrictions.join(', ')
+          : (u.licenseRestrictions || ''),
         emergencyContactName: u.emergencyContactName || '',
         emergencyContactPhone: u.emergencyContactPhone || '',
         emergencyContactRelationship: u.emergencyContactRelationship || '',
@@ -96,6 +101,10 @@ export function ProfilePage() {
     if (form.licenseNumber.trim()) payload.licenseNumber = form.licenseNumber.trim();
     if (form.licenseType) payload.licenseType = form.licenseType;
     if (form.licenseExpiry) payload.licenseExpiry = form.licenseExpiry;
+    payload.licenseRestrictions = form.licenseRestrictions
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
     if (form.emergencyContactName.trim()) payload.emergencyContactName = form.emergencyContactName.trim();
     if (form.emergencyContactPhone.trim()) payload.emergencyContactPhone = form.emergencyContactPhone.trim();
     if (form.emergencyContactRelationship.trim()) payload.emergencyContactRelationship = form.emergencyContactRelationship.trim();
@@ -117,6 +126,9 @@ export function ProfilePage() {
           licenseNumber: u.licenseNumber || '',
           licenseType: u.licenseType || '',
           licenseExpiry: u.licenseExpiry ? u.licenseExpiry.slice(0, 10) : '',
+          licenseRestrictions: Array.isArray(u.licenseRestrictions)
+            ? u.licenseRestrictions.join(', ')
+            : (u.licenseRestrictions || ''),
           emergencyContactName: u.emergencyContactName || '',
           emergencyContactPhone: u.emergencyContactPhone || '',
           emergencyContactRelationship: u.emergencyContactRelationship || '',
@@ -389,6 +401,19 @@ export function ProfilePage() {
                   className={inputClass(!editing)}
                 />
               </div>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Restricciones
+              </label>
+              <input
+                type="text"
+                value={form.licenseRestrictions}
+                onChange={(e) => update('licenseRestrictions', e.target.value)}
+                disabled={!editing}
+                className={inputClass(!editing)}
+                placeholder="Ej. lentes, manual, sin autopista (separadas por coma)"
+              />
             </div>
           </div>
         </div>

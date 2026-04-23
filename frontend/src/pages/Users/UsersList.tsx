@@ -17,6 +17,7 @@ type User = {
   status: string;
   roleId?: string;
   role?: Role;
+  lastLoginAt?: string;
 };
 
 const STATUS_OPTIONS = [
@@ -277,13 +278,14 @@ export function UsersList() {
                 <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Departamento</th>
                 <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Rol</th>
                 <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Estado</th>
+                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Último acceso</th>
                 <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {paginatedUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">No hay usuarios registrados.</td>
+                  <td colSpan={7} className="px-6 py-8 text-center text-slate-500">No hay usuarios registrados.</td>
                 </tr>
               ) : (
                 paginatedUsers.map((u: User) => {
@@ -298,6 +300,17 @@ export function UsersList() {
                       <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
                         {STATUS_OPTIONS.find((o) => o.value === u.status)?.label ?? u.status}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm font-mono-data text-slate-500 whitespace-nowrap">
+                      {u.lastLoginAt
+                        ? new Date(u.lastLoginAt).toLocaleString('es-MX', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : '—'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button

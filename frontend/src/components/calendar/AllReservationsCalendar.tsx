@@ -28,6 +28,7 @@ type ReservationEvent = {
   destination?: string;
   reservedBy?: string;
   vehiclePlate?: string;
+  vehicleName?: string;
 };
 
 function EventWithTooltip({
@@ -46,6 +47,7 @@ function EventWithTooltip({
   const destination = event.destination;
   const reservedBy = event.reservedBy;
   const vehiclePlate = event.vehiclePlate;
+  const vehicleName = event.vehicleName;
 
   const timeFmt = isSameDay(event.start, event.end)
     ? (d: Date) => format(d, 'HH:mm', { locale: es })
@@ -74,10 +76,15 @@ function EventWithTooltip({
       </div>
       <div className="px-4 py-3">
         <dl className="space-y-3 text-xs">
-          {(vehiclePlate != null && vehiclePlate !== '') && (
+          {(vehicleName != null && vehicleName !== '') && (
             <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
               <dt className="min-w-0 font-medium text-slate-400">Vehículo</dt>
-              <dd className="text-slate-100">{vehiclePlate}</dd>
+              <dd className="text-slate-100">
+                {vehicleName}
+                {vehiclePlate && vehiclePlate !== '—' && (
+                  <span className="ml-1.5 text-slate-400">({vehiclePlate})</span>
+                )}
+              </dd>
             </div>
           )}
           <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
@@ -181,9 +188,12 @@ export function AllReservationsCalendar({
       const startDt = (r.startDatetime ?? r.start_datetime) as string;
       const endDt = (r.endDatetime ?? r.end_datetime) as string;
       const eventName = (r.eventName ?? r.event_name) as string | undefined;
-      const vehicle = r.vehicle as { plate?: string; id?: string } | undefined;
+      const vehicle = r.vehicle as { plate?: string; id?: string; brand?: string; model?: string } | undefined;
       const plate = vehicle?.plate ?? '—';
-      const title = eventName?.trim() ? `${plate} – ${eventName}` : `${plate} – Reserva`;
+      const vehicleName = vehicle?.brand && vehicle?.model
+        ? `${vehicle.brand} ${vehicle.model}`
+        : plate;
+      const title = eventName?.trim() ? `${vehicleName} – ${eventName}` : vehicleName;
       const desc = (r.description as string) ?? '';
       const dest = (r.destination as string) ?? '';
       const user = r.user as { displayName?: string; email?: string } | undefined;
@@ -199,19 +209,23 @@ export function AllReservationsCalendar({
         destination: dest || undefined,
         reservedBy: reservedBy || undefined,
         vehiclePlate: plate !== '—' ? plate : undefined,
+        vehicleName: vehicleName !== '—' ? vehicleName : undefined,
       };
     });
   }, [reservations, monthStart, monthEnd]);
 
   // Unique vehicles in current month's events for the legend
   const vehicleLegend = useMemo(() => {
-    const seen = new Map<string, string>();
+    const seen = new Map<string, { label: string; plate?: string }>();
     for (const e of events) {
-      if (e.vehicleId && e.vehiclePlate && !seen.has(e.vehicleId)) {
-        seen.set(e.vehicleId, e.vehiclePlate);
+      if (e.vehicleId && !seen.has(e.vehicleId)) {
+        seen.set(e.vehicleId, {
+          label: e.vehicleName ?? e.vehiclePlate ?? '—',
+          plate: e.vehiclePlate,
+        });
       }
     }
-    return Array.from(seen.entries()).map(([vehicleId, plate]) => ({ vehicleId, plate }));
+    return Array.from(seen.entries()).map(([vehicleId, info]) => ({ vehicleId, ...info }));
   }, [events]);
 
   type ViewType = 'month' | 'week' | 'day' | 'agenda' | 'work_week';
@@ -268,12 +282,15 @@ export function AllReservationsCalendar({
             style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-table-head-bg)' }}
           >
             <span className="text-xs font-semibold uppercase tracking-wider shrink-0" style={{ color: 'var(--color-text-muted)' }}>Vehículos</span>
-            {vehicleLegend.map(({ vehicleId, plate }) => {
+            {vehicleLegend.map(({ vehicleId, label, plate }) => {
               const c = getVehicleColor(vehicleId);
               return (
                 <div key={vehicleId} className="flex items-center gap-1.5">
                   <span className="w-3 h-3 rounded-full shrink-0" style={{ background: c.bg }} />
-                  <span className="text-xs font-medium" style={{ color: 'var(--color-text-soft)' }}>{plate}</span>
+                  <span className="text-xs font-medium" style={{ color: 'var(--color-text-soft)' }}>
+                    {label}
+                    {plate && <span className="ml-1 font-normal opacity-60">({plate})</span>}
+                  </span>
                 </div>
               );
             })}

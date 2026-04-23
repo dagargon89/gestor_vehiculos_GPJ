@@ -26,6 +26,7 @@ export type MobileCalEvent = {
   destination?: string;
   reservedBy?: string;
   vehiclePlate?: string;
+  vehicleName?: string;
 };
 
 type MobileCalendarProps = {
@@ -72,12 +73,17 @@ export function MobileCalendar({
   const dayEvents = eventsForDay(selectedDate);
 
   const vehicleLegend = useMemo(() => {
-    const seen = new Map<string, string>();
+    const seen = new Map<string, { label: string; plate?: string }>();
     for (const e of events) {
       const vid = e.vehicleId ?? e.id;
-      if (e.vehiclePlate && !seen.has(vid)) seen.set(vid, e.vehiclePlate);
+      if (!seen.has(vid)) {
+        seen.set(vid, {
+          label: e.vehicleName ?? e.vehiclePlate ?? '—',
+          plate: e.vehiclePlate,
+        });
+      }
     }
-    return Array.from(seen.entries()).map(([vehicleId, plate]) => ({ vehicleId, plate }));
+    return Array.from(seen.entries()).map(([vehicleId, info]) => ({ vehicleId, ...info }));
   }, [events]);
 
   const handleDayClick = (d: Date) => {
@@ -197,12 +203,13 @@ export function MobileCalendar({
       {/* Leyenda — vehículos presentes en el mes */}
       {vehicleLegend.length > 0 && (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-1">
-          {vehicleLegend.map(({ vehicleId, plate }) => {
+          {vehicleLegend.map(({ vehicleId, label, plate }) => {
             const c = getVehicleColor(vehicleId);
             return (
               <span key={vehicleId} className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-text-muted)' }}>
                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: c.bg }} />
-                {plate}
+                {label}
+                {plate && <span className="opacity-60">({plate})</span>}
               </span>
             );
           })}
@@ -239,7 +246,8 @@ export function MobileCalendar({
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{e.title}</p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                     {format(e.start, 'HH:mm')} – {format(e.end, 'HH:mm')}
-                    {e.vehiclePlate && ` · ${e.vehiclePlate}`}
+                    {e.vehicleName && ` · ${e.vehicleName}`}
+                    {e.vehiclePlate && ` (${e.vehiclePlate})`}
                   </p>
                   {e.reservedBy && (
                     <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{e.reservedBy}</p>

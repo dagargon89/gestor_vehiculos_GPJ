@@ -17,6 +17,8 @@ export const ROUTE_PERMISSION: Record<
   '/role-permissions': { resource: 'roles', action: 'read' },
   '/system-settings': { resource: 'system_settings', action: 'read' },
   '/fuel-records': { resource: 'fuel_records', action: 'read' },
+  '/costs': { resource: 'costs', action: 'read' },
+  '/audit-logs': { resource: 'audit_logs', action: 'read' },
 };
 
 /**
@@ -47,9 +49,11 @@ export const ADMIN_ROUTE_ITEMS: AdminRouteItem[] = [
   { to: '/fuel-records', label: 'Registros de combustible', resource: 'fuel_records', action: 'read', icon: 'local_gas_station', category: 'flota' },
   { to: '/incidents', label: 'Incidentes', resource: 'incidents', action: 'read', icon: 'warning', category: 'flota' },
   { to: '/sanctions', label: 'Sanciones', resource: 'sanctions', action: 'read', icon: 'gavel', category: 'flota' },
+  { to: '/costs', label: 'Costos y Gastos', resource: 'costs', action: 'read', icon: 'payments', category: 'flota' },
   { to: '/users', label: 'Gestión de Usuarios', resource: 'users', action: 'read', icon: 'people', category: 'usuarios' },
   { to: '/providers', label: 'Gestión de Proveedores', resource: 'providers', action: 'read', icon: 'business', category: 'usuarios' },
   { to: '/reports', label: 'Reportes y Estadísticas', resource: 'reports', action: 'read', icon: 'bar_chart', category: 'sistema' },
+  { to: '/audit-logs', label: 'Bitácora de Auditoría', resource: 'audit_logs', action: 'read', icon: 'history', category: 'sistema' },
   { to: '/role-permissions', label: 'Permisos por rol', resource: 'roles', action: 'read', icon: 'lock', category: 'sistema' },
   { to: '/system-settings', label: 'Configuración del sistema', resource: 'system_settings', action: 'read', icon: 'settings', category: 'sistema' },
 ];

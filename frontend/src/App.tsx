@@ -22,6 +22,8 @@ import { RolePermissionsPage } from './pages/RolePermissions/RolePermissionsPage
 import { SystemSettingsPage } from './pages/SystemSettings/SystemSettingsPage';
 import { FuelRecordsList } from './pages/FuelRecords/FuelRecordsList';
 import { AssignRolesPage } from './pages/AssignRoles/AssignRolesPage';
+import { CostsList } from './pages/Costs/CostsList';
+import { AuditLogsPage } from './pages/AuditLogs/AuditLogsPage';
 import { canAccessDashboard, isConductor } from './config/routePermissions';
 import { useAuth } from './contexts/AuthContext';
 
@@ -66,6 +68,8 @@ function App() {
               <Route path="fuel-records" element={<PermissionRoute resource="fuel_records" action="read"><FuelRecordsList /></PermissionRoute>} />
               <Route path="incidents" element={<PermissionRoute resource="incidents" action="read"><IncidentList /></PermissionRoute>} />
               <Route path="sanctions" element={<PermissionRoute resource="sanctions" action="read"><SanctionList /></PermissionRoute>} />
+              <Route path="costs" element={<PermissionRoute resource="costs" action="read"><CostsList /></PermissionRoute>} />
+              <Route path="audit-logs" element={<PermissionRoute resource="audit_logs" action="read"><AuditLogsPage /></PermissionRoute>} />
               <Route path="role-permissions" element={<PermissionRoute resource="roles" action="read"><RolePermissionsPage /></PermissionRoute>} />
               <Route path="system-settings" element={<PermissionRoute resource="system_settings" action="read"><SystemSettingsPage /></PermissionRoute>} />
               <Route path="profile" element={<ProfilePage />} />
