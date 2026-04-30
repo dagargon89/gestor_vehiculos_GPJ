@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindManyOptions } from 'typeorm';
+import { DataSource, Repository, FindManyOptions } from 'typeorm';
 import { Reservation } from '../../database/entities/reservation.entity';
 import { Vehicle } from '../../database/entities/vehicle.entity';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -15,6 +15,7 @@ export class ReservationsService {
     private vehicleRepo: Repository<Vehicle>,
     private notificationsService: NotificationsService,
     private systemSettingsService: SystemSettingsService,
+    private dataSource: DataSource,
   ) {}
 
   async findAll(filters?: {
@@ -84,24 +85,32 @@ export class ReservationsService {
     if (payload.endDatetime && typeof payload.endDatetime === 'string') {
       payload.endDatetime = new Date(payload.endDatetime as string);
     }
-    // Validar conflictos de horario (siempre, independientemente de auto-aprobación)
-    let autoApproved = false;
-    if (payload.vehicleId && payload.startDatetime && payload.endDatetime) {
-      await this.assertNoConflict(
-        payload.vehicleId as string,
-        payload.startDatetime as Date,
-        payload.endDatetime as Date,
-      );
-      // Auto-aprobación: si el ajuste global está activo, aprobar directamente
-      const autoApproveSetting = await this.systemSettingsService.findByKey('auto_approve_reservations');
-      if (autoApproveSetting?.value === 'true') {
-        payload.status = 'active';
-        autoApproved = true;
-      }
-    }
 
-    const r = this.repo.create(payload as Partial<Reservation>);
-    const saved = await this.repo.save(r);
+    let autoApproved = false;
+    let saved: Reservation;
+
+    if (payload.vehicleId && payload.startDatetime && payload.endDatetime) {
+      // Use a transaction with a per-vehicle advisory lock to prevent race conditions
+      // where two simultaneous requests both pass the conflict check before either saves.
+      saved = await this.dataSource.transaction(async (em) => {
+        await em.query('SELECT pg_advisory_xact_lock(hashtext($1))', [payload.vehicleId]);
+        await this.assertNoConflict(
+          payload.vehicleId as string,
+          payload.startDatetime as Date,
+          payload.endDatetime as Date,
+        );
+        const autoApproveSetting = await this.systemSettingsService.findByKey('auto_approve_reservations');
+        if (autoApproveSetting?.value === 'true') {
+          payload.status = 'active';
+          autoApproved = true;
+        }
+        const r = em.getRepository(Reservation).create(payload as Partial<Reservation>);
+        return em.getRepository(Reservation).save(r);
+      });
+    } else {
+      const r = this.repo.create(payload as Partial<Reservation>);
+      saved = await this.repo.save(r);
+    }
 
     if (autoApproved) {
       const full = await this.findOne(saved.id);
@@ -155,16 +164,22 @@ export class ReservationsService {
       return previous;
     }
 
-    // Validar conflictos si el resultado quedará en estado activo o pendiente
+    // Validar conflictos si el resultado quedará en estado activo o pendiente.
+    // Usar advisory lock por vehículo para evitar race conditions entre aprobaciones simultáneas.
     const newStatus = (payload.status as string) ?? previous.status;
     if (newStatus === 'pending' || newStatus === 'active') {
       const newVehicleId = (payload.vehicleId as string) ?? previous.vehicleId;
       const newStart = (payload.startDatetime as Date) ?? previous.startDatetime;
       const newEnd = (payload.endDatetime as Date) ?? previous.endDatetime;
-      await this.assertNoConflict(newVehicleId, newStart, newEnd, id);
+      await this.dataSource.transaction(async (em) => {
+        await em.query('SELECT pg_advisory_xact_lock(hashtext($1))', [newVehicleId]);
+        await this.assertNoConflict(newVehicleId, newStart, newEnd, id);
+        await em.getRepository(Reservation).update(id, payload);
+      });
+    } else {
+      await this.repo.update(id, payload);
     }
 
-    await this.repo.update(id, payload);
     const updated = await this.findOne(id);
 
     const vehicleLabel = previous.vehicle
@@ -206,10 +221,16 @@ export class ReservationsService {
     end: Date,
     excludeId?: string,
   ): Promise<void> {
+    // Blocking statuses: pending/active always block.
+    // overdue also blocks when the vehicle was actually taken out (checkin done)
+    // but never returned (checkout missing) — the vehicle is still in the field.
     let qb = this.repo
       .createQueryBuilder('r')
       .where('r.vehicleId = :vehicleId', { vehicleId })
-      .andWhere('r.status IN (:...statuses)', { statuses: ['pending', 'active'] })
+      .andWhere(
+        '(r.status IN (:...blocking) OR (r.status = :overdue AND r.checkinOdometer IS NOT NULL AND r.checkoutOdometer IS NULL))',
+        { blocking: ['pending', 'active'], overdue: 'overdue' },
+      )
       .andWhere('r.startDatetime < :end', { end })
       .andWhere('r.endDatetime > :start', { start });
     if (excludeId) {
@@ -218,7 +239,7 @@ export class ReservationsService {
     const count = await qb.getCount();
     if (count > 0) {
       throw new BadRequestException(
-        'El vehículo ya tiene una reserva en ese horario. Elige otro horario o vehículo.',
+        'El vehículo ya tiene una reserva activa en ese horario. Elige otro horario o vehículo.',
       );
     }
   }

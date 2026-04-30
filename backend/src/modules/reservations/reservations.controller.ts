@@ -8,6 +8,7 @@ import {
   Body,
   Query,
   UseGuards,
+  HttpException,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
@@ -93,6 +94,7 @@ export class ReservationsController {
     try {
       return await this.reservationsService.update(id, body as Parameters<typeof this.reservationsService.update>[1]);
     } catch (err) {
+      if (err instanceof HttpException) throw err;
       const message = err instanceof Error ? err.message : String(err);
       throw new InternalServerErrorException(message);
     }
