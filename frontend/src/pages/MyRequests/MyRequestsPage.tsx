@@ -85,12 +85,12 @@ function ReservationCard({ r }: { r: Reservation }) {
 
 // ─── Overdue warning card ────────────────────────────────────────────────────
 
-function OverdueCard({ r }: { r: Reservation }) {
+function OverdueCard({ r, onCheckOut }: { r: Reservation; onCheckOut: () => void }) {
   const vehicleLabel = r.vehicle
     ? `${r.vehicle.plate} – ${r.vehicle.brand} ${r.vehicle.model}`
     : 'Vehículo';
-  const noCheckin  = r.checkinOdometer == null;
-  const noCheckout = r.checkinOdometer != null && r.checkoutOdometer == null;
+  const noCheckin        = r.checkinOdometer == null;
+  const pendingCheckout  = r.checkinOdometer != null && r.checkoutOdometer == null;
 
   return (
     <div
@@ -120,12 +120,23 @@ function OverdueCard({ r }: { r: Reservation }) {
         <span className="material-icons text-base shrink-0 mt-0.5">warning</span>
         <span>
           {noCheckin
-            ? 'No se registró check-in ni check-out. Comunícate con administración para regularizar.'
-            : noCheckout
-            ? 'Se registró check-in pero falta el check-out. Ingresa y completa la devolución del vehículo.'
+            ? 'No se registró check-in. Comunícate con administración para regularizar.'
+            : pendingCheckout
+            ? 'Registraste el check-in pero falta el check-out. Completa la devolución para registrar gasolina y kilometraje.'
             : 'Esta reserva venció sin completarse. Revisa con el área de administración.'}
         </span>
       </div>
+      {pendingCheckout && (
+        <button
+          type="button"
+          onClick={onCheckOut}
+          className="mt-3 w-full min-h-[48px] py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+          style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}
+        >
+          <span className="material-icons">flag</span>
+          Hacer check-out pendiente
+        </button>
+      )}
     </div>
   );
 }
@@ -539,7 +550,13 @@ export function MyRequestsPage() {
             Reservas vencidas ({overdue.length})
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {overdue.map((r: Reservation) => <OverdueCard key={r.id} r={r} />)}
+            {overdue.map((r: Reservation) => (
+              <OverdueCard
+                key={r.id}
+                r={r}
+                onCheckOut={() => setCheckInOut({ reservation: r, action: 'checkout' })}
+              />
+            ))}
           </div>
         </section>
       )}

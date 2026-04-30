@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Reservation } from '../../database/entities/reservation.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MailService } from '../mail/mail.service';
@@ -36,14 +36,25 @@ export class ReservationsSchedulerService implements OnApplicationBootstrap {
   @Cron('*/10 * * * *') // Every 10 minutes
   async markOverdueReservations(): Promise<void> {
     const now = new Date();
+    // Grace period: 10 min after startDatetime with no check-in
+    const tenMinAgo = new Date(now.getTime() - 10 * 60 * 1000);
+    // Grace period: 30 min after endDatetime with no check-out
+    const thirtyMinAgo = new Date(now.getTime() - 30 * 60 * 1000);
 
-    const expired = await this.reservationRepo.find({
-      where: [
-        { status: 'active', endDatetime: LessThan(now) },
-        { status: 'pending', endDatetime: LessThan(now) },
-      ],
-      relations: ['user', 'vehicle'],
-    });
+    // Case 1 – pending never approved and period ended
+    // Case 2 – active, no check-in 10+ min after start
+    // Case 3 – active, check-in done but no check-out 30+ min after end
+    const expired = await this.reservationRepo
+      .createQueryBuilder('r')
+      .leftJoinAndSelect('r.user', 'u')
+      .leftJoinAndSelect('r.vehicle', 'v')
+      .where(
+        '(r.status = :pending AND r.endDatetime < :now)' +
+        ' OR (r.status = :active AND r.checkinOdometer IS NULL AND r.startDatetime < :tenMinAgo)' +
+        ' OR (r.status = :active AND r.checkinOdometer IS NOT NULL AND r.checkoutOdometer IS NULL AND r.endDatetime < :thirtyMinAgo)',
+        { pending: 'pending', active: 'active', now, tenMinAgo, thirtyMinAgo },
+      )
+      .getMany();
 
     if (expired.length === 0) return;
 
@@ -98,19 +109,22 @@ export class ReservationsSchedulerService implements OnApplicationBootstrap {
             'Este es un mensaje automático del sistema de Gestión de Vehículos Institucionales.',
           ].join('\n');
         } else {
-          notifTitle = 'Reserva vencida – pendiente de registrar devolución';
-          notifMessage = `Tu reserva de ${vehicleLabel} venció el ${endDate} sin registrar el check-out. Ingresa a la plataforma y complétalo.`;
-          emailSubject = `[Gestión de Vehículos] Reserva vencida – pendiente de registrar devolución`;
+          notifTitle = 'Reserva vencida – aún puedes registrar tu devolución';
+          notifMessage = `Tu reserva de ${vehicleLabel} venció el ${endDate} sin registrar el check-out. Puedes completarlo desde "Mis solicitudes" → sección Vencidas.`;
+          emailSubject = `[Gestión de Vehículos] Reserva vencida – registra tu devolución pendiente`;
           emailBody = [
             `${greeting},`,
             '',
             `Tu reserva del vehículo ${vehicleLabel} tenía fecha de devolución el ${endDate}.`,
-            'Registraste correctamente el check-in (salida) pero NO se registró el check-out (devolución).',
+            'Registraste correctamente el check-in (salida) pero aún no se ha registrado el check-out (devolución).',
             '',
-            'Si ya devolviste el vehículo:',
+            'IMPORTANTE: Aún puedes registrar el check-out para dejar el registro de gasolina y kilometraje.',
+            '',
+            'Pasos para completar el check-out:',
             '  1. Ingresa a la plataforma en "Mis solicitudes"',
-            '  2. Localiza la reserva y pulsa "Hacer check-out"',
-            '  3. Registra el kilometraje de regreso y confirma',
+            '  2. En la sección "Reservas vencidas" localiza esta reserva',
+            '  3. Pulsa el botón "Hacer check-out"',
+            '  4. Registra el kilometraje de regreso, nivel de gasolina y confirma',
             '',
             'Si aún no has devuelto el vehículo, hazlo a la brevedad y completa el check-out.',
             '',
