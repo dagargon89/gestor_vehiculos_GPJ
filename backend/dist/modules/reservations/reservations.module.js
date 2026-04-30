@@ -15,6 +15,7 @@ const notifications_module_1 = require("../notifications/notifications.module");
 const system_settings_module_1 = require("../system-settings/system-settings.module");
 const reservations_service_1 = require("./reservations.service");
 const reservations_controller_1 = require("./reservations.controller");
+const reservations_scheduler_service_1 = require("./reservations-scheduler.service");
 let ReservationsModule = class ReservationsModule {
 };
 exports.ReservationsModule = ReservationsModule;
@@ -26,7 +27,7 @@ exports.ReservationsModule = ReservationsModule = __decorate([
             system_settings_module_1.SystemSettingsModule,
         ],
         controllers: [reservations_controller_1.ReservationsController],
-        providers: [reservations_service_1.ReservationsService],
+        providers: [reservations_service_1.ReservationsService, reservations_scheduler_service_1.ReservationsSchedulerService],
         exports: [reservations_service_1.ReservationsService],
     })
 ], ReservationsModule);

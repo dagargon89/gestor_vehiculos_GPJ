@@ -21,6 +21,7 @@ type Reservation = {
   eventName?: string;
   description?: string;
   destination?: string;
+  checkinOdometer?: number | null;
   vehicle?: Vehicle;
   user?: User;
 };
@@ -231,6 +232,96 @@ function ReservationFormModal({
   );
 }
 
+function NoCheckInPanel() {
+  const [collapsed, setCollapsed] = useState(false);
+
+  const { data: noCheckIn = [], isLoading } = useQuery<Reservation[]>({
+    queryKey: ['reservations-no-checkin'],
+    queryFn: async () => {
+      const res = await apiClient.get('/reservations/no-checkin');
+      return res.data;
+    },
+    refetchInterval: 5 * 60 * 1000,
+  });
+
+  if (isLoading || noCheckIn.length === 0) return null;
+
+  const getUserLabel = (r: Reservation) => {
+    const u = r.user;
+    if (!u) return '—';
+    return (u as { displayName?: string }).displayName || u.email || '—';
+  };
+
+  const getVehicleLabel = (r: Reservation) => {
+    const v = r.vehicle;
+    return v ? `${v.plate} – ${v.brand} ${v.model}` : '—';
+  };
+
+  const isOverdue = (r: Reservation) => r.status === 'overdue';
+
+  return (
+    <div className="rounded-[16px] border border-orange-300 bg-orange-50 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setCollapsed((c) => !c)}
+        className="w-full flex items-center justify-between px-5 py-3 text-left"
+      >
+        <div className="flex items-center gap-2">
+          <span className="material-icons text-orange-600 text-xl">warning</span>
+          <span className="font-bold text-orange-800">
+            Sin check-in: {noCheckIn.length} reserva{noCheckIn.length !== 1 ? 's' : ''}
+          </span>
+          <span className="text-sm text-orange-700">
+            — usuarios que no han registrado salida del vehículo
+          </span>
+        </div>
+        <span className="material-icons text-orange-600">
+          {collapsed ? 'expand_more' : 'expand_less'}
+        </span>
+      </button>
+
+      {!collapsed && (
+        <div className="overflow-x-auto border-t border-orange-200">
+          <table className="w-full min-w-[640px]">
+            <thead className="bg-orange-100">
+              <tr>
+                <th className="text-left px-5 py-3 text-xs font-bold text-orange-800 uppercase tracking-wide">Usuario</th>
+                <th className="text-left px-5 py-3 text-xs font-bold text-orange-800 uppercase tracking-wide">Vehículo</th>
+                <th className="text-left px-5 py-3 text-xs font-bold text-orange-800 uppercase tracking-wide">Evento</th>
+                <th className="text-left px-5 py-3 text-xs font-bold text-orange-800 uppercase tracking-wide">Inicio</th>
+                <th className="text-left px-5 py-3 text-xs font-bold text-orange-800 uppercase tracking-wide">Fin</th>
+                <th className="text-left px-5 py-3 text-xs font-bold text-orange-800 uppercase tracking-wide">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {noCheckIn.map((r) => (
+                <tr key={r.id} className="border-t border-orange-200 hover:bg-orange-100/50">
+                  <td className="px-5 py-3 font-medium text-slate-900">{getUserLabel(r)}</td>
+                  <td className="px-5 py-3 text-slate-700">{getVehicleLabel(r)}</td>
+                  <td className="px-5 py-3 text-slate-600">{r.eventName || '—'}</td>
+                  <td className="px-5 py-3 text-slate-600 whitespace-nowrap">
+                    {new Date(r.startDatetime).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                  </td>
+                  <td className="px-5 py-3 text-slate-600 whitespace-nowrap">
+                    {new Date(r.endDatetime).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                  </td>
+                  <td className="px-5 py-3">
+                    {isOverdue(r) ? (
+                      <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">Vencida</span>
+                    ) : (
+                      <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-200 text-orange-800">Por vencer</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ReservationsList() {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
@@ -334,6 +425,7 @@ export function ReservationsList() {
 
   return (
     <div className="space-y-6">
+      <NoCheckInPanel />
       <div className="flex flex-wrap justify-between items-center gap-4">
         <h2 className="text-2xl font-bold text-slate-900">Gestión de reservas</h2>
         <div className="flex flex-wrap items-center gap-3">

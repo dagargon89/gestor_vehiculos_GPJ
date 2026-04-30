@@ -21,6 +21,7 @@ export declare class ReservationsService {
     update(id: string, data: Partial<Reservation>): Promise<Reservation>;
     private assertNoConflict;
     findOverdue(): Promise<Reservation[]>;
+    findNoCheckIn(): Promise<Reservation[]>;
     remove(id: string): Promise<void>;
     checkIn(id: string, userId: string, odometer: number, fuelPhotoUrl?: string, conditionPhotoUrls?: string[]): Promise<Reservation>;
     checkOut(id: string, userId: string, odometer: number, fuelPhotoUrl?: string, conditionPhotoUrls?: string[], fuelLevel?: string): Promise<Reservation>;

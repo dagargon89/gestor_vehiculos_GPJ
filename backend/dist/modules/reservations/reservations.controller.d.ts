@@ -15,6 +15,7 @@ export declare class ReservationsController {
         fuelLevel?: string;
         conditionPhotoUrls?: string[];
     }): Promise<import("../../database/entities/reservation.entity").Reservation>;
+    findNoCheckIn(): Promise<import("../../database/entities/reservation.entity").Reservation[]>;
     findOne(id: string): Promise<import("../../database/entities/reservation.entity").Reservation>;
     create(body: Record<string, unknown>): Promise<import("../../database/entities/reservation.entity").Reservation>;
     update(id: string, body: Record<string, unknown>): Promise<import("../../database/entities/reservation.entity").Reservation>;

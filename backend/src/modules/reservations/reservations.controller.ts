@@ -69,6 +69,12 @@ export class ReservationsController {
     );
   }
 
+  @Get('no-checkin')
+  @RequirePermission('reservations', 'read')
+  findNoCheckIn() {
+    return this.reservationsService.findNoCheckIn();
+  }
+
   @Get(':id')
   @RequirePermission('reservations', 'read')
   findOne(@Param('id') id: string) {

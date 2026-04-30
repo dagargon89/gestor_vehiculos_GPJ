@@ -33,6 +33,9 @@ let ReservationsController = class ReservationsController {
     checkOut(id, user, body) {
         return this.reservationsService.checkOut(id, user.id, body.odometer, body.fuelPhotoUrl, body.conditionPhotoUrls, body.fuelLevel);
     }
+    findNoCheckIn() {
+        return this.reservationsService.findNoCheckIn();
+    }
     findOne(id) {
         return this.reservationsService.findOne(id);
     }
@@ -85,6 +88,13 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", void 0)
 ], ReservationsController.prototype, "checkOut", null);
+__decorate([
+    (0, common_1.Get)('no-checkin'),
+    (0, permissions_decorator_1.RequirePermission)('reservations', 'read'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ReservationsController.prototype, "findNoCheckIn", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, permissions_decorator_1.RequirePermission)('reservations', 'read'),

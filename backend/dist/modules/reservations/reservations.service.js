@@ -189,6 +189,18 @@ let ReservationsService = class ReservationsService {
             .andWhere('r.status = :status', { status: 'active' })
             .getMany();
     }
+    async findNoCheckIn() {
+        const now = new Date();
+        const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        return this.repo
+            .createQueryBuilder('r')
+            .leftJoinAndSelect('r.vehicle', 'v')
+            .leftJoinAndSelect('r.user', 'u')
+            .where('r.checkinOdometer IS NULL')
+            .andWhere('(r.status = :overdue OR (r.status = :active AND r.startDatetime <= :now AND r.endDatetime <= :in24h))', { overdue: 'overdue', active: 'active', now, in24h })
+            .orderBy('r.endDatetime', 'ASC')
+            .getMany();
+    }
     async remove(id) {
         const reservation = await this.findOne(id);
         await this.repo.softDelete(id);
