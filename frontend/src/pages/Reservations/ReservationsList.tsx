@@ -22,6 +22,7 @@ type Reservation = {
   description?: string;
   destination?: string;
   checkinOdometer?: number | null;
+  checkoutOdometer?: number | null;
   vehicle?: Vehicle;
   user?: User;
 };
@@ -232,19 +233,22 @@ function ReservationFormModal({
   );
 }
 
-function NoCheckInPanel() {
-  const [collapsed, setCollapsed] = useState(false);
+function OverduePanel() {
+  const queryClient = useQueryClient();
+  const [collapsed, setCollapsed] = useState(true);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
-  const { data: noCheckIn = [], isLoading } = useQuery<Reservation[]>({
-    queryKey: ['reservations-no-checkin'],
+  const { data: overdue = [], isLoading } = useQuery<Reservation[]>({
+    queryKey: ['reservations-overdue'],
     queryFn: async () => {
-      const res = await apiClient.get('/reservations/no-checkin');
+      const res = await apiClient.get('/reservations?status=overdue');
       return res.data;
     },
     refetchInterval: 5 * 60 * 1000,
   });
 
-  if (isLoading || noCheckIn.length === 0) return null;
+  if (isLoading || overdue.length === 0) return null;
 
   const getUserLabel = (r: Reservation) => {
     const u = r.user;
@@ -257,65 +261,134 @@ function NoCheckInPanel() {
     return v ? `${v.plate} – ${v.brand} ${v.model}` : '—';
   };
 
-  const isOverdue = (r: Reservation) => r.status === 'overdue';
+  const getSituacion = (r: Reservation) =>
+    r.checkinOdometer != null ? 'Salió, sin devolución' : 'Sin check-in ni devolución';
+
+  const allSelected = overdue.length > 0 && overdue.every((r) => selected.has(r.id));
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(overdue.map((r) => r.id)));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selected.size === 0) return;
+    if (!window.confirm(`¿Eliminar ${selected.size} reserva${selected.size !== 1 ? 's' : ''} vencida${selected.size !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) return;
+    setBulkDeleting(true);
+    try {
+      await Promise.all([...selected].map((id) => apiClient.delete(`/reservations/${id}`)));
+      setSelected(new Set());
+      await queryClient.invalidateQueries({ queryKey: ['reservations-overdue'] });
+      await queryClient.invalidateQueries({ queryKey: ['reservations'] });
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
 
   return (
-    <div className="rounded-[16px] border border-orange-300 bg-orange-50 overflow-hidden">
+    <div className="rounded-[16px] border border-red-300 bg-red-50 overflow-hidden">
       <button
         type="button"
         onClick={() => setCollapsed((c) => !c)}
         className="w-full flex items-center justify-between px-5 py-3 text-left"
       >
         <div className="flex items-center gap-2">
-          <span className="material-icons text-orange-600 text-xl">warning</span>
-          <span className="font-bold text-orange-800">
-            Sin check-in: {noCheckIn.length} reserva{noCheckIn.length !== 1 ? 's' : ''}
+          <span className="material-icons text-red-600 text-xl">event_busy</span>
+          <span className="font-bold text-red-800">
+            Reservas vencidas: {overdue.length}
           </span>
-          <span className="text-sm text-orange-700">
-            — usuarios que no han registrado salida del vehículo
+          <span className="text-sm text-red-700">
+            — selecciona y elimina los registros que ya no necesites
           </span>
         </div>
-        <span className="material-icons text-orange-600">
+        <span className="material-icons text-red-600">
           {collapsed ? 'expand_more' : 'expand_less'}
         </span>
       </button>
 
       {!collapsed && (
-        <div className="overflow-x-auto border-t border-orange-200">
-          <table className="w-full min-w-[640px]">
-            <thead className="bg-orange-100">
-              <tr>
-                <th className="text-left px-5 py-3 text-xs font-bold text-orange-800 uppercase tracking-wide">Usuario</th>
-                <th className="text-left px-5 py-3 text-xs font-bold text-orange-800 uppercase tracking-wide">Vehículo</th>
-                <th className="text-left px-5 py-3 text-xs font-bold text-orange-800 uppercase tracking-wide">Evento</th>
-                <th className="text-left px-5 py-3 text-xs font-bold text-orange-800 uppercase tracking-wide">Inicio</th>
-                <th className="text-left px-5 py-3 text-xs font-bold text-orange-800 uppercase tracking-wide">Fin</th>
-                <th className="text-left px-5 py-3 text-xs font-bold text-orange-800 uppercase tracking-wide">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {noCheckIn.map((r) => (
-                <tr key={r.id} className="border-t border-orange-200 hover:bg-orange-100/50">
-                  <td className="px-5 py-3 font-medium text-slate-900">{getUserLabel(r)}</td>
-                  <td className="px-5 py-3 text-slate-700">{getVehicleLabel(r)}</td>
-                  <td className="px-5 py-3 text-slate-600">{r.eventName || '—'}</td>
-                  <td className="px-5 py-3 text-slate-600 whitespace-nowrap">
-                    {new Date(r.startDatetime).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600 whitespace-nowrap">
-                    {new Date(r.endDatetime).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
-                  </td>
-                  <td className="px-5 py-3">
-                    {isOverdue(r) ? (
-                      <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">Vencida</span>
-                    ) : (
-                      <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-200 text-orange-800">Por vencer</span>
-                    )}
-                  </td>
+        <div className="border-t border-red-200">
+          {selected.size > 0 && (
+            <div className="flex items-center justify-between px-5 py-2 bg-red-100 border-b border-red-200">
+              <span className="text-sm font-medium text-red-800">
+                {selected.size} seleccionada{selected.size !== 1 ? 's' : ''}
+              </span>
+              <button
+                type="button"
+                onClick={handleBulkDelete}
+                disabled={bulkDeleting}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+              >
+                <span className="material-icons text-base">delete</span>
+                {bulkDeleting ? 'Eliminando...' : `Eliminar seleccionadas (${selected.size})`}
+              </button>
+            </div>
+          )}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px]">
+              <thead className="bg-red-100">
+                <tr>
+                  <th className="px-5 py-3 w-10">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleAll}
+                      className="rounded border-red-400 text-red-600 focus:ring-red-500"
+                    />
+                  </th>
+                  <th className="text-left px-5 py-3 text-xs font-bold text-red-800 uppercase tracking-wide">Usuario</th>
+                  <th className="text-left px-5 py-3 text-xs font-bold text-red-800 uppercase tracking-wide">Vehículo</th>
+                  <th className="text-left px-5 py-3 text-xs font-bold text-red-800 uppercase tracking-wide">Evento</th>
+                  <th className="text-left px-5 py-3 text-xs font-bold text-red-800 uppercase tracking-wide">Inicio</th>
+                  <th className="text-left px-5 py-3 text-xs font-bold text-red-800 uppercase tracking-wide">Fin</th>
+                  <th className="text-left px-5 py-3 text-xs font-bold text-red-800 uppercase tracking-wide">Situación</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {overdue.map((r) => (
+                  <tr
+                    key={r.id}
+                    onClick={() => toggleOne(r.id)}
+                    className={`border-t border-red-200 cursor-pointer ${selected.has(r.id) ? 'bg-red-100' : 'hover:bg-red-50'}`}
+                  >
+                    <td className="px-5 py-3" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(r.id)}
+                        onChange={() => toggleOne(r.id)}
+                        className="rounded border-red-400 text-red-600 focus:ring-red-500"
+                      />
+                    </td>
+                    <td className="px-5 py-3 font-medium text-slate-900">{getUserLabel(r)}</td>
+                    <td className="px-5 py-3 text-slate-700">{getVehicleLabel(r)}</td>
+                    <td className="px-5 py-3 text-slate-600">{r.eventName || '—'}</td>
+                    <td className="px-5 py-3 text-slate-600 whitespace-nowrap">
+                      {new Date(r.startDatetime).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                    </td>
+                    <td className="px-5 py-3 text-slate-600 whitespace-nowrap">
+                      {new Date(r.endDatetime).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${r.checkinOdometer != null ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
+                        {getSituacion(r)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
@@ -425,7 +498,7 @@ export function ReservationsList() {
 
   return (
     <div className="space-y-6">
-      <NoCheckInPanel />
+      <OverduePanel />
       <div className="flex flex-wrap justify-between items-center gap-4">
         <h2 className="text-2xl font-bold text-slate-900">Gestión de reservas</h2>
         <div className="flex flex-wrap items-center gap-3">
