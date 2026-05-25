@@ -79,6 +79,10 @@ export class NotificationsService {
     return this.findOne(id);
   }
 
+  async markAllAsRead(userId: string): Promise<void> {
+    await this.repo.update({ userId, read: false }, { read: true });
+  }
+
   async remove(id: string): Promise<void> {
     await this.repo.delete(id);
   }

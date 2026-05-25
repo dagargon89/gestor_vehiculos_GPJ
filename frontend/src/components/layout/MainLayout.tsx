@@ -58,6 +58,11 @@ export function MainLayout() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
 
+  const markAllAsReadMutation = useMutation({
+    mutationFn: () => apiClient.put(`/notifications/read-all`, null, { params: { userId: userData?.id } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+
   const unreadCount = notifications.filter((n: { read: boolean }) => !n.read).length;
   const isAdminRoute = adminRoutes.some((r) => location.pathname === r.to || (r.to !== '/' && location.pathname.startsWith(r.to)));
 
@@ -298,7 +303,17 @@ export function MainLayout() {
                   >
                     <div className="px-4 py-2 flex justify-between items-center shrink-0" style={{ borderBottom: '1px solid var(--color-border)' }}>
                       <span className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>Notificaciones</span>
-                      {unreadCount > 0 && <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{unreadCount} sin leer</span>}
+                      {unreadCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => markAllAsReadMutation.mutate()}
+                          disabled={markAllAsReadMutation.isPending}
+                          className="text-xs font-medium px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+                          style={{ color: '#6366f1', background: 'rgba(99,102,241,0.08)' }}
+                        >
+                          {markAllAsReadMutation.isPending ? 'Marcando…' : 'Marcar todas como leídas'}
+                        </button>
+                      )}
                     </div>
                     <div>
                       {notifications.length === 0 ? (

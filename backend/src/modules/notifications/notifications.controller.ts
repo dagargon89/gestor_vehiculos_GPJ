@@ -41,6 +41,12 @@ export class NotificationsController {
     return this.notificationsService.create(body);
   }
 
+  @Put('read-all')
+  @RequirePermission('notifications', 'update')
+  markAllAsRead(@Query('userId') userId: string) {
+    return this.notificationsService.markAllAsRead(userId);
+  }
+
   @Put(':id/read')
   @RequirePermission('notifications', 'update')
   markAsRead(@Param('id') id: string) {
