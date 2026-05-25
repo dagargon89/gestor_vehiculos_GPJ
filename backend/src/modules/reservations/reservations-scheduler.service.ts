@@ -78,6 +78,7 @@ export class ReservationsSchedulerService implements OnApplicationBootstrap {
         const vehicleLabel = r.vehicle
           ? `${r.vehicle.plate} – ${r.vehicle.brand} ${r.vehicle.model}`
           : 'el vehículo';
+        const startDate = formatDateEs(r.startDatetime);
         const endDate = formatDateEs(r.endDatetime);
         const greeting = r.user?.displayName ? `Hola, ${r.user.displayName}` : 'Hola';
 
@@ -100,20 +101,20 @@ export class ReservationsSchedulerService implements OnApplicationBootstrap {
             'Este es un mensaje automático del sistema de Gestión de Vehículos Institucionales.',
           ].join('\n');
         } else if (r.checkinOdometer == null) {
-          notifTitle = 'Reserva vencida – sin check-in ni check-out';
-          notifMessage = `Tu reserva de ${vehicleLabel} venció el ${endDate} sin registrar salida ni devolución. Comunícate con administración.`;
-          emailSubject = `[Gestión de Vehículos] Reserva vencida – sin registro de salida ni devolución`;
+          notifTitle = 'Reserva vencida – sin check-in registrado';
+          notifMessage = `Tu reserva de ${vehicleLabel} fue marcada como vencida: no se registró check-in en los 10 minutos posteriores a la hora de inicio (${startDate}). Comunícate con administración.`;
+          emailSubject = `[Gestión de Vehículos] Reserva vencida – sin registro de salida`;
           emailBody = [
             `${greeting},`,
             '',
-            `Tu reserva del vehículo ${vehicleLabel} tenía fecha de devolución el ${endDate},`,
-            'pero venció sin que se registrara ninguno de los dos controles obligatorios:',
+            `Tu reserva del vehículo ${vehicleLabel} fue marcada como vencida porque no se registró`,
+            `check-in (salida) dentro de los 10 minutos posteriores a la hora de inicio:`,
             '',
-            '  • Check-in  (salida del vehículo)',
-            '  • Check-out (devolución del vehículo)',
+            `  Inicio programado: ${startDate}`,
+            `  Devolución programada: ${endDate}`,
             '',
-            'Si ya devolviste el vehículo, ingresa a la plataforma en "Mis solicitudes"',
-            'y completa el check-out para regularizar la reserva.',
+            'Si ya tomaste el vehículo, ingresa a la plataforma en "Mis solicitudes" y registra',
+            'el check-in para regularizar la reserva.',
             '',
             'De lo contrario, comunícate de inmediato con el área de administración de flota.',
             '',
