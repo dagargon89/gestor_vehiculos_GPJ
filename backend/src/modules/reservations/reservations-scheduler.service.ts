@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { Reservation } from '../../database/entities/reservation.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MailService } from '../mail/mail.service';
+import { SystemSettingsService } from '../system-settings/system-settings.service';
 
 function formatDateEs(date: Date): string {
   return date.toLocaleDateString('es-MX', {
@@ -27,6 +28,7 @@ export class ReservationsSchedulerService implements OnApplicationBootstrap {
     private reservationRepo: Repository<Reservation>,
     private notificationsService: NotificationsService,
     private mailService: MailService,
+    private systemSettingsService: SystemSettingsService,
   ) {}
 
   async onApplicationBootstrap() {
@@ -41,20 +43,29 @@ export class ReservationsSchedulerService implements OnApplicationBootstrap {
     // Grace period: 30 min after endDatetime with no check-out
     const thirtyMinAgo = new Date(now.getTime() - 30 * 60 * 1000);
 
+    const adminOverdueSetting = await this.systemSettingsService.findByKey('admin_overdue_enabled');
+    const adminExempt = adminOverdueSetting?.value === 'false';
+
     // Case 1 – pending never approved and period ended
     // Case 2 – active, no check-in 10+ min after start
     // Case 3 – active, check-in done but no check-out 30+ min after end
-    const expired = await this.reservationRepo
+    const qb = this.reservationRepo
       .createQueryBuilder('r')
       .leftJoinAndSelect('r.user', 'u')
+      .leftJoinAndSelect('u.role', 'role')
       .leftJoinAndSelect('r.vehicle', 'v')
       .where(
-        '(r.status = :pending AND r.endDatetime < :now)' +
+        '((r.status = :pending AND r.endDatetime < :now)' +
         ' OR (r.status = :active AND r.checkinOdometer IS NULL AND r.startDatetime < :tenMinAgo)' +
-        ' OR (r.status = :active AND r.checkinOdometer IS NOT NULL AND r.checkoutOdometer IS NULL AND r.endDatetime < :thirtyMinAgo)',
+        ' OR (r.status = :active AND r.checkinOdometer IS NOT NULL AND r.checkoutOdometer IS NULL AND r.endDatetime < :thirtyMinAgo))',
         { pending: 'pending', active: 'active', now, tenMinAgo, thirtyMinAgo },
-      )
-      .getMany();
+      );
+
+    if (adminExempt) {
+      qb.andWhere('(role.name IS NULL OR LOWER(role.name) != :adminRole)', { adminRole: 'admin' });
+    }
+
+    const expired = await qb.getMany();
 
     if (expired.length === 0) return;
 

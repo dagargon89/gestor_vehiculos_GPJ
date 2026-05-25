@@ -109,12 +109,14 @@ function SettingFormModal({
 }
 
 const AUTO_APPROVE_KEY = 'auto_approve_reservations';
+const ADMIN_OVERDUE_KEY = 'admin_overdue_enabled';
 
 export function SystemSettingsPage() {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSetting, setEditingSetting] = useState<SystemSetting | null>(null);
   const [togglingAutoApprove, setTogglingAutoApprove] = useState(false);
+  const [togglingAdminOverdue, setTogglingAdminOverdue] = useState(false);
 
   const { data: settings = [], isLoading } = useQuery({
     queryKey: ['system-settings'],
@@ -129,6 +131,12 @@ export function SystemSettingsPage() {
   );
   const autoApproveEnabled = autoApproveSetting?.value === 'true';
 
+  const adminOverdueSetting: SystemSetting | undefined = settings.find(
+    (s: SystemSetting) => s.key === ADMIN_OVERDUE_KEY,
+  );
+  // Absent = true (current behavior: admins subject to overdue like everyone else)
+  const adminOverdueEnabled = adminOverdueSetting === undefined || adminOverdueSetting.value !== 'false';
+
   const handleToggleAutoApprove = async () => {
     setTogglingAutoApprove(true);
     try {
@@ -141,6 +149,21 @@ export function SystemSettingsPage() {
       queryClient.invalidateQueries({ queryKey: ['system-settings'] });
     } finally {
       setTogglingAutoApprove(false);
+    }
+  };
+
+  const handleToggleAdminOverdue = async () => {
+    setTogglingAdminOverdue(true);
+    try {
+      const newValue = adminOverdueEnabled ? 'false' : 'true';
+      if (adminOverdueSetting) {
+        await apiClient.put(`/system-settings/${adminOverdueSetting.id}`, { value: newValue });
+      } else {
+        await apiClient.post('/system-settings', { key: ADMIN_OVERDUE_KEY, value: newValue });
+      }
+      queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+    } finally {
+      setTogglingAdminOverdue(false);
     }
   };
 
@@ -201,43 +224,90 @@ export function SystemSettingsPage() {
           <span className="material-icons text-primary text-xl">tune</span>
           Comportamiento de reservas
         </h3>
-        <div className="flex items-start justify-between gap-4">
+        <div className="space-y-5 divide-y divide-slate-100">
+          {/* Auto-aprobación */}
           <div>
-            <p className="text-sm font-semibold text-slate-800">Auto-aprobación de reservas</p>
-            <p className="text-sm text-slate-500 mt-0.5">
-              Cuando está activo, las solicitudes de reserva se aprueban automáticamente si el
-              vehículo está disponible en las fechas solicitadas. Si hay conflicto, la reserva
-              queda en estado pendiente para revisión manual.
-            </p>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-slate-800">Auto-aprobación de reservas</p>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Cuando está activo, las solicitudes de reserva se aprueban automáticamente si el
+                  vehículo está disponible en las fechas solicitadas. Si hay conflicto, la reserva
+                  queda en estado pendiente para revisión manual.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleToggleAutoApprove}
+                disabled={togglingAutoApprove}
+                className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  autoApproveEnabled ? 'bg-primary' : 'bg-slate-200'
+                }`}
+                role="switch"
+                aria-checked={autoApproveEnabled}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    autoApproveEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+            <div className="mt-3">
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                  autoApproveEnabled
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-slate-100 text-slate-500'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${autoApproveEnabled ? 'bg-green-500' : 'bg-slate-400'}`} />
+                {autoApproveEnabled ? 'Activo' : 'Inactivo — aprobación manual requerida'}
+              </span>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={handleToggleAutoApprove}
-            disabled={togglingAutoApprove}
-            className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-              autoApproveEnabled ? 'bg-primary' : 'bg-slate-200'
-            }`}
-            role="switch"
-            aria-checked={autoApproveEnabled}
-          >
-            <span
-              className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                autoApproveEnabled ? 'translate-x-5' : 'translate-x-0'
-              }`}
-            />
-          </button>
-        </div>
-        <div className="mt-3">
-          <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-              autoApproveEnabled
-                ? 'bg-green-100 text-green-700'
-                : 'bg-slate-100 text-slate-500'
-            }`}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${autoApproveEnabled ? 'bg-green-500' : 'bg-slate-400'}`} />
-            {autoApproveEnabled ? 'Activo' : 'Inactivo — aprobación manual requerida'}
-          </span>
+
+          {/* Vencimiento para administradores */}
+          <div className="pt-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-slate-800">Vencimiento de reservas para administradores</p>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Cuando está activo, las reservas de administradores vencen igual que las del resto
+                  de los usuarios. Si está desactivado, los administradores quedan exentos del
+                  proceso automático de vencimiento.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleToggleAdminOverdue}
+                disabled={togglingAdminOverdue}
+                className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  adminOverdueEnabled ? 'bg-primary' : 'bg-slate-200'
+                }`}
+                role="switch"
+                aria-checked={adminOverdueEnabled}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    adminOverdueEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+            <div className="mt-3">
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                  adminOverdueEnabled
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-amber-100 text-amber-700'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${adminOverdueEnabled ? 'bg-green-500' : 'bg-amber-400'}`} />
+                {adminOverdueEnabled ? 'Activo — aplica a todos los usuarios' : 'Inactivo — administradores exentos'}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
