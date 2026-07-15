@@ -6,6 +6,7 @@ import { VehicleAvailabilityCalendar } from '../../components/calendar/VehicleAv
 import { SearchSelect } from '../../components/ui/SearchSelect';
 import { useAuth } from '../../contexts/AuthContext';
 import { isConductor } from '../../config/routePermissions';
+import { QueryErrorState } from '../../components/ui/QueryErrorState';
 
 type User = { id: string; email: string; displayName?: string };
 type Vehicle = {
@@ -283,7 +284,7 @@ function ReserveVehicleModal({
 export function VehicleRequestPage() {
   const [reserveVehicle, setReserveVehicle] = useState<Vehicle | null>(null);
 
-  const { data: vehicles = [], isLoading } = useQuery({
+  const { data: vehicles = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['vehicles'],
     queryFn: async () => {
       const res = await apiClient.get('/vehicles');
@@ -293,6 +294,16 @@ export function VehicleRequestPage() {
 
   if (isLoading) {
     return <div className="text-primary font-bold">Cargando vehículos...</div>;
+  }
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="vehículos disponibles"
+        message={error instanceof Error ? error.message : 'Error desconocido'}
+        onRetry={() => refetch()}
+      />
+    );
   }
 
   return (

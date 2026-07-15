@@ -9,6 +9,7 @@ import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { useAuth } from '../../contexts/AuthContext';
 import { isConductor } from '../../config/routePermissions';
+import { QueryErrorState } from '../../components/ui/QueryErrorState';
 
 type User = { id: string; displayName?: string; email?: string };
 
@@ -163,7 +164,7 @@ export function SanctionList() {
   const [editingSanction, setEditingSanction] = useState<Sanction | null>(null);
   const [filterUserId, setFilterUserId] = useState('');
 
-  const { data: sanctionList = [], isLoading } = useQuery({
+  const { data: sanctionList = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['sanctions', filterUserId || undefined],
     queryFn: async () => {
       const params = filterUserId ? { userId: filterUserId } : {};
@@ -238,6 +239,16 @@ export function SanctionList() {
     ]);
 
   if (isLoading) return <div className="text-primary font-bold">Cargando sanciones...</div>;
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="sanciones"
+        message={error instanceof Error ? error.message : 'Error desconocido'}
+        onRetry={() => refetch()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

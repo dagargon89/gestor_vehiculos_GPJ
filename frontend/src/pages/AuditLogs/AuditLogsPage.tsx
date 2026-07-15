@@ -5,6 +5,7 @@ import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { SearchSelect } from '../../components/ui/SearchSelect';
+import { QueryErrorState } from '../../components/ui/QueryErrorState';
 
 type AuditLog = {
   id: string;
@@ -132,7 +133,7 @@ export function AuditLogsPage() {
   const [filterResource, setFilterResource] = useState('');
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
 
-  const { data: logs = [], isLoading } = useQuery<AuditLog[]>({
+  const { data: logs = [], isLoading, isError, error, refetch } = useQuery<AuditLog[]>({
     queryKey: ['audit-logs'],
     queryFn: async () => (await apiClient.get('/audit-logs')).data,
   });
@@ -171,6 +172,16 @@ export function AuditLogsPage() {
     endIndex,
     PAGE_SIZE_OPTIONS,
   } = usePagination<AuditLog>(filtered, { pageSize: 30 });
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="la bitácora"
+        message={error instanceof Error ? error.message : 'Error desconocido'}
+        onRetry={() => refetch()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

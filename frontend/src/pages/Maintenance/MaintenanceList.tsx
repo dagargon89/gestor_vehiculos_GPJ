@@ -7,6 +7,7 @@ import { SearchSelect } from '../../components/ui/SearchSelect';
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
+import { QueryErrorState } from '../../components/ui/QueryErrorState';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string };
 
@@ -187,7 +188,7 @@ export function MaintenanceList() {
   const [filterVehicleId, setFilterVehicleId] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
-  const { data: maintenanceList = [], isLoading } = useQuery({
+  const { data: maintenanceList = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['maintenance', filterVehicleId || undefined, filterStatus || undefined],
     queryFn: async () => {
       const params: Record<string, string> = {};
@@ -260,6 +261,16 @@ export function MaintenanceList() {
     ]);
 
   if (isLoading) return <div className="text-primary font-bold">Cargando mantenimientos...</div>;
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="mantenimientos"
+        message={error instanceof Error ? error.message : 'Error desconocido'}
+        onRetry={() => refetch()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

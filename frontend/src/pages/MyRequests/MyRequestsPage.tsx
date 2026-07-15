@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import apiClient from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import { notifySuccess, notifyError } from '../../lib/toast';
+import { QueryErrorState } from '../../components/ui/QueryErrorState';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string; currentOdometer?: number };
 
@@ -488,7 +489,7 @@ export function MyRequestsPage() {
   const userId = userData?.id;
   const [checkInOut, setCheckInOut] = useState<{ reservation: Reservation; action: 'checkin' | 'checkout' } | null>(null);
 
-  const { data: reservations = [], isLoading } = useQuery({
+  const { data: reservations = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['reservations', 'my', userId],
     queryFn: async () => {
       const res = await apiClient.get('/reservations', { params: { userId } });
@@ -515,6 +516,16 @@ export function MyRequestsPage() {
       <div className="flex items-center justify-center py-16">
         <p style={{ color: 'var(--color-text-muted)' }}>Cargando tus solicitudes...</p>
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="tus solicitudes"
+        message={error instanceof Error ? error.message : 'Error desconocido'}
+        onRetry={() => refetch()}
+      />
     );
   }
 

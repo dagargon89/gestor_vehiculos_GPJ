@@ -7,6 +7,7 @@ import { SearchSelect } from '../../components/ui/SearchSelect';
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
+import { QueryErrorState } from '../../components/ui/QueryErrorState';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string };
 
@@ -201,7 +202,7 @@ export function CostsList() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCost, setEditingCost] = useState<Cost | null>(null);
 
-  const { data: costs = [], isLoading } = useQuery<Cost[]>({
+  const { data: costs = [], isLoading, isError, error, refetch } = useQuery<Cost[]>({
     queryKey: ['costs'],
     queryFn: async () => (await apiClient.get('/costs')).data,
   });
@@ -266,6 +267,16 @@ export function CostsList() {
     endIndex,
     PAGE_SIZE_OPTIONS,
   } = usePagination<Cost>(filtered, { pageSize: 25 });
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="gastos"
+        message={error instanceof Error ? error.message : 'Error desconocido'}
+        onRetry={() => refetch()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

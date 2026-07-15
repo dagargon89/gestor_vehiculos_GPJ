@@ -6,6 +6,7 @@ import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/Vi
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
+import { QueryErrorState } from '../../components/ui/QueryErrorState';
 
 type Provider = {
   id: string;
@@ -156,7 +157,7 @@ export function ProvidersList() {
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
   const [filterSearch, setFilterSearch] = useState('');
 
-  const { data: providers = [], isLoading } = useQuery({
+  const { data: providers = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['providers'],
     queryFn: async () => {
       const res = await apiClient.get('/providers');
@@ -210,6 +211,16 @@ export function ProvidersList() {
     list.map((p) => [p.name, p.contactName ?? '—', p.phone ?? '—', p.email ?? '—']);
 
   if (isLoading) return <div className="text-primary font-bold">Cargando proveedores...</div>;
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="proveedores"
+        message={error instanceof Error ? error.message : 'Error desconocido'}
+        onRetry={() => refetch()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

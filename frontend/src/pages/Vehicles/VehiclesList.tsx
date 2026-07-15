@@ -8,6 +8,7 @@ import { ImageCropModal } from '../../components/ui/ImageCropModal';
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
+import { QueryErrorState } from '../../components/ui/QueryErrorState';
 
 type Vehicle = {
   id: string;
@@ -459,7 +460,7 @@ export function VehiclesList() {
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [filterStatus, setFilterStatus] = useState('');
 
-  const { data: vehicles = [], isLoading } = useQuery({
+  const { data: vehicles = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['vehicles'],
     queryFn: async () => {
       const res = await apiClient.get('/vehicles');
@@ -518,6 +519,16 @@ export function VehiclesList() {
     ]);
 
   if (isLoading) return <div className="text-primary font-bold">Cargando vehículos...</div>;
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="vehículos"
+        message={error instanceof Error ? error.message : 'Error desconocido'}
+        onRetry={() => refetch()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

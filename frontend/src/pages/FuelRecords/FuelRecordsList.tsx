@@ -7,6 +7,7 @@ import { SearchSelect } from '../../components/ui/SearchSelect';
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
+import { QueryErrorState } from '../../components/ui/QueryErrorState';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string };
 
@@ -160,7 +161,7 @@ export function FuelRecordsList() {
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
 
-  const { data: records = [], isLoading } = useQuery({
+  const { data: records = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['fuel-records', filterVehicleId || undefined],
     queryFn: async () => {
       const params = filterVehicleId ? { vehicleId: filterVehicleId } : {};
@@ -213,6 +214,16 @@ export function FuelRecordsList() {
   const getExportRows = (list: FuelRecord[]) => list.map((r) => [getVehicleLabel(r), formatDate(r.date), formatNum(r.liters), r.cost != null ? formatNum(r.cost) : '—', formatNum(r.odometer)]);
 
   if (isLoading) return <div className="text-primary font-bold">Cargando registros de combustible...</div>;
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="registros de combustible"
+        message={error instanceof Error ? error.message : 'Error desconocido'}
+        onRetry={() => refetch()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -9,6 +9,7 @@ import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { useAuth } from '../../contexts/AuthContext';
 import { isConductor } from '../../config/routePermissions';
+import { QueryErrorState } from '../../components/ui/QueryErrorState';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string };
 type User = { id: string; displayName?: string; email?: string };
@@ -189,7 +190,7 @@ export function IncidentList() {
   const [filterVehicleId, setFilterVehicleId] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
-  const { data: incidentList = [], isLoading } = useQuery({
+  const { data: incidentList = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['incidents', filterVehicleId || undefined, filterStatus || undefined],
     queryFn: async () => {
       const params: Record<string, string> = {};
@@ -285,6 +286,16 @@ export function IncidentList() {
     ]);
 
   if (isLoading) return <div className="text-primary font-bold">Cargando incidentes...</div>;
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="incidentes"
+        message={error instanceof Error ? error.message : 'Error desconocido'}
+        onRetry={() => refetch()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

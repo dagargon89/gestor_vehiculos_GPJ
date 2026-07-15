@@ -5,6 +5,7 @@ import { notifySuccess, notifyError } from '../../lib/toast';
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
+import { QueryErrorState } from '../../components/ui/QueryErrorState';
 
 type SystemSetting = { id: string; key: string; value: string };
 
@@ -119,7 +120,7 @@ export function SystemSettingsPage() {
   const [togglingAutoApprove, setTogglingAutoApprove] = useState(false);
   const [togglingAdminOverdue, setTogglingAdminOverdue] = useState(false);
 
-  const { data: settings = [], isLoading } = useQuery({
+  const { data: settings = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['system-settings'],
     queryFn: async () => {
       const res = await apiClient.get('/system-settings');
@@ -209,6 +210,16 @@ export function SystemSettingsPage() {
   const getExportRows = (list: SystemSetting[]) => list.map((s) => [s.key, s.value]);
 
   if (isLoading) return <div className="text-primary font-bold">Cargando configuración...</div>;
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="configuración"
+        message={error instanceof Error ? error.message : 'Error desconocido'}
+        onRetry={() => refetch()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

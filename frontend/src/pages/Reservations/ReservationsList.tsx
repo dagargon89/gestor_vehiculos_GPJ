@@ -8,6 +8,7 @@ import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { useAuth } from '../../contexts/AuthContext';
 import { isConductor } from '../../config/routePermissions';
+import { QueryErrorState } from '../../components/ui/QueryErrorState';
 
 type User = { id: string; email: string; displayName?: string };
 type Vehicle = { id: string; plate: string; brand: string; model: string };
@@ -402,7 +403,7 @@ export function ReservationsList() {
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
   const [filterStatus, setFilterStatus] = useState('');
 
-  const { data: reservations = [], isLoading } = useQuery({
+  const { data: reservations = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['reservations'],
     queryFn: async () => {
       const res = await apiClient.get('/reservations');
@@ -500,6 +501,16 @@ export function ReservationsList() {
     ]);
 
   if (isLoading) return <div className="text-primary font-bold">Cargando reservas...</div>;
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="reservas"
+        message={error instanceof Error ? error.message : 'Error desconocido'}
+        onRetry={() => refetch()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
