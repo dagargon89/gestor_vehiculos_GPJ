@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { notifySuccess, notifyError } from '../../lib/toast';
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
@@ -169,7 +170,11 @@ export function SystemSettingsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/system-settings/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['system-settings'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+      notifySuccess('Configuración eliminada correctamente.');
+    },
+    onError: () => notifyError('No se pudo eliminar la configuración.'),
   });
 
   const openCreate = () => {
@@ -375,7 +380,10 @@ export function SystemSettingsPage() {
         <SettingFormModal
           setting={editingSetting}
           onClose={() => setModalOpen(false)}
-          onSuccess={() => queryClient.invalidateQueries({ queryKey: ['system-settings'] })}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+            notifySuccess('Configuración guardada correctamente.');
+          }}
         />
       )}
     </div>

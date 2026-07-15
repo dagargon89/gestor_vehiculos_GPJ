@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { notifySuccess, notifyError } from '../../lib/toast';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
 import { usePagination } from '../../hooks/usePagination';
@@ -207,7 +208,11 @@ export function MaintenanceList() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/maintenance/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['maintenance'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['maintenance'] });
+      notifySuccess('Mantenimiento eliminado correctamente.');
+    },
+    onError: () => notifyError('No se pudo eliminar el mantenimiento.'),
   });
 
   const openCreate = () => {
@@ -381,7 +386,10 @@ export function MaintenanceList() {
           maintenance={editingMaintenance}
           vehicles={vehicles}
           onClose={() => setModalOpen(false)}
-          onSuccess={() => queryClient.invalidateQueries({ queryKey: ['maintenance'] })}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['maintenance'] });
+            notifySuccess('Mantenimiento guardado correctamente.');
+          }}
         />
       )}
     </div>

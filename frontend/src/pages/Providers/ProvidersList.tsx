@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { notifySuccess, notifyError } from '../../lib/toast';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
@@ -165,7 +166,11 @@ export function ProvidersList() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/providers/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['providers'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['providers'] });
+      notifySuccess('Proveedor eliminado correctamente.');
+    },
+    onError: () => notifyError('No se pudo eliminar el proveedor.'),
   });
 
   const openCreate = () => {
@@ -335,7 +340,10 @@ export function ProvidersList() {
         <ProviderFormModal
           provider={editingProvider}
           onClose={() => setModalOpen(false)}
-          onSuccess={() => queryClient.invalidateQueries({ queryKey: ['providers'] })}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['providers'] });
+            notifySuccess('Proveedor guardado correctamente.');
+          }}
         />
       )}
     </div>

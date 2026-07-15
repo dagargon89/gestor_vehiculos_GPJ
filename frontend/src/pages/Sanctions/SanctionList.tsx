@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { notifySuccess, notifyError } from '../../lib/toast';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
 import { usePagination } from '../../hooks/usePagination';
@@ -181,7 +182,11 @@ export function SanctionList() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/sanctions/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['sanctions'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sanctions'] });
+      notifySuccess('Sanción eliminada correctamente.');
+    },
+    onError: () => notifyError('No se pudo eliminar la sanción.'),
   });
 
   const openCreate = () => {
@@ -343,7 +348,10 @@ export function SanctionList() {
           sanction={editingSanction}
           users={users}
           onClose={() => setModalOpen(false)}
-          onSuccess={() => queryClient.invalidateQueries({ queryKey: ['sanctions'] })}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['sanctions'] });
+            notifySuccess('Sanción guardada correctamente.');
+          }}
         />
       )}
     </div>

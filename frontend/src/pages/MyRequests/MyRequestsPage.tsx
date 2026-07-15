@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import apiClient from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
+import { notifySuccess, notifyError } from '../../lib/toast';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string; currentOdometer?: number };
 
@@ -200,6 +201,7 @@ function CheckInOutForm({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reservations', 'my', userId] });
+      notifySuccess(action === 'checkin' ? 'Check-in registrado correctamente.' : 'Check-out registrado correctamente.');
       onSuccess();
       onClose();
     },
@@ -209,6 +211,7 @@ function CheckInOutForm({
           ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
           : 'Error al guardar';
       setError(String(msg));
+      notifyError(action === 'checkin' ? 'No se pudo registrar el check-in.' : 'No se pudo registrar el check-out.');
     },
   });
 

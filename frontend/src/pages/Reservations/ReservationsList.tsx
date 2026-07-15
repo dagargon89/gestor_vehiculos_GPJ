@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { notifySuccess, notifyError } from '../../lib/toast';
 import { SearchSelect } from '../../components/ui/SearchSelect';
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
@@ -427,7 +428,11 @@ export function ReservationsList() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/reservations/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reservations'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      notifySuccess('Reserva eliminada correctamente.');
+    },
+    onError: () => notifyError('No se pudo eliminar la reserva.'),
   });
 
   const approveMutation = useMutation({
@@ -602,7 +607,10 @@ export function ReservationsList() {
           vehicles={vehicles}
           users={users}
           onClose={() => setModalOpen(false)}
-          onSuccess={() => queryClient.invalidateQueries({ queryKey: ['reservations'] })}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['reservations'] });
+            notifySuccess('Reserva guardada correctamente.');
+          }}
         />
       )}
     </div>

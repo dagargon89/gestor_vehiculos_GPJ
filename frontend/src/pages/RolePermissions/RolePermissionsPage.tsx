@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { notifySuccess, notifyError } from '../../lib/toast';
 
 type Permission = { id: string; resource: string; action: string };
 type Role = { id: string; name: string; description?: string; permissions?: Permission[] };
@@ -139,6 +140,7 @@ export function RolePermissionsPage() {
   const handleRoleCreated = (newRoleId: string) => {
     queryClient.invalidateQueries({ queryKey: ['roles'] });
     setSelectedRoleId(newRoleId);
+    notifySuccess('Rol guardado correctamente.');
   };
 
   const togglePermission = (id: string) => {
@@ -158,7 +160,9 @@ export function RolePermissionsPage() {
       apiClient.put(`/roles/${payload.roleId}`, { permissionIds: payload.permissionIds }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
+      notifySuccess('Permisos actualizados correctamente.');
     },
+    onError: () => notifyError('No se pudieron actualizar los permisos.'),
   });
 
   const handleSave = () => {

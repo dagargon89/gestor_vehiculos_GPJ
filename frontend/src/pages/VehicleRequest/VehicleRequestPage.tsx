@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { notifySuccess } from '../../lib/toast';
 import { VehicleAvailabilityCalendar } from '../../components/calendar/VehicleAvailabilityCalendar';
 import { SearchSelect } from '../../components/ui/SearchSelect';
 import { useAuth } from '../../contexts/AuthContext';
@@ -117,6 +118,7 @@ function ReserveVehicleModal({
         destination: destination.trim() || undefined,
       });
       queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      notifySuccess('Solicitud enviada correctamente.');
       onSuccess();
       onClose();
     } catch (err: unknown) {

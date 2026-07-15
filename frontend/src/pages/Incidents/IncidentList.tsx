@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { notifySuccess, notifyError } from '../../lib/toast';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
 import { usePagination } from '../../hooks/usePagination';
@@ -217,7 +218,11 @@ export function IncidentList() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/incidents/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['incidents'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['incidents'] });
+      notifySuccess('Incidente eliminado correctamente.');
+    },
+    onError: () => notifyError('No se pudo eliminar el incidente.'),
   });
 
   const openCreate = () => {
@@ -409,7 +414,10 @@ export function IncidentList() {
           vehicles={vehicles}
           users={users}
           onClose={() => setModalOpen(false)}
-          onSuccess={() => queryClient.invalidateQueries({ queryKey: ['incidents'] })}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['incidents'] });
+            notifySuccess('Incidente guardado correctamente.');
+          }}
         />
       )}
     </div>

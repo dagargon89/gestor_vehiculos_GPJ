@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
+import { notifySuccess, notifyError } from '../../lib/toast';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
 import { ImageCropModal } from '../../components/ui/ImageCropModal';
@@ -468,7 +469,11 @@ export function VehiclesList() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/vehicles/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vehicles'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      notifySuccess('Vehículo eliminado correctamente.');
+    },
+    onError: () => notifyError('No se pudo eliminar el vehículo.'),
   });
 
   const openCreate = () => {
@@ -685,7 +690,10 @@ export function VehiclesList() {
         <VehicleFormModal
           vehicle={editingVehicle}
           onClose={() => setModalOpen(false)}
-          onSuccess={() => queryClient.invalidateQueries({ queryKey: ['vehicles'] })}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+            notifySuccess('Vehículo guardado correctamente.');
+          }}
         />
       )}
     </div>
