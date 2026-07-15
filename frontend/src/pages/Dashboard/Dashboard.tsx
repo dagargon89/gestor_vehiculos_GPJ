@@ -22,6 +22,8 @@ type Reservation = {
   status: string;
   vehicle?: { plate: string };
   user?: { displayName?: string };
+  checkinOdometer?: number;
+  checkoutOdometer?: number;
 };
 
 type MaintenanceRecord = {
@@ -42,6 +44,15 @@ type Cost = {
   amount: number;
   date: string;
   category: string;
+};
+
+type FuelRecord = {
+  id: string;
+  vehicleId: string;
+  date: string;
+  liters: number;
+  cost?: number;
+  odometer?: number;
 };
 
 function getRangeLabel(key: DateRangeKey) {
@@ -127,6 +138,12 @@ export function Dashboard() {
     retry: false,
   });
 
+  const { data: fuelRecords = [] } = useQuery<FuelRecord[]>({
+    queryKey: ['fuel-records'],
+    queryFn: async () => (await apiClient.get('/fuel-records')).data,
+    retry: false,
+  });
+
   const { start, end } = getRangeDates(dateRange);
 
   const activeCount = vehicles.filter(
@@ -154,7 +171,21 @@ export function Dashboard() {
     const d = new Date(c.date);
     return d >= start && d <= end;
   });
-  const totalCostsInRange = costsInRange.reduce((acc, c) => acc + Number(c.amount), 0);
+  const fuelRecordsInRange = fuelRecords.filter((f) => {
+    const d = new Date(f.date);
+    return d >= start && d <= end;
+  });
+  const fuelCostsInRange = fuelRecordsInRange.reduce((acc, f) => acc + Number(f.cost ?? 0), 0);
+  const totalCostsInRange =
+    costsInRange.reduce((acc, c) => acc + Number(c.amount), 0) + fuelCostsInRange;
+
+  const kmDrivenInRange = reservationsInRange.reduce((acc, r) => {
+    if (r.checkoutOdometer != null && r.checkinOdometer != null) {
+      return acc + (r.checkoutOdometer - r.checkinOdometer);
+    }
+    return acc;
+  }, 0);
+  const costPerKm = kmDrivenInRange > 0 ? totalCostsInRange / kmDrivenInRange : null;
 
   const trendData = buildTrendData(reservations, dateRange);
 
@@ -332,10 +363,25 @@ export function Dashboard() {
               <span className="material-icons" style={{ fontSize: 20 }}>payments</span>
             </div>
             <span className="stat-card__value" style={{ fontSize: totalCostsInRange > 999999 ? 18 : undefined }}>
-              {costs.length === 0 ? '—' : fmtCurrency(totalCostsInRange)}
+              {costsInRange.length === 0 && fuelRecordsInRange.length === 0 ? '—' : fmtCurrency(totalCostsInRange)}
             </span>
           </div>
           <div className="stat-card__label">Costos del período</div>
+          <div className="stat-card__sub">
+            <span className="badge badge-blue">{getRangeLabel(dateRange)}</span>
+          </div>
+        </Link>
+
+        <Link to="/reports" className="stat-card" style={{ textDecoration: 'none', background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="stat-card__icon" style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981' }}>
+              <span className="material-icons" style={{ fontSize: 20 }}>speed</span>
+            </div>
+            <span className="stat-card__value">
+              {costPerKm == null ? '—' : fmtCurrency(costPerKm)}
+            </span>
+          </div>
+          <div className="stat-card__label">Costo por km</div>
           <div className="stat-card__sub">
             <span className="badge badge-blue">{getRangeLabel(dateRange)}</span>
           </div>
