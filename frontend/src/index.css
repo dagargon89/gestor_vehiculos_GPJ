@@ -19,6 +19,7 @@ html[data-theme="dark"] {
   color-scheme: dark;
   --color-bg:              #0a0e17;
   --color-bg-soft:         #0f1423;
+  --color-surface:         var(--color-bg-soft);
   --color-text:            #e2e8f0;
   --color-text-soft:       #c5cde0;
   --color-text-muted:      #8892a8;
@@ -45,6 +46,7 @@ html[data-theme="light"] {
   color-scheme: light;
   --color-bg:              #f4f7ff;
   --color-bg-soft:         #ffffff;
+  --color-surface:         var(--color-bg-soft);
   --color-text:            #162033;
   --color-text-soft:       #2f3b52;
   --color-text-muted:      #5e6b85;

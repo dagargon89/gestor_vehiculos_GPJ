@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository, FindManyOptions } from 'typeorm';
 import { Reservation } from '../../database/entities/reservation.entity';
@@ -10,6 +16,8 @@ import { SanctionsService } from '../sanctions/sanctions.service';
 
 @Injectable()
 export class ReservationsService {
+  private readonly logger = new Logger(ReservationsService.name);
+
   constructor(
     @InjectRepository(Reservation)
     private repo: Repository<Reservation>,
@@ -132,27 +140,39 @@ export class ReservationsService {
       : 'vehículo';
 
     if (autoApproved) {
-      await this.notificationsService.notifyUser(
-        full.userId,
-        'reservation_approved',
-        'Reserva aprobada automáticamente',
-        `Tu solicitud de ${vehicleLabel} ha sido aprobada automáticamente. Ya puedes hacer check-in cuando retires el vehículo.`,
-        '/mis-solicitudes',
-      );
+      try {
+        await this.notificationsService.notifyUser(
+          full.userId,
+          'reservation_approved',
+          'Reserva aprobada automáticamente',
+          `Tu solicitud de ${vehicleLabel} ha sido aprobada automáticamente. Ya puedes hacer check-in cuando retires el vehículo.`,
+          '/mis-solicitudes',
+        );
+      } catch (err) {
+        this.logger.error(
+          `Failed to notify user ${full.userId} of auto-approved reservation ${full.id}: ${err instanceof Error ? err.message : err}`,
+        );
+      }
     } else {
-      const requesterLabel = full.user?.displayName || full.user?.email || 'Un conductor';
-      const approvers = await this.usersService.findUsersWithPermission('reservations', 'delete');
-      await Promise.all(
-        approvers.map((approver) =>
-          this.notificationsService.notifyUser(
-            approver.id,
-            'reservation_requested',
-            'Nueva solicitud de reserva pendiente',
-            `${requesterLabel} solicitó ${vehicleLabel} y espera aprobación.`,
-            '/reservations',
+      try {
+        const requesterLabel = full.user?.displayName || full.user?.email || 'Un conductor';
+        const approvers = await this.usersService.findUsersWithPermission('reservations', 'delete');
+        await Promise.all(
+          approvers.map((approver) =>
+            this.notificationsService.notifyUser(
+              approver.id,
+              'reservation_requested',
+              'Nueva solicitud de reserva pendiente',
+              `${requesterLabel} solicitó ${vehicleLabel} y espera aprobación.`,
+              '/reservations',
+            ),
           ),
-        ),
-      );
+        );
+      } catch (err) {
+        this.logger.error(
+          `Failed to notify approvers of pending reservation ${full.id}: ${err instanceof Error ? err.message : err}`,
+        );
+      }
     }
 
     return saved;
