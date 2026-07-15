@@ -114,7 +114,7 @@ export class ReportsService {
           THEN ROUND((SUM(fr.cost) / SUM(fr.liters))::numeric, 2)
           ELSE 0 END as "avgCostPerLiter"
       FROM vehicles v
-      LEFT JOIN fuel_records fr ON v.id = fr."vehicleId"
+      LEFT JOIN fuel_records fr ON v.id = fr."vehicle_id"
         AND fr.date BETWEEN $1 AND $2
         AND fr."deletedAt" IS NULL
       WHERE v."deletedAt" IS NULL
@@ -140,7 +140,7 @@ export class ReportsService {
         MAX(m."scheduledDate") as "lastServiceDate",
         STRING_AGG(DISTINCT m.type, ', ') FILTER (WHERE m.type IS NOT NULL) as "serviceTypes"
       FROM vehicles v
-      LEFT JOIN maintenance m ON v.id = m."vehicleId"
+      LEFT JOIN maintenance m ON v.id = m."vehicle_id"
         AND m."scheduledDate" BETWEEN $1 AND $2
         AND m."deletedAt" IS NULL
       WHERE v."deletedAt" IS NULL
