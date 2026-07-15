@@ -1,0 +1,104 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { ForbiddenException } from '@nestjs/common';
+import { ReservationsService } from './reservations.service';
+import { Reservation } from '../../database/entities/reservation.entity';
+import { Vehicle } from '../../database/entities/vehicle.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { SystemSettingsService } from '../system-settings/system-settings.service';
+
+describe('ReservationsService', () => {
+  let service: ReservationsService;
+  let repo: {
+    create: jest.Mock;
+    save: jest.Mock;
+    update: jest.Mock;
+    findOne: jest.Mock;
+    createQueryBuilder: jest.Mock;
+  };
+  let vehicleRepo: { update: jest.Mock };
+  let dataSource: { transaction: jest.Mock };
+
+  const pendingReservation = {
+    id: 'r1',
+    userId: 'owner-1',
+    status: 'pending',
+    vehicle: { plate: 'ABC-123', brand: 'Nissan', model: 'NP300' },
+  } as unknown as Reservation;
+
+  beforeEach(async () => {
+    // `update()` runs assertNoConflict() (via repo.createQueryBuilder) whenever the
+    // resulting status is 'pending'/'active' — which is true for every case here
+    // (owner edits keep status 'pending'; the admin case sets it to 'active'). The
+    // brief's `createQueryBuilder: jest.fn()` returns undefined, so `.where(...)`
+    // on it throws. Made it a chainable stub resolving to "no conflicts" (getCount
+    // 0) so the ownership/status behavior under test isn't masked by this.
+    const queryBuilderStub: Record<string, jest.Mock> = {};
+    queryBuilderStub.where = jest.fn().mockReturnValue(queryBuilderStub);
+    queryBuilderStub.andWhere = jest.fn().mockReturnValue(queryBuilderStub);
+    queryBuilderStub.getCount = jest.fn().mockResolvedValue(0);
+    repo = {
+      create: jest.fn((x) => x),
+      save: jest.fn(async (x) => x),
+      update: jest.fn().mockResolvedValue(undefined),
+      findOne: jest.fn().mockResolvedValue(pendingReservation),
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilderStub),
+    };
+    vehicleRepo = { update: jest.fn().mockResolvedValue(undefined) };
+    dataSource = { transaction: jest.fn(async (cb) => cb({ query: jest.fn(), getRepository: () => repo })) };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ReservationsService,
+        { provide: getRepositoryToken(Reservation), useValue: repo },
+        { provide: getRepositoryToken(Vehicle), useValue: vehicleRepo },
+        { provide: NotificationsService, useValue: { notifyUser: jest.fn() } },
+        { provide: SystemSettingsService, useValue: { findByKey: jest.fn().mockResolvedValue(null) } },
+        // ReservationsService injects the real `DataSource` class from typeorm (no
+        // custom token), so the provider token here must be that class itself —
+        // the brief's `.overrideProvider(require('typeorm').DataSource)` pattern
+        // has nothing to override since no provider was registered under that
+        // token, so DI still fails. Registering it directly avoids that.
+        { provide: require('typeorm').DataSource, useValue: dataSource },
+      ],
+    }).compile();
+    service = module.get(ReservationsService);
+  });
+
+  describe('create', () => {
+    it('ignora "status" enviado por el cliente (siempre queda en default "pending" salvo auto-approve)', async () => {
+      await service.create({
+        vehicleId: undefined,
+        startDatetime: undefined,
+        endDatetime: undefined,
+        status: 'active',
+        eventName: 'Prueba',
+      } as unknown as Partial<Reservation>);
+      const savedArg = repo.save.mock.calls[0][0];
+      expect(savedArg.status).toBeUndefined();
+    });
+  });
+
+  describe('update', () => {
+    it('permite al dueño editar campos no sensibles', async () => {
+      await service.update('r1', { destination: 'Nuevo destino' }, { id: 'owner-1' });
+      expect(repo.update).toHaveBeenCalledWith('r1', { destination: 'Nuevo destino' });
+    });
+
+    it('descarta "status" cuando lo envía el propio dueño (anti auto-aprobación)', async () => {
+      await service.update('r1', { status: 'active', destination: 'x' }, { id: 'owner-1' });
+      expect(repo.update).toHaveBeenCalledWith('r1', { destination: 'x' });
+    });
+
+    it('permite "status" cuando lo envía un admin', async () => {
+      await service.update('r1', { status: 'active' }, { id: 'admin-1', role: { name: 'admin' } });
+      expect(repo.update).toHaveBeenCalledWith('r1', { status: 'active' });
+    });
+
+    it('rechaza la edición de un no-dueño sin rol elevado', async () => {
+      await expect(
+        service.update('r1', { destination: 'x' }, { id: 'otro-conductor' }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+  });
+});

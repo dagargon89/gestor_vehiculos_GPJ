@@ -90,9 +90,17 @@ export class ReservationsController {
 
   @Put(':id')
   @RequirePermission('reservations', 'update')
-  async update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async update(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() user: CurrentUserPayload,
+  ) {
     try {
-      return await this.reservationsService.update(id, body as Parameters<typeof this.reservationsService.update>[1]);
+      return await this.reservationsService.update(
+        id,
+        body as Parameters<typeof this.reservationsService.update>[1],
+        user,
+      );
     } catch (err) {
       if (err instanceof HttpException) throw err;
       const message = err instanceof Error ? err.message : String(err);

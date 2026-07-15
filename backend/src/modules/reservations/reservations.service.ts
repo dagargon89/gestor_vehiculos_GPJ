@@ -65,7 +65,6 @@ export class ReservationsService {
       'userId',
       'startDatetime',
       'endDatetime',
-      'status',
       'eventName',
       'description',
       'destination',
@@ -129,14 +128,23 @@ export class ReservationsService {
     return saved;
   }
 
-  async update(id: string, data: Partial<Reservation>): Promise<Reservation> {
+  async update(
+    id: string,
+    data: Partial<Reservation>,
+    currentUser: { id: string; role?: { name?: string } },
+  ): Promise<Reservation> {
     const previous = await this.findOne(id);
-    const allowedKeys = [
+    const isOwner = previous.userId === currentUser.id;
+    const roleName = currentUser.role?.name?.toLowerCase();
+    const isElevated = roleName === 'admin' || roleName === 'manager_flotilla';
+    if (!isOwner && !isElevated) {
+      throw new ForbiddenException('No tienes permiso para modificar esta reserva');
+    }
+    const baseAllowedKeys = [
       'vehicleId',
       'userId',
       'startDatetime',
       'endDatetime',
-      'status',
       'eventName',
       'description',
       'destination',
@@ -147,6 +155,7 @@ export class ReservationsService {
       'checkoutFuelPhotoUrl',
       'checkoutConditionPhotoUrls',
     ] as const;
+    const allowedKeys = isElevated ? ([...baseAllowedKeys, 'status'] as const) : baseAllowedKeys;
     const payload: Record<string, unknown> = {};
     for (const key of allowedKeys) {
       const value = data[key];
