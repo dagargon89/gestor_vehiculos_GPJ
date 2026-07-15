@@ -143,4 +143,29 @@ export class UsersService {
   async remove(id: string): Promise<void> {
     await this.userRepo.softDelete(id);
   }
+
+  /** Campos que un usuario puede auto-actualizar vía /auth/sync-user. Nunca roleId ni status. */
+  private static readonly SELF_SERVICE_ALLOWED_KEYS: (keyof User)[] = [
+    'displayName',
+    'phone',
+    'licenseNumber',
+    'licenseType',
+    'licenseExpiry',
+    'licenseRestrictions',
+    'emergencyContactName',
+    'emergencyContactPhone',
+    'emergencyContactRelationship',
+    'emailNotifications',
+  ];
+
+  async updateOwnProfile(id: string, data: Partial<User>): Promise<User> {
+    const payload: Record<string, unknown> = {};
+    for (const key of UsersService.SELF_SERVICE_ALLOWED_KEYS) {
+      if (key in data) {
+        payload[key] = (data as Record<string, unknown>)[key];
+      }
+    }
+    await this.userRepo.update(id, payload as Partial<User>);
+    return this.findOne(id);
+  }
 }

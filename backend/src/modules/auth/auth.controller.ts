@@ -2,6 +2,7 @@ import { Controller, Get, Post, Delete, Body, UseGuards, Logger } from '@nestjs/
 import { AuthService } from './auth.service';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '../../common/decorators/current-user.decorator';
+import { SyncUserDto } from './dto/sync-user.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -32,7 +33,7 @@ export class AuthController {
 
   @Post('sync-user')
   @UseGuards(FirebaseAuthGuard)
-  syncUser(@CurrentUser() user: CurrentUserPayload, @Body() body: Record<string, unknown>) {
+  syncUser(@CurrentUser() user: CurrentUserPayload, @Body() body: SyncUserDto) {
     return this.authService.updateUserData(user.id, body);
   }
 
