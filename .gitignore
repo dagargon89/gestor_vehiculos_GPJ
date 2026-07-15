@@ -1,4 +1,5 @@
 # Environment files con secretos
+.env
 backend/.env
 frontend/.env
 
