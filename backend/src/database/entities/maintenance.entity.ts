@@ -15,12 +15,12 @@ export class Maintenance {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  vehicleId: string;
-
   @ManyToOne(() => Vehicle)
   @JoinColumn({ name: 'vehicle_id' })
   vehicle: Vehicle;
+
+  @Column({ name: 'vehicle_id' })
+  vehicleId: string;
 
   @Column({ type: 'date' })
   scheduledDate: Date;

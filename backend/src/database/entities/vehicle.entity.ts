@@ -14,7 +14,7 @@ export class Vehicle {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   plate: string;
 
   @Column()
@@ -29,7 +29,7 @@ export class Vehicle {
   @Column({ nullable: true })
   color: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, unique: true })
   vin: string;
 
   @Column({ type: 'text', nullable: true })

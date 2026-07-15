@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  Index,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Vehicle } from './vehicle.entity';
@@ -21,6 +22,7 @@ export class Reservation {
   user: User;
 
   @Column({ name: 'user_id' })
+  @Index()
   userId: string;
 
   @ManyToOne(() => Vehicle, (v) => v.reservations)
@@ -28,6 +30,7 @@ export class Reservation {
   vehicle: Vehicle;
 
   @Column({ name: 'vehicle_id' })
+  @Index()
   vehicleId: string;
 
   @Column({ type: 'timestamptz' })
@@ -37,6 +40,7 @@ export class Reservation {
   endDatetime: Date;
 
   @Column({ default: 'pending' })
+  @Index()
   status: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })

@@ -16,19 +16,19 @@ export class Incident {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  vehicleId: string;
-
   @ManyToOne(() => Vehicle)
   @JoinColumn({ name: 'vehicle_id' })
   vehicle: Vehicle;
 
-  @Column({ nullable: true })
-  userId: string;
+  @Column({ name: 'vehicle_id' })
+  vehicleId: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @Column({ name: 'user_id', nullable: true })
+  userId: string;
 
   @Column({ type: 'date' })
   date: Date;
