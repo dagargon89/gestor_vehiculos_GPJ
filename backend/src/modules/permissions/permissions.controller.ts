@@ -31,11 +31,13 @@ export class PermissionsController {
   }
 
   @Post()
+  @RequirePermission('permissions', 'create')
   create(@Body() body: { resource: string; action: string }) {
     return this.permissionsService.create(body);
   }
 
   @Put(':id')
+  @RequirePermission('permissions', 'update')
   update(
     @Param('id') id: string,
     @Body() body: Partial<{ resource: string; action: string }>,
@@ -44,6 +46,7 @@ export class PermissionsController {
   }
 
   @Delete(':id')
+  @RequirePermission('permissions', 'delete')
   remove(@Param('id') id: string) {
     return this.permissionsService.remove(id);
   }

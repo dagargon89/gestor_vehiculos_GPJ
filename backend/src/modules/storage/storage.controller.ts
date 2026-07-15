@@ -26,6 +26,7 @@ export class StorageController {
   constructor(private storageService: StorageService) {}
 
   @Post('upload')
+  @RequirePermission('storage_files', 'create')
   @UseInterceptors(FileInterceptor('file'))
   async upload(
     @UploadedFile() file: Express.Multer.File,
@@ -72,6 +73,7 @@ export class StorageController {
   }
 
   @Delete(':id')
+  @RequirePermission('storage_files', 'delete')
   delete(@Param('id') id: string) {
     return this.storageService.deleteFile(id);
   }

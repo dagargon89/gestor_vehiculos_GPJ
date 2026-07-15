@@ -37,6 +37,7 @@ export class NotificationsController {
   }
 
   @Post()
+  @RequirePermission('notifications', 'create')
   create(@Body() body: Partial<Notification>) {
     return this.notificationsService.create(body);
   }
@@ -60,6 +61,7 @@ export class NotificationsController {
   }
 
   @Delete(':id')
+  @RequirePermission('notifications', 'delete')
   remove(@Param('id') id: string) {
     return this.notificationsService.remove(id);
   }
