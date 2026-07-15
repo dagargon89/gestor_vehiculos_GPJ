@@ -166,6 +166,9 @@ export class UsersService {
         payload[key] = (data as Record<string, unknown>)[key];
       }
     }
+    if (Object.keys(payload).length === 0) {
+      return this.findOne(id);
+    }
     await this.userRepo.update(id, payload as Partial<User>);
     return this.findOne(id);
   }

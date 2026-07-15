@@ -56,4 +56,14 @@ describe('UsersService.updateOwnProfile', () => {
       photoUrl: 'https://storage.example.com/profile/u1.jpg',
     });
   });
+
+  it('no llama a update cuando el payload está vacío (solo campos no permitidos)', async () => {
+    const result = await service.updateOwnProfile('u1', {
+      roleId: 'admin-role-id',
+      status: 'active',
+    } as Partial<User>);
+    expect(userRepo.update).not.toHaveBeenCalled();
+    expect(userRepo.findOne).toHaveBeenCalled();
+    expect(result).toEqual({ id: 'u1', displayName: 'Nuevo nombre' });
+  });
 });
