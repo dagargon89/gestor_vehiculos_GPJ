@@ -337,7 +337,7 @@ export function Dashboard() {
       </div>
 
       {/* Segunda fila de KPIs: incidentes abiertos + costos del período */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <Link to="/incidents" className="stat-card" style={{ textDecoration: 'none', background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
           <div className="flex items-center justify-between mb-3">
             <div className="stat-card__icon" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>
