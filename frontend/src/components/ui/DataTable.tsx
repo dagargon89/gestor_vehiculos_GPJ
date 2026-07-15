@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 
 export interface DataTableColumn<T> {
   key: string;
@@ -6,6 +6,10 @@ export interface DataTableColumn<T> {
   align?: 'left' | 'right';
   sortAccessor?: (row: T) => string | number;
   render: (row: T) => ReactNode;
+  /** Extra className applied to this column's <td>, on top of the base cell styling. */
+  cellClassName?: string;
+  /** Extra inline style applied to this column's <td>, merged over (and able to override) the base cell style. */
+  cellStyle?: CSSProperties;
 }
 
 export function DataTable<T>({
@@ -25,6 +29,8 @@ export function DataTable<T>({
   sortDir?: 'asc' | 'desc';
   onSort?: (key: string, accessor: (row: T) => string | number) => void;
 }) {
+  const [hoveredRowKey, setHoveredRowKey] = useState<string | null>(null);
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[600px]">
@@ -51,15 +57,30 @@ export function DataTable<T>({
               </td>
             </tr>
           ) : (
-            rows.map((row) => (
-              <tr key={getRowKey(row)} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                {columns.map((col) => (
-                  <td key={col.key} className={`px-6 py-4 ${col.align === 'right' ? 'text-right' : ''}`} style={{ color: 'var(--color-text)' }}>
-                    {col.render(row)}
-                  </td>
-                ))}
-              </tr>
-            ))
+            rows.map((row) => {
+              const rowKey = getRowKey(row);
+              return (
+                <tr
+                  key={rowKey}
+                  style={{
+                    borderBottom: '1px solid var(--color-border)',
+                    background: hoveredRowKey === rowKey ? 'var(--color-table-row-hover)' : undefined,
+                  }}
+                  onMouseEnter={() => setHoveredRowKey(rowKey)}
+                  onMouseLeave={() => setHoveredRowKey((k) => (k === rowKey ? null : k))}
+                >
+                  {columns.map((col) => (
+                    <td
+                      key={col.key}
+                      className={`px-6 py-4 ${col.align === 'right' ? 'text-right' : ''} ${col.cellClassName ?? ''}`}
+                      style={{ color: 'var(--color-text)', ...(col.cellStyle ?? {}) }}
+                    >
+                      {col.render(row)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

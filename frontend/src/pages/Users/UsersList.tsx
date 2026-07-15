@@ -290,7 +290,7 @@ export function UsersList() {
           />
           <DataTable<User>
             columns={[
-              { key: 'email', header: 'Email', sortAccessor: (u) => u.email, render: (u) => u.email },
+              { key: 'email', header: 'Email', sortAccessor: (u) => u.email, cellClassName: 'font-medium', render: (u) => u.email },
               { key: 'displayName', header: 'Nombre', sortAccessor: (u) => u.displayName ?? '', render: (u) => u.displayName ?? '—' },
               { key: 'department', header: 'Departamento', render: (u) => u.department ?? '—' },
               { key: 'role', header: 'Rol', render: (u) => getRoleName(u) },
@@ -307,6 +307,8 @@ export function UsersList() {
                 key: 'lastLoginAt',
                 header: 'Último acceso',
                 sortAccessor: (u) => u.lastLoginAt ?? '',
+                cellClassName: 'text-sm font-mono-data',
+                cellStyle: { whiteSpace: 'nowrap', color: 'var(--color-text-muted)' },
                 render: (u) =>
                   u.lastLoginAt
                     ? new Date(u.lastLoginAt).toLocaleString('es-MX', {
