@@ -36,4 +36,24 @@ describe('UsersService.updateOwnProfile', () => {
     } as Partial<User>);
     expect(userRepo.update).toHaveBeenCalledWith('u1', { displayName: 'Nuevo nombre' });
   });
+
+  it('permite actualizar photoUrl (subida de foto de perfil vía /storage/upload + /auth/sync-user)', async () => {
+    await service.updateOwnProfile('u1', {
+      photoUrl: 'https://storage.example.com/profile/u1.jpg',
+    } as Partial<User>);
+    expect(userRepo.update).toHaveBeenCalledWith('u1', {
+      photoUrl: 'https://storage.example.com/profile/u1.jpg',
+    });
+  });
+
+  it('descarta roleId y status pero conserva photoUrl cuando llegan juntos en el body', async () => {
+    await service.updateOwnProfile('u1', {
+      photoUrl: 'https://storage.example.com/profile/u1.jpg',
+      roleId: 'admin-role-id',
+      status: 'active',
+    } as Partial<User>);
+    expect(userRepo.update).toHaveBeenCalledWith('u1', {
+      photoUrl: 'https://storage.example.com/profile/u1.jpg',
+    });
+  });
 });

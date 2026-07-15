@@ -147,6 +147,7 @@ export class UsersService {
   /** Campos que un usuario puede auto-actualizar vía /auth/sync-user. Nunca roleId ni status. */
   private static readonly SELF_SERVICE_ALLOWED_KEYS: (keyof User)[] = [
     'displayName',
+    'photoUrl',
     'phone',
     'licenseNumber',
     'licenseType',

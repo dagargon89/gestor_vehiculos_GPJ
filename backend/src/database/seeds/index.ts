@@ -21,17 +21,14 @@ function addDays(d: Date, days: number): Date {
   return out;
 }
 
+/** Clave única de un permiso, usada para diffear contra lo ya existente en BD. */
+const permKey = (p: { resource: string; action: string }): string => `${p.resource}:${p.action}`;
+
 export async function seedRolesAndPermissions(dataSource: DataSource): Promise<void> {
   const permRepo = dataSource.getRepository(Permission);
   const roleRepo = dataSource.getRepository(Role);
 
-  const existingPerms = await permRepo.count();
-  if (existingPerms > 0) {
-    console.log('  permissions ya tienen datos, omitiendo.');
-    return;
-  }
-
-  const permissions = await permRepo.save([
+  const permissionDefs: { resource: string; action: string }[] = [
     { resource: 'vehicles', action: 'create' },
     { resource: 'vehicles', action: 'read' },
     { resource: 'vehicles', action: 'update' },
@@ -85,46 +82,81 @@ export async function seedRolesAndPermissions(dataSource: DataSource): Promise<v
     { resource: 'permissions', action: 'update' },
     { resource: 'permissions', action: 'delete' },
     { resource: 'reports', action: 'read' },
-  ]);
+  ];
 
-  const existingRoles = await roleRepo.count();
-  if (existingRoles > 0) {
-    console.log('  roles ya tienen datos, omitiendo.');
-    return;
+  // Upsert: inserta solo los permisos que aún no existan (por resource+action), para que
+  // volver a correr el seed en una BD ya poblada agregue los permisos nuevos de este sprint
+  // en vez de omitir todo el bloque.
+  const existingPermissions = await permRepo.find();
+  const existingPermKeys = new Set(existingPermissions.map(permKey));
+  const missingPermissionDefs = permissionDefs.filter((d) => !existingPermKeys.has(permKey(d)));
+  const newPermissions = missingPermissionDefs.length > 0 ? await permRepo.save(missingPermissionDefs) : [];
+  if (newPermissions.length > 0) {
+    console.log(`  permissions: ${newPermissions.length} nuevos insertados.`);
+  } else {
+    console.log('  permissions ya tienen datos, sin nuevos que insertar.');
+  }
+  const permissions = [...existingPermissions, ...newPermissions];
+
+  const managerResources = ['vehicles', 'reservations', 'maintenance', 'fuel_records', 'costs', 'incidents', 'sanctions', 'providers', 'storage_files'];
+
+  const roleDefs: { name: string; description: string; permissions: Permission[] }[] = [
+    {
+      name: 'admin',
+      description: 'Administrador del sistema con acceso total',
+      permissions,
+    },
+    {
+      name: 'manager_flotilla',
+      description: 'Manager de flotilla: gestión operativa (vehículos, reservas, mantenimiento, costos, incidentes, sanciones, proveedores, reportes, notificaciones)',
+      permissions: permissions.filter(
+        (p) =>
+          (managerResources.includes(p.resource) && ['create', 'read', 'update', 'delete'].includes(p.action)) ||
+          (p.resource === 'reports' && p.action === 'read') ||
+          (p.resource === 'notifications' && ['read', 'update'].includes(p.action)),
+      ),
+    },
+    {
+      name: 'conductor',
+      description: 'Conductor de vehículos',
+      permissions: permissions.filter(
+        (p) =>
+          ['vehicles', 'reservations', 'fuel_records', 'incidents'].includes(p.resource) &&
+          ['read', 'create', 'update'].includes(p.action),
+      ),
+    },
+  ];
+
+  // Upsert también para roles: si el rol ya existe, se le asocian los permisos que aún no
+  // tenga (sin quitarle ninguno) en vez de omitir toda la asociación. Esto es necesario para
+  // que los permisos nuevos insertados arriba efectivamente queden otorgados a roles existentes.
+  for (const def of roleDefs) {
+    const existingRole = await roleRepo.findOne({ where: { name: def.name }, relations: ['permissions'] });
+
+    if (!existingRole) {
+      const role = roleRepo.create({
+        name: def.name,
+        description: def.description,
+        permissions: def.permissions,
+      });
+      await roleRepo.save(role);
+      console.log(`  rol ${def.name} creado con ${def.permissions.length} permisos.`);
+      continue;
+    }
+
+    const currentPermKeys = new Set(existingRole.permissions.map(permKey));
+    const missingForRole = def.permissions.filter((p) => !currentPermKeys.has(permKey(p)));
+    if (missingForRole.length === 0) {
+      console.log(`  rol ${def.name} ya tiene sus permisos al día, sin cambios.`);
+      continue;
+    }
+
+    existingRole.permissions = [...existingRole.permissions, ...missingForRole];
+    await roleRepo.save(existingRole);
+    console.log(`  rol ${def.name}: ${missingForRole.length} permisos nuevos asociados.`);
   }
 
-  const adminRole = roleRepo.create({
-    name: 'admin',
-    description: 'Administrador del sistema con acceso total',
-    permissions,
-  });
-  await roleRepo.save(adminRole);
-
-  const managerResources = ['vehicles', 'reservations', 'maintenance', 'fuel_records', 'costs', 'incidents', 'sanctions', 'providers'];
-  const managerRole = roleRepo.create({
-    name: 'manager_flotilla',
-    description: 'Manager de flotilla: gestión operativa (vehículos, reservas, mantenimiento, costos, incidentes, sanciones, proveedores, reportes, notificaciones)',
-    permissions: permissions.filter(
-      (p) =>
-        (managerResources.includes(p.resource) && ['create', 'read', 'update', 'delete'].includes(p.action)) ||
-        (p.resource === 'reports' && p.action === 'read') ||
-        (p.resource === 'notifications' && ['read', 'update'].includes(p.action)),
-    ),
-  });
-  await roleRepo.save(managerRole);
-
-  const conductorRole = roleRepo.create({
-    name: 'conductor',
-    description: 'Conductor de vehículos',
-    permissions: permissions.filter(
-      (p) =>
-        ['vehicles', 'reservations', 'fuel_records', 'incidents'].includes(p.resource) &&
-        ['read', 'create', 'update'].includes(p.action),
-    ),
-  });
-  await roleRepo.save(conductorRole);
-
-  console.log('  roles y permissions sembrados (admin, manager_flotilla, conductor).');
+  console.log('  roles y permissions sembrados/actualizados (admin, manager_flotilla, conductor).');
 }
 
 /**

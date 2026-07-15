@@ -25,6 +25,7 @@ const CONDUCTOR_DEFAULT_PERMISSIONS: { resource: string; action: string }[] = [
   { resource: 'incidents', action: 'create' },
   { resource: 'incidents', action: 'update' },
   { resource: 'notifications', action: 'read' },
+  { resource: 'storage_files', action: 'create' },
 ];
 
 @Injectable()
