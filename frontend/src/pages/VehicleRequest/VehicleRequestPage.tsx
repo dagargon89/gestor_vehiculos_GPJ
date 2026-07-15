@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { notifySuccess } from '../../lib/toast';
+import { validateReservationDates } from '../../lib/reservationDates';
 import { VehicleAvailabilityCalendar } from '../../components/calendar/VehicleAvailabilityCalendar';
 import { SearchSelect } from '../../components/ui/SearchSelect';
 import { useAuth } from '../../contexts/AuthContext';
@@ -90,22 +91,13 @@ function ReserveVehicleModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    const validationError = validateReservationDates(startDatetime, endDatetime);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     const start = new Date(startDatetime);
     const end = new Date(endDatetime);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-      setError('Las fechas no son válidas. Revisa hora de salida y de regreso.');
-      return;
-    }
-    const yearMin = 2020;
-    const yearMax = 2035;
-    if (start.getFullYear() < yearMin || start.getFullYear() > yearMax || end.getFullYear() < yearMin || end.getFullYear() > yearMax) {
-      setError(`El año debe estar entre ${yearMin} y ${yearMax}. Revisa las fechas.`);
-      return;
-    }
-    if (end.getTime() <= start.getTime()) {
-      setError('La hora de regreso debe ser posterior a la hora de salida.');
-      return;
-    }
     setSubmitting(true);
     try {
       await apiClient.post('/reservations', {
@@ -249,6 +241,7 @@ function ReserveVehicleModal({
                 <input
                   type="datetime-local"
                   required
+                  min={toDatetimeLocal(new Date())}
                   value={startDatetime}
                   onChange={(e) => setStartDatetime(e.target.value)}
                   className="input-field w-full"
@@ -259,6 +252,7 @@ function ReserveVehicleModal({
                 <input
                   type="datetime-local"
                   required
+                  min={toDatetimeLocal(new Date())}
                   value={endDatetime}
                   onChange={(e) => setEndDatetime(e.target.value)}
                   className="input-field w-full"

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { notifySuccess, notifyError } from '../../lib/toast';
+import { validateReservationDates } from '../../lib/reservationDates';
 import { SearchSelect } from '../../components/ui/SearchSelect';
 import { useDataTable } from '../../hooks/useDataTable';
 import { TableToolbar } from '../../components/ui/TableToolbar';
@@ -56,12 +57,13 @@ function ReservationFormModal({
   const { userData } = useAuth();
   const esConductor = isConductor(userData?.role?.name);
 
+  const toLocal = (iso: string | Date) => {
+    const d = typeof iso === 'string' ? new Date(iso) : iso;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
   const [form, setForm] = useState(() => {
-    const toLocal = (iso: string) => {
-      const d = new Date(iso);
-      const pad = (n: number) => String(n).padStart(2, '0');
-      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    };
     const start = reservation?.startDatetime ? toLocal(reservation.startDatetime) : '';
     const end   = reservation?.endDatetime   ? toLocal(reservation.endDatetime)   : '';
     return {
@@ -82,6 +84,14 @@ function ReservationFormModal({
     e.preventDefault();
     setError(null);
     setSubmitting(true);
+    const validationError = validateReservationDates(form.startDatetime, form.endDatetime, {
+      allowPast: Boolean(reservation), // al editar una reserva existente se permite conservar/corregir fechas pasadas
+    });
+    if (validationError) {
+      setError(validationError);
+      setSubmitting(false);
+      return;
+    }
     try {
       const payload = {
         vehicleId: form.vehicleId,
@@ -150,6 +160,7 @@ function ReservationFormModal({
             <input
               type="datetime-local"
               required
+              min={reservation ? undefined : toLocal(new Date())}
               value={form.startDatetime}
               onChange={(e) => setForm((f) => ({ ...f, startDatetime: e.target.value }))}
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
