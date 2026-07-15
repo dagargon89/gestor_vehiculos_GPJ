@@ -533,7 +533,7 @@ export function VehiclesList() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap justify-between items-center gap-4">
-        <h2 className="text-2xl font-bold text-slate-900">Vehículos</h2>
+        <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Vehículos</h2>
         <div className="flex items-center gap-3">
           <SearchSelect
             options={[{ value: '', label: 'Todos los estados' }, ...STATUS_OPTIONS]}

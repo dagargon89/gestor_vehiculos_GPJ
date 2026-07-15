@@ -516,7 +516,7 @@ export function ReservationsList() {
     <div className="space-y-6">
       <OverduePanel />
       <div className="flex flex-wrap justify-between items-center gap-4">
-        <h2 className="text-2xl font-bold text-slate-900">Gestión de reservas</h2>
+        <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Gestión de reservas</h2>
         <div className="flex flex-wrap items-center gap-3">
             <SearchSelect
               options={[{ value: '', label: 'Todos los estados' }, ...STATUS_OPTIONS]}

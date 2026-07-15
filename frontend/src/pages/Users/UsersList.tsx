@@ -225,7 +225,7 @@ export function UsersList() {
     const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
     return (
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-slate-900">Usuarios</h2>
+        <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Usuarios</h2>
         <div className="bg-red-50 border border-red-200 rounded-[16px] px-6 py-4 text-red-700">
           <p className="font-medium">Error al cargar la lista de usuarios.</p>
           <p className="text-sm mt-1">{message}</p>
@@ -239,7 +239,7 @@ export function UsersList() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap justify-between items-center gap-4">
-        <h2 className="text-2xl font-bold text-slate-900">Usuarios</h2>
+        <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Usuarios</h2>
         <div className="flex flex-wrap items-center gap-3">
           <SearchSelect
             options={[{ value: '', label: 'Todos los roles' }, ...roles.map((r: Role) => ({ value: r.id, label: r.name }))]}
@@ -259,7 +259,10 @@ export function UsersList() {
         </div>
       </div>
       {view === 'table' && (
-        <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+        <div
+          className="rounded-[16px] shadow-sm overflow-hidden"
+          style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
+        >
           <TableToolbar
             page={page}
             totalPages={totalPages}
