@@ -4,8 +4,9 @@ import apiClient from '../../services/api.service';
 import { notifySuccess, notifyError } from '../../lib/toast';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
-import { usePagination } from '../../hooks/usePagination';
+import { useDataTable } from '../../hooks/useDataTable';
 import { TableToolbar } from '../../components/ui/TableToolbar';
+import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { useAuth } from '../../contexts/AuthContext';
 import { isConductor } from '../../config/routePermissions';
@@ -218,6 +219,11 @@ export function SanctionList() {
   };
 
   const {
+    search,
+    setSearch,
+    sortKey,
+    sortDir,
+    toggleSort,
     paginatedData: paginatedSanctions,
     page,
     setPage,
@@ -228,7 +234,10 @@ export function SanctionList() {
     startIndex,
     endIndex,
     PAGE_SIZE_OPTIONS,
-  } = usePagination<Sanction>(sanctionList, { pageSize: 25 });
+  } = useDataTable<Sanction>(sanctionList, {
+    pageSize: 25,
+    searchFields: (s) => [getUserLabel(s), s.reason],
+  });
 
   const exportHeaders = ['Usuario', 'Motivo', 'Fecha efectiva', 'Fecha fin'];
   const getExportRows = (list: Sanction[]) =>
@@ -276,6 +285,15 @@ export function SanctionList() {
 
       {view === 'table' && (
         <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-4 pt-4">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por usuario o motivo..."
+              className="input-field w-full max-w-sm"
+            />
+          </div>
           <TableToolbar
             page={page}
             totalPages={totalPages}
@@ -290,41 +308,31 @@ export function SanctionList() {
             onExportExcel={() => exportToExcel(exportHeaders, getExportRows(sanctionList), 'sanciones.xlsx', 'Sanciones')}
             onExportPDF={() => exportToPDF(exportHeaders, getExportRows(sanctionList), 'sanciones.pdf', 'Sanciones')}
           />
-          <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px]">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Usuario</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Motivo</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Fecha efectiva</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Fecha fin</th>
-                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedSanctions.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No hay sanciones registradas.</td>
-                </tr>
-              ) : (
-                paginatedSanctions.map((s: Sanction) => (
-                  <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="px-6 py-4 font-medium text-slate-900">
-                      {getUserLabel(s)}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 max-w-[280px] truncate">{s.reason}</td>
-                    <td className="px-6 py-4 text-slate-600">{formatDate(s.effectiveDate)}</td>
-                    <td className="px-6 py-4 text-slate-600">{s.endDate ? formatDate(s.endDate) : '—'}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button type="button" onClick={() => openEdit(s)} className="text-primary font-medium hover:underline mr-3">Editar</button>
-                      <button type="button" onClick={() => handleDelete(s)} className="text-red-600 font-medium hover:underline">Eliminar</button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-          </div>
+          <DataTable<Sanction>
+            columns={[
+              { key: 'user', header: 'Usuario', sortAccessor: (s) => getUserLabel(s), cellClassName: 'font-medium', render: (s) => getUserLabel(s) },
+              { key: 'reason', header: 'Motivo', cellClassName: 'max-w-[280px] truncate', render: (s) => s.reason },
+              { key: 'effectiveDate', header: 'Fecha efectiva', sortAccessor: (s) => s.effectiveDate, render: (s) => formatDate(s.effectiveDate) },
+              { key: 'endDate', header: 'Fecha fin', sortAccessor: (s) => s.endDate ?? '', render: (s) => (s.endDate ? formatDate(s.endDate) : '—') },
+              {
+                key: 'actions',
+                header: 'Acciones',
+                align: 'right',
+                render: (s) => (
+                  <>
+                    <button type="button" onClick={() => openEdit(s)} className="text-primary font-medium hover:underline mr-3">Editar</button>
+                    <button type="button" onClick={() => handleDelete(s)} className="text-red-600 font-medium hover:underline">Eliminar</button>
+                  </>
+                ),
+              },
+            ]}
+            rows={paginatedSanctions}
+            getRowKey={(s) => s.id}
+            emptyMessage="No hay sanciones registradas."
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={toggleSort}
+          />
         </div>
       )}
 

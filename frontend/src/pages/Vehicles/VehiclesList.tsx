@@ -5,8 +5,9 @@ import { notifySuccess, notifyError } from '../../lib/toast';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
 import { ImageCropModal } from '../../components/ui/ImageCropModal';
-import { usePagination } from '../../hooks/usePagination';
+import { useDataTable } from '../../hooks/useDataTable';
 import { TableToolbar } from '../../components/ui/TableToolbar';
+import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 import { Modal } from '../../components/ui/Modal';
@@ -488,6 +489,11 @@ export function VehiclesList() {
     : vehicles;
 
   const {
+    search,
+    setSearch,
+    sortKey,
+    sortDir,
+    toggleSort,
     paginatedData: paginatedVehicles,
     page,
     setPage,
@@ -498,7 +504,10 @@ export function VehiclesList() {
     startIndex,
     endIndex,
     PAGE_SIZE_OPTIONS,
-  } = usePagination<Vehicle>(filteredVehicles, { pageSize: 25 });
+  } = useDataTable<Vehicle>(filteredVehicles, {
+    pageSize: 25,
+    searchFields: (v) => [v.plate, v.brand, v.model],
+  });
 
   const exportHeaders = ['Placa', 'Marca', 'Modelo', 'Estado'];
   const getExportRows = (list: Vehicle[]) =>
@@ -545,6 +554,15 @@ export function VehiclesList() {
       </div>
       {view === 'table' && (
         <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-4 pt-4">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por placa, marca o modelo..."
+              className="input-field w-full max-w-sm"
+            />
+          </div>
           <TableToolbar
             page={page}
             totalPages={totalPages}
@@ -559,55 +577,39 @@ export function VehiclesList() {
             onExportExcel={() => exportToExcel(exportHeaders, getExportRows(filteredVehicles), 'vehiculos.xlsx', 'Vehículos')}
             onExportPDF={() => exportToPDF(exportHeaders, getExportRows(filteredVehicles), 'vehiculos.pdf', 'Vehículos')}
           />
-          <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px]">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Placa</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Marca</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Modelo</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Estado</th>
-                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedVehicles.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No hay vehículos registrados.</td>
-                </tr>
-              ) : (
-                paginatedVehicles.map((v: Vehicle) => (
-                  <tr key={v.id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="px-6 py-4 font-medium text-slate-900">{v.plate}</td>
-                    <td className="px-6 py-4 text-slate-600">{v.brand}</td>
-                    <td className="px-6 py-4 text-slate-600">{v.model}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
-                        {STATUS_OPTIONS.find((o) => o.value === v.status)?.label ?? v.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(v)}
-                        className="text-primary font-medium hover:underline mr-3"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(v)}
-                        className="text-red-600 font-medium hover:underline"
-                      >
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-          </div>
+          <DataTable<Vehicle>
+            columns={[
+              { key: 'plate', header: 'Placa', sortAccessor: (v) => v.plate, cellClassName: 'font-medium', render: (v) => v.plate },
+              { key: 'brand', header: 'Marca', sortAccessor: (v) => v.brand, render: (v) => v.brand },
+              { key: 'model', header: 'Modelo', sortAccessor: (v) => v.model, render: (v) => v.model },
+              {
+                key: 'status',
+                header: 'Estado',
+                render: (v) => (
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                    {STATUS_OPTIONS.find((o) => o.value === v.status)?.label ?? v.status}
+                  </span>
+                ),
+              },
+              {
+                key: 'actions',
+                header: 'Acciones',
+                align: 'right',
+                render: (v) => (
+                  <>
+                    <button type="button" onClick={() => openEdit(v)} className="text-primary font-medium hover:underline mr-3">Editar</button>
+                    <button type="button" onClick={() => handleDelete(v)} className="text-red-600 font-medium hover:underline">Eliminar</button>
+                  </>
+                ),
+              },
+            ]}
+            rows={paginatedVehicles}
+            getRowKey={(v) => v.id}
+            emptyMessage="No hay vehículos registrados."
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={toggleSort}
+          />
         </div>
       )}
       {view === 'cards' && (

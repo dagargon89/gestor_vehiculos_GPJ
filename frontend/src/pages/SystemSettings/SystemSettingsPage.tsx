@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { notifySuccess, notifyError } from '../../lib/toast';
-import { usePagination } from '../../hooks/usePagination';
+import { useDataTable } from '../../hooks/useDataTable';
 import { TableToolbar } from '../../components/ui/TableToolbar';
+import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -195,6 +196,11 @@ export function SystemSettingsPage() {
   };
 
   const {
+    search,
+    setSearch,
+    sortKey,
+    sortDir,
+    toggleSort,
     paginatedData: paginatedSettings,
     page,
     setPage,
@@ -205,7 +211,10 @@ export function SystemSettingsPage() {
     startIndex,
     endIndex,
     PAGE_SIZE_OPTIONS,
-  } = usePagination<SystemSetting>(settings, { pageSize: 25 });
+  } = useDataTable<SystemSetting>(settings, {
+    pageSize: 25,
+    searchFields: (s) => [s.key, s.value],
+  });
 
   const exportHeaders = ['Clave', 'Valor'];
   const getExportRows = (list: SystemSetting[]) => list.map((s) => [s.key, s.value]);
@@ -329,6 +338,15 @@ export function SystemSettingsPage() {
       </div>
 
       <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+        <div className="px-4 pt-4">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por clave o valor..."
+            className="input-field w-full max-w-sm"
+          />
+        </div>
         <TableToolbar
           page={page}
           totalPages={totalPages}
@@ -343,49 +361,29 @@ export function SystemSettingsPage() {
           onExportExcel={() => exportToExcel(exportHeaders, getExportRows(settings), 'configuracion-sistema.xlsx', 'Configuración')}
           onExportPDF={() => exportToPDF(exportHeaders, getExportRows(settings), 'configuracion-sistema.pdf', 'Configuración del sistema')}
         />
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px]">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Clave</th>
-              <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Valor</th>
-              <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedSettings.length === 0 ? (
-              <tr>
-                <td colSpan={3} className="px-6 py-8 text-center text-slate-500">
-                  No hay configuraciones. Añade una para parámetros globales del sistema.
-                </td>
-              </tr>
-            ) : (
-              paginatedSettings.map((s: SystemSetting) => (
-                <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="px-6 py-4 font-medium text-slate-900 font-mono text-sm">{s.key}</td>
-                  <td className="px-6 py-4 text-slate-600 max-w-md truncate">{s.value}</td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(s)}
-                      className="text-primary font-medium hover:underline mr-3"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(s)}
-                      className="text-red-600 font-medium hover:underline"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-          </div>
+        <DataTable<SystemSetting>
+          columns={[
+            { key: 'key', header: 'Clave', sortAccessor: (s) => s.key, cellClassName: 'font-medium font-mono text-sm', render: (s) => s.key },
+            { key: 'value', header: 'Valor', cellClassName: 'max-w-md truncate', render: (s) => s.value },
+            {
+              key: 'actions',
+              header: 'Acciones',
+              align: 'right',
+              render: (s) => (
+                <>
+                  <button type="button" onClick={() => openEdit(s)} className="text-primary font-medium hover:underline mr-3">Editar</button>
+                  <button type="button" onClick={() => handleDelete(s)} className="text-red-600 font-medium hover:underline">Eliminar</button>
+                </>
+              ),
+            },
+          ]}
+          rows={paginatedSettings}
+          getRowKey={(s) => s.id}
+          emptyMessage="No hay configuraciones. Añade una para parámetros globales del sistema."
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onSort={toggleSort}
+        />
       </div>
 
       {modalOpen && (

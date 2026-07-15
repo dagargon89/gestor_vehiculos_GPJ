@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
-import { usePagination } from '../../hooks/usePagination';
+import { useDataTable } from '../../hooks/useDataTable';
 import { TableToolbar } from '../../components/ui/TableToolbar';
+import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { SearchSelect } from '../../components/ui/SearchSelect';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
@@ -128,7 +129,6 @@ function MetadataModal({ log, onClose }: { log: AuditLog; onClose: () => void })
 const EXPORT_HEADERS = ['Fecha', 'Acción', 'Recurso', 'ID Recurso', 'Usuario ID'];
 
 export function AuditLogsPage() {
-  const [search, setSearch] = useState('');
   const [filterAction, setFilterAction] = useState('');
   const [filterResource, setFilterResource] = useState('');
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
@@ -138,29 +138,20 @@ export function AuditLogsPage() {
     queryFn: async () => (await apiClient.get('/audit-logs')).data,
   });
 
-  const filtered = logs.filter((l: AuditLog) => {
+  const filteredBase = logs.filter((l: AuditLog) => {
     if (filterAction && l.action !== filterAction) return false;
     if (filterResource && l.resource !== filterResource) return false;
-    const q = search.toLowerCase();
-    if (!q) return true;
-    return (
-      (l.action ?? '').toLowerCase().includes(q) ||
-      (l.resource ?? '').toLowerCase().includes(q) ||
-      (l.userId ?? '').toLowerCase().includes(q) ||
-      (l.resourceId ?? '').toLowerCase().includes(q)
-    );
+    return true;
   });
 
-  const getExportRows = (list: AuditLog[]) =>
-    list.map((l) => [
-      new Date(l.createdAt).toLocaleString('es-MX'),
-      l.action,
-      resourceLabel(l.resource),
-      l.resourceId ?? '',
-      l.userId ?? '',
-    ]);
+  const logSearchFields = (l: AuditLog) => [l.action ?? '', l.resource ?? '', l.userId ?? '', l.resourceId ?? ''];
 
   const {
+    search,
+    setSearch,
+    sortKey,
+    sortDir,
+    toggleSort,
     paginatedData: paginatedLogs,
     page,
     setPage,
@@ -171,7 +162,27 @@ export function AuditLogsPage() {
     startIndex,
     endIndex,
     PAGE_SIZE_OPTIONS,
-  } = usePagination<AuditLog>(filtered, { pageSize: 30 });
+  } = useDataTable<AuditLog>(filteredBase, {
+    pageSize: 30,
+    searchFields: logSearchFields,
+  });
+
+  // Full filtered+searched list (pre-pagination), mirroring useDataTable's internal
+  // filtering, needed for CSV/Excel/PDF export below.
+  const filtered = search.trim()
+    ? filteredBase.filter((l) =>
+        logSearchFields(l).some((f) => f.toLowerCase().includes(search.trim().toLowerCase())),
+      )
+    : filteredBase;
+
+  const getExportRows = (list: AuditLog[]) =>
+    list.map((l) => [
+      new Date(l.createdAt).toLocaleString('es-MX'),
+      l.action,
+      resourceLabel(l.resource),
+      l.resourceId ?? '',
+      l.userId ?? '',
+    ]);
 
   if (isError) {
     return (
@@ -271,77 +282,45 @@ export function AuditLogsPage() {
           }
         />
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px]">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Fecha</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Acción</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Recurso</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">
-                  ID Recurso
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Usuario</th>
-                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Detalle</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-slate-400">
-                    Cargando...
-                  </td>
-                </tr>
-              ) : paginatedLogs.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                    No hay registros de auditoría.
-                  </td>
-                </tr>
-              ) : (
-                paginatedLogs.map((l: AuditLog) => (
-                  <tr
-                    key={l.id}
-                    className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer"
-                    onClick={() => setSelectedLog(l)}
-                  >
-                    <td className="px-6 py-4 text-sm font-mono-data text-slate-600 whitespace-nowrap">
-                      {new Date(l.createdAt).toLocaleString('es-MX', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </td>
-                    <td className="px-6 py-4">{actionBadge(l.action)}</td>
-                    <td className="px-6 py-4 text-sm text-slate-700">
-                      {resourceLabel(l.resource)}
-                    </td>
-                    <td className="px-6 py-4 text-xs font-mono-data text-slate-500 max-w-[140px] truncate">
-                      {l.resourceId ?? '—'}
-                    </td>
-                    <td className="px-6 py-4 text-xs font-mono-data text-slate-500 max-w-[140px] truncate">
-                      {l.userId ?? '—'}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedLog(l);
-                        }}
-                        className="text-primary font-medium hover:underline text-sm"
-                      >
-                        Ver
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DataTable<AuditLog>
+          columns={[
+            {
+              key: 'createdAt',
+              header: 'Fecha',
+              sortAccessor: (l) => l.createdAt,
+              cellClassName: 'text-sm font-mono-data text-slate-600',
+              cellStyle: { whiteSpace: 'nowrap' },
+              render: (l) =>
+                new Date(l.createdAt).toLocaleString('es-MX', {
+                  day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+                }),
+            },
+            { key: 'action', header: 'Acción', sortAccessor: (l) => l.action, render: (l) => actionBadge(l.action) },
+            { key: 'resource', header: 'Recurso', sortAccessor: (l) => resourceLabel(l.resource), cellClassName: 'text-sm text-slate-700', render: (l) => resourceLabel(l.resource) },
+            { key: 'resourceId', header: 'ID Recurso', cellClassName: 'text-xs font-mono-data text-slate-500 max-w-[140px] truncate', render: (l) => l.resourceId ?? '—' },
+            { key: 'userId', header: 'Usuario', cellClassName: 'text-xs font-mono-data text-slate-500 max-w-[140px] truncate', render: (l) => l.userId ?? '—' },
+            {
+              key: 'actions',
+              header: 'Detalle',
+              align: 'right',
+              render: (l) => (
+                <button
+                  type="button"
+                  onClick={() => setSelectedLog(l)}
+                  className="text-primary font-medium hover:underline text-sm"
+                >
+                  Ver
+                </button>
+              ),
+            },
+          ]}
+          rows={paginatedLogs}
+          getRowKey={(l) => l.id}
+          emptyMessage={isLoading ? 'Cargando...' : 'No hay registros de auditoría.'}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onSort={toggleSort}
+        />
       </div>
 
       {selectedLog && (

@@ -3,8 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { notifySuccess, notifyError } from '../../lib/toast';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
-import { usePagination } from '../../hooks/usePagination';
+import { useDataTable } from '../../hooks/useDataTable';
 import { TableToolbar } from '../../components/ui/TableToolbar';
+import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -156,7 +157,6 @@ export function ProvidersList() {
   const [view, setView] = useState<ViewMode>(() => getStoredView('providersView'));
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
-  const [filterSearch, setFilterSearch] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Provider | null>(null);
 
   const { data: providers = [], isLoading, isError, error, refetch } = useQuery({
@@ -190,11 +190,12 @@ export function ProvidersList() {
     setDeleteTarget(p);
   };
 
-  const filteredProviders = filterSearch.trim()
-    ? providers.filter((p: Provider) => p.name.toLowerCase().includes(filterSearch.trim().toLowerCase()))
-    : providers;
-
   const {
+    search,
+    setSearch,
+    sortKey,
+    sortDir,
+    toggleSort,
     paginatedData: paginatedProviders,
     page,
     setPage,
@@ -205,7 +206,10 @@ export function ProvidersList() {
     startIndex,
     endIndex,
     PAGE_SIZE_OPTIONS,
-  } = usePagination<Provider>(filteredProviders, { pageSize: 25 });
+  } = useDataTable<Provider>(providers, {
+    pageSize: 25,
+    searchFields: (p) => [p.name, p.contactName ?? '', p.email ?? ''],
+  });
 
   const exportHeaders = ['Nombre', 'Contacto', 'Teléfono', 'Email'];
   const getExportRows = (list: Provider[]) =>
@@ -228,13 +232,6 @@ export function ProvidersList() {
       <div className="flex flex-wrap justify-between items-center gap-4">
         <h2 className="text-2xl font-bold text-slate-900">Proveedores</h2>
         <div className="flex flex-wrap items-center gap-3">
-          <input
-            type="text"
-            value={filterSearch}
-            onChange={(e) => setFilterSearch(e.target.value)}
-            placeholder="Buscar por nombre"
-            className="w-48 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary"
-          />
           <ViewToggle value={view} onChange={setView} storageKey="providersView" />
           <button
             type="button"
@@ -247,6 +244,15 @@ export function ProvidersList() {
       </div>
       {view === 'table' && (
         <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-4 pt-4">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por nombre, contacto o email..."
+              className="input-field w-full max-w-sm"
+            />
+          </div>
           <TableToolbar
             page={page}
             totalPages={totalPages}
@@ -257,55 +263,35 @@ export function ProvidersList() {
             startIndex={startIndex}
             endIndex={endIndex}
             pageSizeOptions={PAGE_SIZE_OPTIONS}
-            onExportCSV={() => exportToCSV(exportHeaders, getExportRows(filteredProviders), 'proveedores.csv')}
-            onExportExcel={() => exportToExcel(exportHeaders, getExportRows(filteredProviders), 'proveedores.xlsx', 'Proveedores')}
-            onExportPDF={() => exportToPDF(exportHeaders, getExportRows(filteredProviders), 'proveedores.pdf', 'Proveedores')}
+            onExportCSV={() => exportToCSV(exportHeaders, getExportRows(providers), 'proveedores.csv')}
+            onExportExcel={() => exportToExcel(exportHeaders, getExportRows(providers), 'proveedores.xlsx', 'Proveedores')}
+            onExportPDF={() => exportToPDF(exportHeaders, getExportRows(providers), 'proveedores.pdf', 'Proveedores')}
           />
-          <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px]">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Nombre</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Contacto</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Teléfono</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Email</th>
-                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedProviders.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No hay proveedores registrados.</td>
-                </tr>
-              ) : (
-                paginatedProviders.map((p: Provider) => (
-                  <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="px-6 py-4 font-medium text-slate-900">{p.name}</td>
-                    <td className="px-6 py-4 text-slate-600">{p.contactName ?? '—'}</td>
-                    <td className="px-6 py-4 text-slate-600">{p.phone ?? '—'}</td>
-                    <td className="px-6 py-4 text-slate-600">{p.email ?? '—'}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(p)}
-                        className="text-primary font-medium hover:underline mr-3"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(p)}
-                        className="text-red-600 font-medium hover:underline"
-                      >
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-          </div>
+          <DataTable<Provider>
+            columns={[
+              { key: 'name', header: 'Nombre', sortAccessor: (p) => p.name, cellClassName: 'font-medium', render: (p) => p.name },
+              { key: 'contactName', header: 'Contacto', sortAccessor: (p) => p.contactName ?? '', render: (p) => p.contactName ?? '—' },
+              { key: 'phone', header: 'Teléfono', render: (p) => p.phone ?? '—' },
+              { key: 'email', header: 'Email', sortAccessor: (p) => p.email ?? '', render: (p) => p.email ?? '—' },
+              {
+                key: 'actions',
+                header: 'Acciones',
+                align: 'right',
+                render: (p) => (
+                  <>
+                    <button type="button" onClick={() => openEdit(p)} className="text-primary font-medium hover:underline mr-3">Editar</button>
+                    <button type="button" onClick={() => handleDelete(p)} className="text-red-600 font-medium hover:underline">Eliminar</button>
+                  </>
+                ),
+              },
+            ]}
+            rows={paginatedProviders}
+            getRowKey={(p) => p.id}
+            emptyMessage="No hay proveedores registrados."
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={toggleSort}
+          />
         </div>
       )}
       {view === 'cards' && (

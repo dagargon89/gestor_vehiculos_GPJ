@@ -4,8 +4,9 @@ import apiClient from '../../services/api.service';
 import { notifySuccess, notifyError } from '../../lib/toast';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
-import { usePagination } from '../../hooks/usePagination';
+import { useDataTable } from '../../hooks/useDataTable';
 import { TableToolbar } from '../../components/ui/TableToolbar';
+import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -240,6 +241,11 @@ export function MaintenanceList() {
   };
 
   const {
+    search,
+    setSearch,
+    sortKey,
+    sortDir,
+    toggleSort,
     paginatedData: paginatedMaintenance,
     page,
     setPage,
@@ -250,7 +256,10 @@ export function MaintenanceList() {
     startIndex,
     endIndex,
     PAGE_SIZE_OPTIONS,
-  } = usePagination<Maintenance>(maintenanceList, { pageSize: 25 });
+  } = useDataTable<Maintenance>(maintenanceList, {
+    pageSize: 25,
+    searchFields: (m) => [getVehicleLabel(m), m.type ?? '', m.description ?? ''],
+  });
 
   const exportHeaders = ['Vehículo', 'Fecha', 'Tipo', 'Estado'];
   const getExportRows = (list: Maintenance[]) =>
@@ -305,6 +314,15 @@ export function MaintenanceList() {
 
       {view === 'table' && (
         <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-4 pt-4">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por vehículo, tipo o descripción..."
+              className="input-field w-full max-w-sm"
+            />
+          </div>
           <TableToolbar
             page={page}
             totalPages={totalPages}
@@ -319,45 +337,39 @@ export function MaintenanceList() {
             onExportExcel={() => exportToExcel(exportHeaders, getExportRows(maintenanceList), 'mantenimientos.xlsx', 'Mantenimientos')}
             onExportPDF={() => exportToPDF(exportHeaders, getExportRows(maintenanceList), 'mantenimientos.pdf', 'Mantenimientos')}
           />
-          <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px]">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Vehículo</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Fecha</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Tipo</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Estado</th>
-                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedMaintenance.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No hay mantenimientos registrados.</td>
-                </tr>
-              ) : (
-                paginatedMaintenance.map((m: Maintenance) => (
-                  <tr key={m.id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="px-6 py-4 font-medium text-slate-900">
-                      {getVehicleLabel(m)}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">{formatDate(m.scheduledDate)}</td>
-                    <td className="px-6 py-4 text-slate-600">{m.type ?? '—'}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
-                        {STATUS_OPTIONS.find((o) => o.value === m.status)?.label ?? m.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button type="button" onClick={() => openEdit(m)} className="text-primary font-medium hover:underline mr-3">Editar</button>
-                      <button type="button" onClick={() => handleDelete(m)} className="text-red-600 font-medium hover:underline">Eliminar</button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-          </div>
+          <DataTable<Maintenance>
+            columns={[
+              { key: 'vehicle', header: 'Vehículo', sortAccessor: (m) => getVehicleLabel(m), cellClassName: 'font-medium', render: (m) => getVehicleLabel(m) },
+              { key: 'scheduledDate', header: 'Fecha', sortAccessor: (m) => m.scheduledDate, render: (m) => formatDate(m.scheduledDate) },
+              { key: 'type', header: 'Tipo', sortAccessor: (m) => m.type ?? '', render: (m) => m.type ?? '—' },
+              {
+                key: 'status',
+                header: 'Estado',
+                render: (m) => (
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                    {STATUS_OPTIONS.find((o) => o.value === m.status)?.label ?? m.status}
+                  </span>
+                ),
+              },
+              {
+                key: 'actions',
+                header: 'Acciones',
+                align: 'right',
+                render: (m) => (
+                  <>
+                    <button type="button" onClick={() => openEdit(m)} className="text-primary font-medium hover:underline mr-3">Editar</button>
+                    <button type="button" onClick={() => handleDelete(m)} className="text-red-600 font-medium hover:underline">Eliminar</button>
+                  </>
+                ),
+              },
+            ]}
+            rows={paginatedMaintenance}
+            getRowKey={(m) => m.id}
+            emptyMessage="No hay mantenimientos registrados."
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={toggleSort}
+          />
         </div>
       )}
 

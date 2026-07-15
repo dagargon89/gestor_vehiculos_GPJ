@@ -5,6 +5,8 @@ import apiClient from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import { notifySuccess, notifyError } from '../../lib/toast';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
+import { useDataTable } from '../../hooks/useDataTable';
+import { DataTable, type DataTableColumn } from '../../components/ui/DataTable';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string; currentOdometer?: number };
 
@@ -503,6 +505,23 @@ export function MyRequestsPage() {
   const overdue  = reservations.filter((r: Reservation) => r.status === 'overdue');
   const history  = reservations.filter((r: Reservation) => !['pending', 'active', 'overdue'].includes(r.status));
 
+  const getHistoryVehicleLabel = (r: Reservation) =>
+    r.vehicle ? `${r.vehicle.plate} – ${r.vehicle.brand} ${r.vehicle.model}` : '—';
+
+  // No pagination controls existed for this table before; pageSize is set high
+  // enough to keep showing the full history while gaining search + sort.
+  const {
+    search: historySearch,
+    setSearch: setHistorySearch,
+    sortKey: historySortKey,
+    sortDir: historySortDir,
+    toggleSort: toggleHistorySort,
+    paginatedData: paginatedHistory,
+  } = useDataTable<Reservation>(history, {
+    pageSize: 1000,
+    searchFields: (r) => [getHistoryVehicleLabel(r), r.eventName ?? '', r.destination ?? ''],
+  });
+
   if (!userId) {
     return (
       <div className="rounded-xl p-6 text-sm" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}>
@@ -624,40 +643,72 @@ export function MyRequestsPage() {
           </div>
         ) : (
           <div className="rounded-xl overflow-hidden" style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-table-head-bg)' }}>
-                    <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Vehículo</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Evento</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>Salida</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>Regreso</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((r: Reservation) => {
-                    const vehicleLabel = r.vehicle ? `${r.vehicle.plate} – ${r.vehicle.brand} ${r.vehicle.model}` : '—';
-                    return (
-                      <tr key={r.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                        <td className="px-4 py-3 font-medium whitespace-nowrap" style={{ color: 'var(--color-text-soft)' }}>{vehicleLabel}</td>
-                        <td className="px-4 py-3 max-w-[200px]" style={{ color: 'var(--color-text-soft)' }}>
-                          <div className="truncate">{r.eventName || '—'}</div>
-                          {r.destination && <div className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{r.destination}</div>}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>{formatDate(r.startDatetime)}</td>
-                        <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>{formatDate(r.endDatetime)}</td>
-                        <td className="px-4 py-3">
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={statusBadgeStyle(r.status)}>
-                            {STATUS_LABELS[r.status] ?? r.status}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div className="p-4 pb-0">
+              <input
+                type="text"
+                value={historySearch}
+                onChange={(e) => setHistorySearch(e.target.value)}
+                placeholder="Buscar por vehículo, evento o destino..."
+                className="input-field w-full max-w-sm"
+              />
             </div>
+            <DataTable<Reservation>
+              columns={
+                [
+                  {
+                    key: 'vehicle',
+                    header: 'Vehículo',
+                    sortAccessor: (r) => getHistoryVehicleLabel(r),
+                    cellClassName: 'font-medium whitespace-nowrap',
+                    cellStyle: { color: 'var(--color-text-soft)' },
+                    render: (r) => getHistoryVehicleLabel(r),
+                  },
+                  {
+                    key: 'event',
+                    header: 'Evento',
+                    cellClassName: 'max-w-[200px]',
+                    cellStyle: { color: 'var(--color-text-soft)' },
+                    render: (r) => (
+                      <>
+                        <div className="truncate">{r.eventName || '—'}</div>
+                        {r.destination && <div className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{r.destination}</div>}
+                      </>
+                    ),
+                  },
+                  {
+                    key: 'start',
+                    header: 'Salida',
+                    sortAccessor: (r) => r.startDatetime,
+                    cellClassName: 'whitespace-nowrap',
+                    cellStyle: { color: 'var(--color-text-muted)' },
+                    render: (r) => formatDate(r.startDatetime),
+                  },
+                  {
+                    key: 'end',
+                    header: 'Regreso',
+                    sortAccessor: (r) => r.endDatetime,
+                    cellClassName: 'whitespace-nowrap',
+                    cellStyle: { color: 'var(--color-text-muted)' },
+                    render: (r) => formatDate(r.endDatetime),
+                  },
+                  {
+                    key: 'status',
+                    header: 'Estado',
+                    render: (r) => (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={statusBadgeStyle(r.status)}>
+                        {STATUS_LABELS[r.status] ?? r.status}
+                      </span>
+                    ),
+                  },
+                ] satisfies DataTableColumn<Reservation>[]
+              }
+              rows={paginatedHistory}
+              getRowKey={(r) => r.id}
+              emptyMessage="Aún no tienes reservas en tu historial."
+              sortKey={historySortKey}
+              sortDir={historySortDir}
+              onSort={toggleHistorySort}
+            />
           </div>
         )}
       </section>

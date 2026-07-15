@@ -4,8 +4,9 @@ import apiClient from '../../services/api.service';
 import { notifySuccess, notifyError } from '../../lib/toast';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
-import { usePagination } from '../../hooks/usePagination';
+import { useDataTable } from '../../hooks/useDataTable';
 import { TableToolbar } from '../../components/ui/TableToolbar';
+import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -209,7 +210,26 @@ export function FuelRecordsList() {
     return v ? `${v.plate} — ${v.brand} ${v.model}` : '—';
   };
 
-  const { paginatedData: paginatedRecords, page, setPage, pageSize, setPageSize, totalItems, totalPages, startIndex, endIndex, PAGE_SIZE_OPTIONS } = usePagination<FuelRecord>(filteredByDate, { pageSize: 25 });
+  const {
+    search,
+    setSearch,
+    sortKey,
+    sortDir,
+    toggleSort,
+    paginatedData: paginatedRecords,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    PAGE_SIZE_OPTIONS,
+  } = useDataTable<FuelRecord>(filteredByDate, {
+    pageSize: 25,
+    searchFields: (r) => [getVehicleLabel(r)],
+  });
 
   const exportHeaders = ['Vehículo', 'Fecha', 'Litros', 'Costo', 'Kilometraje (km)'];
   const getExportRows = (list: FuelRecord[]) => list.map((r) => [getVehicleLabel(r), formatDate(r.date), formatNum(r.liters), r.cost != null ? formatNum(r.cost) : '—', formatNum(r.odometer)]);
@@ -247,6 +267,15 @@ export function FuelRecordsList() {
 
       {view === 'table' && (
         <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-4 pt-4">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por vehículo..."
+              className="input-field w-full max-w-sm"
+            />
+          </div>
           <TableToolbar
             page={page}
             totalPages={totalPages}
@@ -261,39 +290,32 @@ export function FuelRecordsList() {
             onExportExcel={() => exportToExcel(exportHeaders, getExportRows(filteredByDate), 'registros-combustible.xlsx', 'Registros combustible')}
             onExportPDF={() => exportToPDF(exportHeaders, getExportRows(filteredByDate), 'registros-combustible.pdf', 'Registros combustible')}
           />
-          <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px]">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Vehículo</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Fecha</th>
-                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Litros</th>
-                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Costo</th>
-                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Kilometraje</th>
-                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedRecords.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-8 text-center text-slate-500">No hay registros de combustible.</td></tr>
-              ) : (
-                paginatedRecords.map((r: FuelRecord) => (
-                  <tr key={r.id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="px-6 py-4 font-medium text-slate-900">{getVehicleLabel(r)}</td>
-                    <td className="px-6 py-4 text-slate-600">{formatDate(r.date)}</td>
-                    <td className="px-6 py-4 text-right text-slate-600">{formatNum(r.liters)}</td>
-                    <td className="px-6 py-4 text-right text-slate-600">{r.cost != null ? formatNum(r.cost) : '—'}</td>
-                    <td className="px-6 py-4 text-right text-slate-600">{formatNum(r.odometer)}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button type="button" onClick={() => openEdit(r)} className="text-primary font-medium hover:underline mr-3">Editar</button>
-                      <button type="button" onClick={() => handleDelete(r)} className="text-red-600 font-medium hover:underline">Eliminar</button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-          </div>
+          <DataTable<FuelRecord>
+            columns={[
+              { key: 'vehicle', header: 'Vehículo', sortAccessor: (r) => getVehicleLabel(r), cellClassName: 'font-medium', render: (r) => getVehicleLabel(r) },
+              { key: 'date', header: 'Fecha', sortAccessor: (r) => r.date, render: (r) => formatDate(r.date) },
+              { key: 'liters', header: 'Litros', align: 'right', sortAccessor: (r) => r.liters, render: (r) => formatNum(r.liters) },
+              { key: 'cost', header: 'Costo', align: 'right', sortAccessor: (r) => r.cost ?? 0, render: (r) => (r.cost != null ? formatNum(r.cost) : '—') },
+              { key: 'odometer', header: 'Kilometraje', align: 'right', sortAccessor: (r) => r.odometer ?? 0, render: (r) => formatNum(r.odometer) },
+              {
+                key: 'actions',
+                header: 'Acciones',
+                align: 'right',
+                render: (r) => (
+                  <>
+                    <button type="button" onClick={() => openEdit(r)} className="text-primary font-medium hover:underline mr-3">Editar</button>
+                    <button type="button" onClick={() => handleDelete(r)} className="text-red-600 font-medium hover:underline">Eliminar</button>
+                  </>
+                ),
+              },
+            ]}
+            rows={paginatedRecords}
+            getRowKey={(r) => r.id}
+            emptyMessage="No hay registros de combustible."
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={toggleSort}
+          />
         </div>
       )}
 

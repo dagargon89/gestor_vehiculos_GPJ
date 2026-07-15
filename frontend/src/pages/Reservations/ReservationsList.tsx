@@ -3,8 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { notifySuccess, notifyError } from '../../lib/toast';
 import { SearchSelect } from '../../components/ui/SearchSelect';
-import { usePagination } from '../../hooks/usePagination';
+import { useDataTable } from '../../hooks/useDataTable';
 import { TableToolbar } from '../../components/ui/TableToolbar';
+import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { useAuth } from '../../contexts/AuthContext';
 import { isConductor } from '../../config/routePermissions';
@@ -478,6 +479,11 @@ export function ReservationsList() {
     : reservations;
 
   const {
+    search,
+    setSearch,
+    sortKey,
+    sortDir,
+    toggleSort,
     paginatedData: paginatedReservations,
     page,
     setPage,
@@ -488,7 +494,10 @@ export function ReservationsList() {
     startIndex,
     endIndex,
     PAGE_SIZE_OPTIONS,
-  } = usePagination<Reservation>(filteredReservations, { pageSize: 25 });
+  } = useDataTable<Reservation>(filteredReservations, {
+    pageSize: 25,
+    searchFields: (r) => [getVehicleLabel(r), getUserLabel(r), r.eventName ?? '', r.destination ?? ''],
+  });
 
   const exportHeaders = ['Vehículo', 'Usuario', 'Inicio', 'Fin', 'Estado'];
   const getExportRows = (list: Reservation[]) =>
@@ -535,6 +544,15 @@ export function ReservationsList() {
           </div>
       </div>
       <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-4 pt-4">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar por vehículo, usuario, evento o destino..."
+                className="input-field w-full max-w-sm"
+              />
+            </div>
             <TableToolbar
               page={page}
               totalPages={totalPages}
@@ -549,67 +567,50 @@ export function ReservationsList() {
               onExportExcel={() => exportToExcel(exportHeaders, getExportRows(filteredReservations), 'reservas.xlsx', 'Reservas')}
               onExportPDF={() => exportToPDF(exportHeaders, getExportRows(filteredReservations), 'reservas.pdf', 'Reservas')}
             />
-            <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px]">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Vehículo</th>
-                  <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Usuario</th>
-                  <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Inicio</th>
-                  <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Fin</th>
-                  <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Estado</th>
-                  <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedReservations.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">No hay reservas.</td>
-                  </tr>
-                ) : (
-                  paginatedReservations.map((r: Reservation) => (
-                    <tr key={r.id} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="px-6 py-4 font-medium text-slate-900">{getVehicleLabel(r)}</td>
-                      <td className="px-6 py-4 text-slate-600">{getUserLabel(r)}</td>
-                      <td className="px-6 py-4 text-slate-600">{new Date(r.startDatetime).toLocaleString()}</td>
-                      <td className="px-6 py-4 text-slate-600">{new Date(r.endDatetime).toLocaleString()}</td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-accent/10 text-accent">
-                          {STATUS_OPTIONS.find((o) => o.value === r.status)?.label ?? r.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        {r.status === 'pending' && (
-                          <button
-                            type="button"
-                            onClick={() => approveMutation.mutate(r.id)}
-                            disabled={approveMutation.isPending}
-                            className="mr-3 px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
-                          >
-                            Aprobar
-                          </button>
-                        )}
+            <DataTable<Reservation>
+              columns={[
+                { key: 'vehicle', header: 'Vehículo', sortAccessor: (r) => getVehicleLabel(r), cellClassName: 'font-medium', render: (r) => getVehicleLabel(r) },
+                { key: 'user', header: 'Usuario', sortAccessor: (r) => getUserLabel(r), render: (r) => getUserLabel(r) },
+                { key: 'start', header: 'Inicio', sortAccessor: (r) => r.startDatetime, render: (r) => new Date(r.startDatetime).toLocaleString() },
+                { key: 'end', header: 'Fin', sortAccessor: (r) => r.endDatetime, render: (r) => new Date(r.endDatetime).toLocaleString() },
+                {
+                  key: 'status',
+                  header: 'Estado',
+                  render: (r) => (
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-accent/10 text-accent">
+                      {STATUS_OPTIONS.find((o) => o.value === r.status)?.label ?? r.status}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'actions',
+                  header: 'Acciones',
+                  align: 'right',
+                  render: (r) => (
+                    <>
+                      {r.status === 'pending' && (
                         <button
                           type="button"
-                          onClick={() => openEdit(r)}
-                          className="text-primary font-medium hover:underline mr-3"
+                          onClick={() => approveMutation.mutate(r.id)}
+                          disabled={approveMutation.isPending}
+                          className="mr-3 px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
                         >
-                          Editar
+                          Aprobar
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(r)}
-                          className="text-red-600 font-medium hover:underline"
-                        >
-                          Eliminar
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                      )}
+                      <button type="button" onClick={() => openEdit(r)} className="text-primary font-medium hover:underline mr-3">Editar</button>
+                      <button type="button" onClick={() => handleDelete(r)} className="text-red-600 font-medium hover:underline">Eliminar</button>
+                    </>
+                  ),
+                },
+              ]}
+              rows={paginatedReservations}
+              getRowKey={(r) => r.id}
+              emptyMessage="No hay reservas."
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={toggleSort}
+            />
       </div>
 
       {modalOpen && (

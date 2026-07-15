@@ -4,8 +4,9 @@ import apiClient from '../../services/api.service';
 import { notifySuccess, notifyError } from '../../lib/toast';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
-import { usePagination } from '../../hooks/usePagination';
+import { useDataTable } from '../../hooks/useDataTable';
 import { TableToolbar } from '../../components/ui/TableToolbar';
+import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { useAuth } from '../../contexts/AuthContext';
 import { isConductor } from '../../config/routePermissions';
@@ -264,6 +265,11 @@ export function IncidentList() {
   };
 
   const {
+    search,
+    setSearch,
+    sortKey,
+    sortDir,
+    toggleSort,
     paginatedData: paginatedIncidents,
     page,
     setPage,
@@ -274,7 +280,10 @@ export function IncidentList() {
     startIndex,
     endIndex,
     PAGE_SIZE_OPTIONS,
-  } = usePagination<Incident>(incidentList, { pageSize: 25 });
+  } = useDataTable<Incident>(incidentList, {
+    pageSize: 25,
+    searchFields: (i) => [getVehicleFullLabel(i), getUserLabel(i), i.description ?? ''],
+  });
 
   const exportHeaders = ['Vehículo', 'Usuario', 'Fecha', 'Estado', 'Descripción'];
   const getExportRows = (list: Incident[]) =>
@@ -330,6 +339,15 @@ export function IncidentList() {
 
       {view === 'table' && (
         <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-4 pt-4">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por vehículo, usuario o descripción..."
+              className="input-field w-full max-w-sm"
+            />
+          </div>
           <TableToolbar
             page={page}
             totalPages={totalPages}
@@ -344,49 +362,40 @@ export function IncidentList() {
             onExportExcel={() => exportToExcel(exportHeaders, getExportRows(incidentList), 'incidentes.xlsx', 'Incidentes')}
             onExportPDF={() => exportToPDF(exportHeaders, getExportRows(incidentList), 'incidentes.pdf', 'Incidentes')}
           />
-          <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px]">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Vehículo</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Usuario</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Fecha</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Estado</th>
-                <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Descripción</th>
-                <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedIncidents.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">No hay incidentes registrados.</td>
-                </tr>
-              ) : (
-                paginatedIncidents.map((i: Incident) => (
-                  <tr key={i.id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="px-6 py-4 font-medium text-slate-900">
-                      {getVehicleLabel(i)}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {getUserLabel(i)}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">{formatDate(i.date)}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
-                        {STATUS_OPTIONS.find((o) => o.value === i.status)?.label ?? i.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 max-w-[200px] truncate">{i.description}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button type="button" onClick={() => openEdit(i)} className="text-primary font-medium hover:underline mr-3">Editar</button>
-                      <button type="button" onClick={() => handleDelete(i)} className="text-red-600 font-medium hover:underline">Eliminar</button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-          </div>
+          <DataTable<Incident>
+            columns={[
+              { key: 'vehicle', header: 'Vehículo', sortAccessor: (i) => getVehicleLabel(i), cellClassName: 'font-medium', render: (i) => getVehicleLabel(i) },
+              { key: 'user', header: 'Usuario', sortAccessor: (i) => getUserLabel(i), render: (i) => getUserLabel(i) },
+              { key: 'date', header: 'Fecha', sortAccessor: (i) => i.date, render: (i) => formatDate(i.date) },
+              {
+                key: 'status',
+                header: 'Estado',
+                render: (i) => (
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                    {STATUS_OPTIONS.find((o) => o.value === i.status)?.label ?? i.status}
+                  </span>
+                ),
+              },
+              { key: 'description', header: 'Descripción', cellClassName: 'max-w-[200px] truncate', render: (i) => i.description },
+              {
+                key: 'actions',
+                header: 'Acciones',
+                align: 'right',
+                render: (i) => (
+                  <>
+                    <button type="button" onClick={() => openEdit(i)} className="text-primary font-medium hover:underline mr-3">Editar</button>
+                    <button type="button" onClick={() => handleDelete(i)} className="text-red-600 font-medium hover:underline">Eliminar</button>
+                  </>
+                ),
+              },
+            ]}
+            rows={paginatedIncidents}
+            getRowKey={(i) => i.id}
+            emptyMessage="No hay incidentes registrados."
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={toggleSort}
+          />
         </div>
       )}
 

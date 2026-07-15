@@ -4,8 +4,9 @@ import apiClient from '../../services/api.service';
 import { notifySuccess, notifyError } from '../../lib/toast';
 import { ViewToggle, getStoredView, type ViewMode } from '../../components/ui/ViewToggle';
 import { SearchSelect } from '../../components/ui/SearchSelect';
-import { usePagination } from '../../hooks/usePagination';
+import { useDataTable } from '../../hooks/useDataTable';
 import { TableToolbar } from '../../components/ui/TableToolbar';
+import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -197,7 +198,6 @@ const EXPORT_HEADERS = ['Fecha', 'Vehículo', 'Categoría', 'Monto (MXN)', 'Desc
 export function CostsList() {
   const queryClient = useQueryClient();
   const [view, setView] = useState<ViewMode>(getStoredView('costsView'));
-  const [search, setSearch] = useState('');
   const [filterVehicle, setFilterVehicle] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -230,17 +230,42 @@ export function CostsList() {
   const openNew = () => { setEditingCost(null); setModalOpen(true); };
   const openEdit = (c: Cost) => { setEditingCost(c); setModalOpen(true); };
 
-  const filtered = costs.filter((c) => {
+  const filteredBase = costs.filter((c) => {
     if (filterVehicle && c.vehicleId !== filterVehicle) return false;
     if (filterCategory && c.category !== filterCategory) return false;
-    const q = search.toLowerCase();
-    if (!q) return true;
-    return (
-      (c.vehicle?.plate ?? '').toLowerCase().includes(q) ||
-      categoryLabel(c.category).toLowerCase().includes(q) ||
-      (c.description ?? '').toLowerCase().includes(q)
-    );
+    return true;
   });
+
+  const costSearchFields = (c: Cost) => [c.vehicle?.plate ?? '', categoryLabel(c.category), c.description ?? ''];
+
+  const {
+    search,
+    setSearch,
+    sortKey,
+    sortDir,
+    toggleSort,
+    paginatedData: paginatedCosts,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    PAGE_SIZE_OPTIONS,
+  } = useDataTable<Cost>(filteredBase, {
+    pageSize: 25,
+    searchFields: costSearchFields,
+  });
+
+  // Full filtered+searched list (pre-pagination), mirroring useDataTable's internal
+  // filtering, needed for the summary totals and exports below.
+  const filtered = search.trim()
+    ? filteredBase.filter((c) =>
+        costSearchFields(c).some((f) => f.toLowerCase().includes(search.trim().toLowerCase())),
+      )
+    : filteredBase;
 
   const totalAmount = filtered.reduce((acc, c) => acc + Number(c.amount), 0);
   const fmtCurrency = (n: number) =>
@@ -254,19 +279,6 @@ export function CostsList() {
       Number(c.amount).toFixed(2),
       c.description ?? '',
     ]);
-
-  const {
-    paginatedData: paginatedCosts,
-    page,
-    setPage,
-    pageSize,
-    setPageSize,
-    totalItems,
-    totalPages,
-    startIndex,
-    endIndex,
-    PAGE_SIZE_OPTIONS,
-  } = usePagination<Cost>(filtered, { pageSize: 25 });
 
   if (isError) {
     return (
@@ -397,86 +409,59 @@ export function CostsList() {
 
         {/* Vista tabla */}
         {view === 'table' && (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px]">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Fecha</th>
-                  <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">
-                    Vehículo
-                  </th>
-                  <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">
-                    Categoría
-                  </th>
-                  <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Monto</th>
-                  <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">
-                    Descripción
-                  </th>
-                  <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-slate-400">
-                      Cargando...
-                    </td>
-                  </tr>
-                ) : paginatedCosts.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                      No hay gastos registrados.
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedCosts.map((c: Cost) => (
-                    <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="px-6 py-4 font-mono-data text-sm text-slate-700">
-                        {String(c.date).slice(0, 10)}
-                      </td>
-                      <td className="px-6 py-4 font-medium text-slate-900">
-                        {c.vehicle
-                          ? `${c.vehicle.plate} — ${c.vehicle.brand} ${c.vehicle.model}`
-                          : c.vehicleId}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
-                          {categoryLabel(c.category)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right font-mono-data font-semibold text-slate-900">
-                        {fmtCurrency(Number(c.amount))}
-                      </td>
-                      <td
-                        className="px-6 py-4 text-slate-500 text-sm max-w-xs truncate"
-                        title={c.description}
-                      >
-                        {c.description || '—'}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => openEdit(c)}
-                          className="text-primary font-medium hover:underline mr-3 text-sm"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(c)}
-                          className="text-red-600 font-medium hover:underline text-sm"
-                        >
-                          Eliminar
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <DataTable<Cost>
+            columns={[
+              { key: 'date', header: 'Fecha', align: 'left', sortAccessor: (c) => String(c.date).slice(0, 10), cellClassName: 'font-mono-data text-sm', render: (c) => String(c.date).slice(0, 10) },
+              {
+                key: 'vehicle',
+                header: 'Vehículo',
+                sortAccessor: (c) => c.vehicle?.plate ?? c.vehicleId,
+                cellClassName: 'font-medium',
+                render: (c) => (c.vehicle ? `${c.vehicle.plate} — ${c.vehicle.brand} ${c.vehicle.model}` : c.vehicleId),
+              },
+              {
+                key: 'category',
+                header: 'Categoría',
+                sortAccessor: (c) => categoryLabel(c.category),
+                render: (c) => (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                    {categoryLabel(c.category)}
+                  </span>
+                ),
+              },
+              {
+                key: 'amount',
+                header: 'Monto',
+                align: 'right',
+                sortAccessor: (c) => Number(c.amount),
+                cellClassName: 'font-mono-data font-semibold text-slate-900',
+                render: (c) => fmtCurrency(Number(c.amount)),
+              },
+              {
+                key: 'description',
+                header: 'Descripción',
+                cellClassName: 'text-slate-500 text-sm max-w-xs truncate',
+                render: (c) => <span title={c.description}>{c.description || '—'}</span>,
+              },
+              {
+                key: 'actions',
+                header: 'Acciones',
+                align: 'right',
+                render: (c) => (
+                  <>
+                    <button type="button" onClick={() => openEdit(c)} className="text-primary font-medium hover:underline mr-3 text-sm">Editar</button>
+                    <button type="button" onClick={() => handleDelete(c)} className="text-red-600 font-medium hover:underline text-sm">Eliminar</button>
+                  </>
+                ),
+              },
+            ]}
+            rows={paginatedCosts}
+            getRowKey={(c) => c.id}
+            emptyMessage={isLoading ? 'Cargando...' : 'No hay gastos registrados.'}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={toggleSort}
+          />
         )}
 
         {/* Vista tarjetas */}
