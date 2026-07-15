@@ -144,6 +144,22 @@ export class UsersService {
     await this.userRepo.softDelete(id);
   }
 
+  /**
+   * Usuarios activos cuyo rol tiene el permiso dado en base de datos.
+   * No incluye los permisos hardcodeados por rol en PermissionsGuard (p. ej. los
+   * defaults de `conductor`) — solo lo sembrado explícitamente en `role_permissions`.
+   */
+  async findUsersWithPermission(resource: string, action: string): Promise<User[]> {
+    return this.userRepo
+      .createQueryBuilder('user')
+      .innerJoin('user.role', 'role')
+      .innerJoin('role.permissions', 'permission')
+      .where('permission.resource = :resource', { resource })
+      .andWhere('permission.action = :action', { action })
+      .andWhere('user.status = :status', { status: 'active' })
+      .getMany();
+  }
+
   /** Campos que un usuario puede auto-actualizar vía /auth/sync-user. Nunca roleId ni status. */
   private static readonly SELF_SERVICE_ALLOWED_KEYS: (keyof User)[] = [
     'displayName',

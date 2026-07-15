@@ -5,6 +5,7 @@ import { Reservation } from '../../database/entities/reservation.entity';
 import { Vehicle } from '../../database/entities/vehicle.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SystemSettingsService } from '../system-settings/system-settings.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class ReservationsService {
@@ -15,6 +16,7 @@ export class ReservationsService {
     private vehicleRepo: Repository<Vehicle>,
     private notificationsService: NotificationsService,
     private systemSettingsService: SystemSettingsService,
+    private usersService: UsersService,
     private dataSource: DataSource,
   ) {}
 
@@ -111,17 +113,32 @@ export class ReservationsService {
       saved = await this.repo.save(r);
     }
 
+    const full = await this.findOne(saved.id);
+    const vehicleLabel = full.vehicle
+      ? `${full.vehicle.plate} – ${full.vehicle.brand} ${full.vehicle.model}`
+      : 'vehículo';
+
     if (autoApproved) {
-      const full = await this.findOne(saved.id);
-      const vehicleLabel = full.vehicle
-        ? `${full.vehicle.plate} – ${full.vehicle.brand} ${full.vehicle.model}`
-        : 'vehículo';
       await this.notificationsService.notifyUser(
         full.userId,
         'reservation_approved',
         'Reserva aprobada automáticamente',
         `Tu solicitud de ${vehicleLabel} ha sido aprobada automáticamente. Ya puedes hacer check-in cuando retires el vehículo.`,
         '/mis-solicitudes',
+      );
+    } else {
+      const requesterLabel = full.user?.displayName || full.user?.email || 'Un conductor';
+      const approvers = await this.usersService.findUsersWithPermission('reservations', 'delete');
+      await Promise.all(
+        approvers.map((approver) =>
+          this.notificationsService.notifyUser(
+            approver.id,
+            'reservation_requested',
+            'Nueva solicitud de reserva pendiente',
+            `${requesterLabel} solicitó ${vehicleLabel} y espera aprobación.`,
+            '/reservations',
+          ),
+        ),
       );
     }
 

@@ -67,3 +67,34 @@ describe('UsersService.updateOwnProfile', () => {
     expect(result).toEqual({ id: 'u1', displayName: 'Nuevo nombre' });
   });
 });
+
+describe('UsersService.findUsersWithPermission', () => {
+  let service: UsersService;
+  let userRepo: { createQueryBuilder: jest.Mock };
+
+  beforeEach(async () => {
+    const qb = {
+      innerJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([{ id: 'approver-1' }]),
+    };
+    userRepo = { createQueryBuilder: jest.fn().mockReturnValue(qb) };
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        UsersService,
+        { provide: getRepositoryToken(User), useValue: userRepo },
+        { provide: getRepositoryToken(Role), useValue: {} },
+      ],
+    }).compile();
+    service = module.get(UsersService);
+  });
+
+  it('devuelve los usuarios activos con el permiso dado', async () => {
+    const result = await service.findUsersWithPermission('reservations', 'delete');
+    expect(result).toEqual([{ id: 'approver-1' }]);
+    const qb = userRepo.createQueryBuilder.mock.results[0].value;
+    expect(qb.where).toHaveBeenCalledWith('permission.resource = :resource', { resource: 'reservations' });
+    expect(qb.andWhere).toHaveBeenCalledWith('permission.action = :action', { action: 'delete' });
+  });
+});

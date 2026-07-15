@@ -6,6 +6,8 @@ import { Reservation } from '../../database/entities/reservation.entity';
 import { Vehicle } from '../../database/entities/vehicle.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SystemSettingsService } from '../system-settings/system-settings.service';
+import { UsersService } from '../users/users.service';
+import { SanctionsService } from '../sanctions/sanctions.service';
 
 describe('ReservationsService', () => {
   let service: ReservationsService;
@@ -18,6 +20,8 @@ describe('ReservationsService', () => {
   };
   let vehicleRepo: { update: jest.Mock };
   let dataSource: { transaction: jest.Mock };
+  let notificationsService: { notifyUser: jest.Mock };
+  let usersService: { findUsersWithPermission: jest.Mock };
 
   const pendingReservation = {
     id: 'r1',
@@ -46,14 +50,23 @@ describe('ReservationsService', () => {
     };
     vehicleRepo = { update: jest.fn().mockResolvedValue(undefined) };
     dataSource = { transaction: jest.fn(async (cb) => cb({ query: jest.fn(), getRepository: () => repo })) };
+    notificationsService = { notifyUser: jest.fn() };
+    usersService = {
+      findUsersWithPermission: jest.fn().mockResolvedValue([{ id: 'approver-1' }, { id: 'approver-2' }]),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReservationsService,
         { provide: getRepositoryToken(Reservation), useValue: repo },
         { provide: getRepositoryToken(Vehicle), useValue: vehicleRepo },
-        { provide: NotificationsService, useValue: { notifyUser: jest.fn() } },
+        { provide: NotificationsService, useValue: notificationsService },
         { provide: SystemSettingsService, useValue: { findByKey: jest.fn().mockResolvedValue(null) } },
+        { provide: UsersService, useValue: usersService },
+        // SanctionsService is mocked here even though ReservationsService.create()
+        // doesn't consume it yet — a later step in this sprint's plan wires it in,
+        // and adding the provider now keeps this shared beforeEach forward-compatible.
+        { provide: SanctionsService, useValue: { isUserSanctioned: jest.fn().mockResolvedValue(false) } },
         // ReservationsService injects the real `DataSource` class from typeorm (no
         // custom token), so the provider token here must be that class itself —
         // the brief's `.overrideProvider(require('typeorm').DataSource)` pattern
@@ -76,6 +89,31 @@ describe('ReservationsService', () => {
       } as unknown as Partial<Reservation>);
       const savedArg = repo.save.mock.calls[0][0];
       expect(savedArg.status).toBeUndefined();
+    });
+
+    it('notifica a todos los usuarios con reservations:delete cuando la reserva queda pending', async () => {
+      await service.create({
+        vehicleId: 'v1',
+        userId: 'driver-1',
+        startDatetime: undefined,
+        endDatetime: undefined,
+        eventName: 'Prueba',
+      } as unknown as Partial<Reservation>);
+      expect(usersService.findUsersWithPermission).toHaveBeenCalledWith('reservations', 'delete');
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith(
+        'approver-1',
+        'reservation_requested',
+        expect.any(String),
+        expect.any(String),
+        '/reservations',
+      );
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith(
+        'approver-2',
+        'reservation_requested',
+        expect.any(String),
+        expect.any(String),
+        '/reservations',
+      );
     });
   });
 
