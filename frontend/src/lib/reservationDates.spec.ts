@@ -16,8 +16,8 @@ describe('validateReservationDates', () => {
   });
 
   it('rechaza fechas en el pasado salvo que allowPast sea true', () => {
-    expect(validateReservationDates('2020-01-01T10:00', '2020-01-01T12:00')).toMatch(/no puede estar en el pasado|año debe estar entre/);
-    expect(validateReservationDates('2020-01-01T10:00', '2020-01-01T12:00', { allowPast: true })).toMatch(/año debe estar entre/);
+    expect(validateReservationDates('2019-01-01T10:00', '2019-01-01T12:00')).toMatch(/no puede estar en el pasado|año debe estar entre/);
+    expect(validateReservationDates('2019-01-01T10:00', '2019-01-01T12:00', { allowPast: true })).toMatch(/año debe estar entre/);
   });
 
   it('acepta un rango válido', () => {

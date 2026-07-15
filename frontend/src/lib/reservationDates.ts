@@ -8,7 +8,7 @@ export function validateReservationDates(
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
     return 'Las fechas no son válidas. Revisa hora de salida y de regreso.';
   }
-  const yearMin = 2021;
+  const yearMin = 2020;
   const yearMax = 2035;
   if (
     start.getFullYear() < yearMin ||
