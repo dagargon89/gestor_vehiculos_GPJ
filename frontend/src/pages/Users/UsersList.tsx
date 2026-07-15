@@ -8,6 +8,7 @@ import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { Modal } from '../../components/ui/Modal';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 type Role = { id: string; name: string; description?: string };
 
@@ -144,6 +145,7 @@ export function UsersList() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [filterRoleId, setFilterRoleId] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
 
   const { data: users = [], isLoading, isError, error } = useQuery({
     queryKey: ['users'],
@@ -176,8 +178,7 @@ export function UsersList() {
   };
 
   const handleDelete = (u: User) => {
-    if (!window.confirm(`¿Eliminar al usuario ${u.displayName || u.email}?`)) return;
-    deleteMutation.mutate(u.id);
+    setDeleteTarget(u);
   };
 
   const filteredUsers = users.filter((u: User) => {
@@ -392,6 +393,16 @@ export function UsersList() {
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['users'] });
             notifySuccess('Usuario guardado correctamente.');
+          }}
+        />
+      )}
+      {deleteTarget && (
+        <ConfirmDialog
+          message={`¿Eliminar al usuario ${deleteTarget.displayName || deleteTarget.email}?`}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => {
+            deleteMutation.mutate(deleteTarget.id);
+            setDeleteTarget(null);
           }}
         />
       )}

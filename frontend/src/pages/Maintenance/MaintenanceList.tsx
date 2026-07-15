@@ -8,6 +8,7 @@ import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string };
 
@@ -187,6 +188,7 @@ export function MaintenanceList() {
   const [editingMaintenance, setEditingMaintenance] = useState<Maintenance | null>(null);
   const [filterVehicleId, setFilterVehicleId] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Maintenance | null>(null);
 
   const { data: maintenanceList = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['maintenance', filterVehicleId || undefined, filterStatus || undefined],
@@ -227,8 +229,7 @@ export function MaintenanceList() {
   };
 
   const handleDelete = (m: Maintenance) => {
-    if (!window.confirm(`¿Eliminar este mantenimiento programado?`)) return;
-    deleteMutation.mutate(m.id);
+    setDeleteTarget(m);
   };
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -400,6 +401,16 @@ export function MaintenanceList() {
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['maintenance'] });
             notifySuccess('Mantenimiento guardado correctamente.');
+          }}
+        />
+      )}
+      {deleteTarget && (
+        <ConfirmDialog
+          message="¿Eliminar este mantenimiento programado?"
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => {
+            deleteMutation.mutate(deleteTarget.id);
+            setDeleteTarget(null);
           }}
         />
       )}

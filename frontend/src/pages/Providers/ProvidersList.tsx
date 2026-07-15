@@ -7,6 +7,7 @@ import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 type Provider = {
   id: string;
@@ -156,6 +157,7 @@ export function ProvidersList() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
   const [filterSearch, setFilterSearch] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Provider | null>(null);
 
   const { data: providers = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['providers'],
@@ -185,8 +187,7 @@ export function ProvidersList() {
   };
 
   const handleDelete = (p: Provider) => {
-    if (!window.confirm(`¿Eliminar el proveedor ${p.name}?`)) return;
-    deleteMutation.mutate(p.id);
+    setDeleteTarget(p);
   };
 
   const filteredProviders = filterSearch.trim()
@@ -354,6 +355,16 @@ export function ProvidersList() {
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['providers'] });
             notifySuccess('Proveedor guardado correctamente.');
+          }}
+        />
+      )}
+      {deleteTarget && (
+        <ConfirmDialog
+          message={`¿Eliminar el proveedor ${deleteTarget.name}?`}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => {
+            deleteMutation.mutate(deleteTarget.id);
+            setDeleteTarget(null);
           }}
         />
       )}

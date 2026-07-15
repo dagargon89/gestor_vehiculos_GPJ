@@ -10,6 +10,7 @@ import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable
 import { useAuth } from '../../contexts/AuthContext';
 import { isConductor } from '../../config/routePermissions';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 type User = { id: string; displayName?: string; email?: string };
 
@@ -163,6 +164,7 @@ export function SanctionList() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSanction, setEditingSanction] = useState<Sanction | null>(null);
   const [filterUserId, setFilterUserId] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Sanction | null>(null);
 
   const { data: sanctionList = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['sanctions', filterUserId || undefined],
@@ -201,8 +203,7 @@ export function SanctionList() {
   };
 
   const handleDelete = (s: Sanction) => {
-    if (!window.confirm('¿Eliminar esta sanción?')) return;
-    deleteMutation.mutate(s.id);
+    setDeleteTarget(s);
   };
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -362,6 +363,16 @@ export function SanctionList() {
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['sanctions'] });
             notifySuccess('Sanción guardada correctamente.');
+          }}
+        />
+      )}
+      {deleteTarget && (
+        <ConfirmDialog
+          message="¿Eliminar esta sanción?"
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => {
+            deleteMutation.mutate(deleteTarget.id);
+            setDeleteTarget(null);
           }}
         />
       )}

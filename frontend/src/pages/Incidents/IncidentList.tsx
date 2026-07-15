@@ -10,6 +10,7 @@ import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable
 import { useAuth } from '../../contexts/AuthContext';
 import { isConductor } from '../../config/routePermissions';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string };
 type User = { id: string; displayName?: string; email?: string };
@@ -189,6 +190,7 @@ export function IncidentList() {
   const [editingIncident, setEditingIncident] = useState<Incident | null>(null);
   const [filterVehicleId, setFilterVehicleId] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Incident | null>(null);
 
   const { data: incidentList = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['incidents', filterVehicleId || undefined, filterStatus || undefined],
@@ -237,8 +239,7 @@ export function IncidentList() {
   };
 
   const handleDelete = (i: Incident) => {
-    if (!window.confirm('¿Eliminar este incidente?')) return;
-    deleteMutation.mutate(i.id);
+    setDeleteTarget(i);
   };
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -428,6 +429,16 @@ export function IncidentList() {
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['incidents'] });
             notifySuccess('Incidente guardado correctamente.');
+          }}
+        />
+      )}
+      {deleteTarget && (
+        <ConfirmDialog
+          message="¿Eliminar este incidente?"
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => {
+            deleteMutation.mutate(deleteTarget.id);
+            setDeleteTarget(null);
           }}
         />
       )}

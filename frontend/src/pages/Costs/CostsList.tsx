@@ -8,6 +8,7 @@ import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string };
 
@@ -201,6 +202,7 @@ export function CostsList() {
   const [filterCategory, setFilterCategory] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCost, setEditingCost] = useState<Cost | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Cost | null>(null);
 
   const { data: costs = [], isLoading, isError, error, refetch } = useQuery<Cost[]>({
     queryKey: ['costs'],
@@ -222,9 +224,7 @@ export function CostsList() {
   });
 
   const handleDelete = (c: Cost) => {
-    const label = `${categoryLabel(c.category)} — ${c.vehicle?.plate ?? c.vehicleId}`;
-    if (!window.confirm(`¿Eliminar el gasto "${label}"?`)) return;
-    deleteMutation.mutate(c.id);
+    setDeleteTarget(c);
   };
 
   const openNew = () => { setEditingCost(null); setModalOpen(true); };
@@ -546,6 +546,16 @@ export function CostsList() {
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['costs'] });
             notifySuccess('Gasto guardado correctamente.');
+          }}
+        />
+      )}
+      {deleteTarget && (
+        <ConfirmDialog
+          message={`¿Eliminar el gasto "${categoryLabel(deleteTarget.category)} — ${deleteTarget.vehicle?.plate ?? deleteTarget.vehicleId}"?`}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => {
+            deleteMutation.mutate(deleteTarget.id);
+            setDeleteTarget(null);
           }}
         />
       )}

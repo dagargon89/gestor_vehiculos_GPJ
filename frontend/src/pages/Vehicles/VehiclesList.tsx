@@ -10,6 +10,7 @@ import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 import { Modal } from '../../components/ui/Modal';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 type Vehicle = {
   id: string;
@@ -449,6 +450,7 @@ export function VehiclesList() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [filterStatus, setFilterStatus] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Vehicle | null>(null);
 
   const { data: vehicles = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['vehicles'],
@@ -478,8 +480,7 @@ export function VehiclesList() {
   };
 
   const handleDelete = (v: Vehicle) => {
-    if (!window.confirm(`¿Eliminar el vehículo ${v.plate} (${v.brand} ${v.model})?`)) return;
-    deleteMutation.mutate(v.id);
+    setDeleteTarget(v);
   };
 
   const filteredVehicles = filterStatus
@@ -694,6 +695,16 @@ export function VehiclesList() {
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['vehicles'] });
             notifySuccess('Vehículo guardado correctamente.');
+          }}
+        />
+      )}
+      {deleteTarget && (
+        <ConfirmDialog
+          message={`¿Eliminar el vehículo ${deleteTarget.plate} (${deleteTarget.brand} ${deleteTarget.model})?`}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => {
+            deleteMutation.mutate(deleteTarget.id);
+            setDeleteTarget(null);
           }}
         />
       )}

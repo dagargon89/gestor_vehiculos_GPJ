@@ -8,6 +8,7 @@ import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string };
 
@@ -160,6 +161,7 @@ export function FuelRecordsList() {
   const [filterVehicleId, setFilterVehicleId] = useState('');
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<FuelRecord | null>(null);
 
   const { data: records = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['fuel-records', filterVehicleId || undefined],
@@ -197,8 +199,7 @@ export function FuelRecordsList() {
   const openCreate = () => { setEditingRecord(null); setModalOpen(true); };
   const openEdit = (r: FuelRecord) => { setEditingRecord(r); setModalOpen(true); };
   const handleDelete = (r: FuelRecord) => {
-    if (!window.confirm('¿Eliminar este registro de combustible?')) return;
-    deleteMutation.mutate(r.id);
+    setDeleteTarget(r);
   };
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -326,6 +327,16 @@ export function FuelRecordsList() {
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['fuel-records'] });
             notifySuccess('Registro de combustible guardado correctamente.');
+          }}
+        />
+      )}
+      {deleteTarget && (
+        <ConfirmDialog
+          message="¿Eliminar este registro de combustible?"
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => {
+            deleteMutation.mutate(deleteTarget.id);
+            setDeleteTarget(null);
           }}
         />
       )}

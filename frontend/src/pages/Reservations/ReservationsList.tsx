@@ -10,6 +10,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { isConductor } from '../../config/routePermissions';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 import { Modal } from '../../components/ui/Modal';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 type User = { id: string; email: string; displayName?: string };
 type Vehicle = { id: string; plate: string; brand: string; model: string };
@@ -231,6 +232,7 @@ function OverduePanel() {
   const [collapsed, setCollapsed] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
   const { data: overdue = [], isLoading } = useQuery<Reservation[]>({
     queryKey: ['reservations-overdue'],
@@ -275,9 +277,13 @@ function OverduePanel() {
     });
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selected.size === 0) return;
-    if (!window.confirm(`¿Eliminar ${selected.size} reserva${selected.size !== 1 ? 's' : ''} vencida${selected.size !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) return;
+    setConfirmBulkDelete(true);
+  };
+
+  const performBulkDelete = async () => {
+    setConfirmBulkDelete(false);
     setBulkDeleting(true);
     try {
       await Promise.all([...selected].map((id) => apiClient.delete(`/reservations/${id}`)));
@@ -384,6 +390,13 @@ function OverduePanel() {
           </div>
         </div>
       )}
+      {confirmBulkDelete && (
+        <ConfirmDialog
+          message={`¿Eliminar ${selected.size} reserva${selected.size !== 1 ? 's' : ''} vencida${selected.size !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`}
+          onCancel={() => setConfirmBulkDelete(false)}
+          onConfirm={performBulkDelete}
+        />
+      )}
     </div>
   );
 }
@@ -393,6 +406,7 @@ export function ReservationsList() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
   const [filterStatus, setFilterStatus] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Reservation | null>(null);
 
   const { data: reservations = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['reservations'],
@@ -456,12 +470,7 @@ export function ReservationsList() {
   };
 
   const handleDelete = (r: Reservation) => {
-    const plate = getVehicleLabel(r);
-    const label = plate !== '—'
-      ? `Reserva de ${plate} (${new Date(r.startDatetime).toLocaleString()})`
-      : `Reserva ${r.id}`;
-    if (!window.confirm(`¿Eliminar la reserva: ${label}?`)) return;
-    deleteMutation.mutate(r.id);
+    setDeleteTarget(r);
   };
 
   const filteredReservations = filterStatus
@@ -612,6 +621,22 @@ export function ReservationsList() {
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['reservations'] });
             notifySuccess('Reserva guardada correctamente.');
+          }}
+        />
+      )}
+      {deleteTarget && (
+        <ConfirmDialog
+          message={(() => {
+            const plate = getVehicleLabel(deleteTarget);
+            const label = plate !== '—'
+              ? `Reserva de ${plate} (${new Date(deleteTarget.startDatetime).toLocaleString()})`
+              : `Reserva ${deleteTarget.id}`;
+            return `¿Eliminar la reserva: ${label}?`;
+          })()}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => {
+            deleteMutation.mutate(deleteTarget.id);
+            setDeleteTarget(null);
           }}
         />
       )}

@@ -6,6 +6,7 @@ import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 type SystemSetting = { id: string; key: string; value: string };
 
@@ -119,6 +120,7 @@ export function SystemSettingsPage() {
   const [editingSetting, setEditingSetting] = useState<SystemSetting | null>(null);
   const [togglingAutoApprove, setTogglingAutoApprove] = useState(false);
   const [togglingAdminOverdue, setTogglingAdminOverdue] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<SystemSetting | null>(null);
 
   const { data: settings = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['system-settings'],
@@ -189,8 +191,7 @@ export function SystemSettingsPage() {
   };
 
   const handleDelete = (s: SystemSetting) => {
-    if (!window.confirm(`¿Eliminar la configuración "${s.key}"?`)) return;
-    deleteMutation.mutate(s.id);
+    setDeleteTarget(s);
   };
 
   const {
@@ -394,6 +395,16 @@ export function SystemSettingsPage() {
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['system-settings'] });
             notifySuccess('Configuración guardada correctamente.');
+          }}
+        />
+      )}
+      {deleteTarget && (
+        <ConfirmDialog
+          message={`¿Eliminar la configuración "${deleteTarget.key}"?`}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => {
+            deleteMutation.mutate(deleteTarget.id);
+            setDeleteTarget(null);
           }}
         />
       )}
