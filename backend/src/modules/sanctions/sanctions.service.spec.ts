@@ -7,15 +7,16 @@ import { UsersService } from '../users/users.service';
 describe('SanctionsService.isUserSanctioned', () => {
   let service: SanctionsService;
   let repo: { createQueryBuilder: jest.Mock };
-
-  const buildQb = (count: number) => ({
-    where: jest.fn().mockReturnThis(),
-    andWhere: jest.fn().mockReturnThis(),
-    getCount: jest.fn().mockResolvedValue(count),
-  });
+  let queryBuilderStub: Record<string, jest.Mock>;
 
   beforeEach(async () => {
-    repo = { createQueryBuilder: jest.fn() };
+    // Build a chainable query builder stub that captures all mock calls
+    queryBuilderStub = {};
+    queryBuilderStub.where = jest.fn().mockReturnValue(queryBuilderStub);
+    queryBuilderStub.andWhere = jest.fn().mockReturnValue(queryBuilderStub);
+    queryBuilderStub.getCount = jest.fn().mockResolvedValue(0);
+
+    repo = { createQueryBuilder: jest.fn().mockReturnValue(queryBuilderStub) };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SanctionsService,
@@ -27,12 +28,42 @@ describe('SanctionsService.isUserSanctioned', () => {
   });
 
   it('devuelve true si hay una sanción vigente', async () => {
-    repo.createQueryBuilder.mockReturnValue(buildQb(1));
-    await expect(service.isUserSanctioned('user-1')).resolves.toBe(true);
+    queryBuilderStub.getCount.mockResolvedValue(1);
+    const userId = 'user-1';
+    const atDate = new Date('2024-01-15');
+
+    await expect(service.isUserSanctioned(userId, atDate)).resolves.toBe(true);
+
+    // Assert query builder was called with alias 's'
+    expect(repo.createQueryBuilder).toHaveBeenCalledWith('s');
+
+    // Assert the where clause for userId
+    expect(queryBuilderStub.where).toHaveBeenCalledWith('s.userId = :userId', { userId });
+
+    // Assert the andWhere clauses for effectiveDate and endDate logic
+    expect(queryBuilderStub.andWhere).toHaveBeenCalledWith('s.effectiveDate <= :atDate', { atDate });
+    expect(queryBuilderStub.andWhere).toHaveBeenCalledWith('(s.endDate IS NULL OR s.endDate >= :atDate)', { atDate });
+
+    expect(queryBuilderStub.getCount).toHaveBeenCalled();
   });
 
   it('devuelve false si no hay sanciones vigentes', async () => {
-    repo.createQueryBuilder.mockReturnValue(buildQb(0));
-    await expect(service.isUserSanctioned('user-1')).resolves.toBe(false);
+    queryBuilderStub.getCount.mockResolvedValue(0);
+    const userId = 'user-2';
+    const atDate = new Date('2024-01-15');
+
+    await expect(service.isUserSanctioned(userId, atDate)).resolves.toBe(false);
+
+    // Assert query builder was called with alias 's'
+    expect(repo.createQueryBuilder).toHaveBeenCalledWith('s');
+
+    // Assert the where clause for userId
+    expect(queryBuilderStub.where).toHaveBeenCalledWith('s.userId = :userId', { userId });
+
+    // Assert the andWhere clauses for effectiveDate and endDate logic
+    expect(queryBuilderStub.andWhere).toHaveBeenCalledWith('s.effectiveDate <= :atDate', { atDate });
+    expect(queryBuilderStub.andWhere).toHaveBeenCalledWith('(s.endDate IS NULL OR s.endDate >= :atDate)', { atDate });
+
+    expect(queryBuilderStub.getCount).toHaveBeenCalled();
   });
 });
