@@ -9,6 +9,7 @@ import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
+import { Modal } from '../../components/ui/Modal';
 
 type Vehicle = {
   id: string;
@@ -195,18 +196,8 @@ function VehicleFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div
-        className="rounded-[16px] w-full max-w-lg max-h-[90vh] overflow-y-auto"
-        style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)', boxShadow: '0 24px 64px rgba(0,0,0,0.4)' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
-          <h3 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
-            {vehicle ? 'Editar vehículo' : 'Nuevo vehículo'}
-          </h3>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <Modal title={vehicle ? 'Editar vehículo' : 'Nuevo vehículo'} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div
               className="p-3 rounded-lg text-sm"
@@ -447,9 +438,8 @@ function VehicleFormModal({
               {submitting ? 'Guardando...' : vehicle ? 'Guardar cambios' : 'Crear vehículo'}
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 }
 

@@ -7,6 +7,7 @@ import { SearchSelect } from '../../components/ui/SearchSelect';
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
+import { Modal } from '../../components/ui/Modal';
 
 type Role = { id: string; name: string; description?: string };
 
@@ -72,16 +73,8 @@ function UserFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-lg max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-bold text-slate-900">Editar usuario</h3>
-          <p className="text-sm text-slate-500 mt-0.5">{user.email}</p>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <Modal title="Editar usuario" subtitle={user.email} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
           )}
@@ -139,9 +132,8 @@ function UserFormModal({
               {submitting ? 'Guardando...' : 'Guardar cambios'}
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 }
 

@@ -9,6 +9,7 @@ import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable
 import { useAuth } from '../../contexts/AuthContext';
 import { isConductor } from '../../config/routePermissions';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
+import { Modal } from '../../components/ui/Modal';
 
 type User = { id: string; email: string; displayName?: string };
 type Vehicle = { id: string; plate: string; brand: string; model: string };
@@ -108,17 +109,8 @@ function ReservationFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-lg max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-bold text-slate-900">
-            {reservation ? 'Editar reserva' : 'Nueva reserva'}
-          </h3>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <Modal title={reservation ? 'Editar reserva' : 'Nueva reserva'} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
           )}
@@ -229,9 +221,8 @@ function ReservationFormModal({
               {submitting ? 'Guardando...' : reservation ? 'Guardar cambios' : 'Enviar solicitud'}
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 }
 
