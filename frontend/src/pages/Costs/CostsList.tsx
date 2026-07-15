@@ -245,6 +245,7 @@ export function CostsList() {
     sortDir,
     toggleSort,
     paginatedData: paginatedCosts,
+    filteredData: filtered,
     page,
     setPage,
     pageSize,
@@ -258,14 +259,6 @@ export function CostsList() {
     pageSize: 25,
     searchFields: costSearchFields,
   });
-
-  // Full filtered+searched list (pre-pagination), mirroring useDataTable's internal
-  // filtering, needed for the summary totals and exports below.
-  const filtered = search.trim()
-    ? filteredBase.filter((c) =>
-        costSearchFields(c).some((f) => f.toLowerCase().includes(search.trim().toLowerCase())),
-      )
-    : filteredBase;
 
   const totalAmount = filtered.reduce((acc, c) => acc + Number(c.amount), 0);
   const fmtCurrency = (n: number) =>

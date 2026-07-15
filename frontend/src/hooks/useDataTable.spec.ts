@@ -61,4 +61,31 @@ describe('useDataTable', () => {
     expect(result.current.paginatedData.map((r) => r.name)).toEqual(['Ana', 'Carlos']);
     expect(result.current.totalItems).toBe(4);
   });
+
+  it('expone filteredData con el set completo filtrado y ordenado, sin paginar', () => {
+    const manyRows: Row[] = [
+      { id: '1', name: 'Elvira', email: 'elvira@x.com' },
+      { id: '2', name: 'Beto', email: 'beto@x.com' },
+      { id: '3', name: 'Diana', email: 'diana@x.com' },
+      { id: '4', name: 'Ana', email: 'ana@x.com' },
+      { id: '5', name: 'Carlos', email: 'carlos@x.com' },
+    ];
+    const { result } = renderHook(() =>
+      useDataTable(manyRows, { pageSize: 2, searchFields: (r) => [r.name, r.email] }),
+    );
+
+    act(() => result.current.toggleSort('name', (r) => r.name));
+    act(() => result.current.setSearch('a')); // matches Elvira, Diana, Ana, Carlos (not Beto)
+
+    // filteredData should hold ALL matching rows (sorted), not just the current page.
+    expect(result.current.filteredData.map((r) => r.name)).toEqual([
+      'Ana',
+      'Carlos',
+      'Diana',
+      'Elvira',
+    ]);
+    expect(result.current.filteredData.length).toBe(4);
+    // paginatedData remains the current-page slice of that same filtered/sorted set.
+    expect(result.current.paginatedData.map((r) => r.name)).toEqual(['Ana', 'Carlos']);
+  });
 });

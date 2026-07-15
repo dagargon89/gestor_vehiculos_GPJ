@@ -197,6 +197,7 @@ export function ProvidersList() {
     sortDir,
     toggleSort,
     paginatedData: paginatedProviders,
+    filteredData,
     page,
     setPage,
     pageSize,
@@ -263,9 +264,9 @@ export function ProvidersList() {
             startIndex={startIndex}
             endIndex={endIndex}
             pageSizeOptions={PAGE_SIZE_OPTIONS}
-            onExportCSV={() => exportToCSV(exportHeaders, getExportRows(providers), 'proveedores.csv')}
-            onExportExcel={() => exportToExcel(exportHeaders, getExportRows(providers), 'proveedores.xlsx', 'Proveedores')}
-            onExportPDF={() => exportToPDF(exportHeaders, getExportRows(providers), 'proveedores.pdf', 'Proveedores')}
+            onExportCSV={() => exportToCSV(exportHeaders, getExportRows(filteredData), 'proveedores.csv')}
+            onExportExcel={() => exportToExcel(exportHeaders, getExportRows(filteredData), 'proveedores.xlsx', 'Proveedores')}
+            onExportPDF={() => exportToPDF(exportHeaders, getExportRows(filteredData), 'proveedores.pdf', 'Proveedores')}
           />
           <DataTable<Provider>
             columns={[

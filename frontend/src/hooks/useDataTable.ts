@@ -42,5 +42,5 @@ export function useDataTable<T>(
 
   const pagination = usePagination<T>(sorted, { pageSize: opts.pageSize ?? 25 });
 
-  return { search, setSearch, sortKey, sortDir, toggleSort, ...pagination };
+  return { search, setSearch, sortKey, sortDir, toggleSort, filteredData: sorted, ...pagination };
 }

@@ -153,6 +153,7 @@ export function AuditLogsPage() {
     sortDir,
     toggleSort,
     paginatedData: paginatedLogs,
+    filteredData: filtered,
     page,
     setPage,
     pageSize,
@@ -166,14 +167,6 @@ export function AuditLogsPage() {
     pageSize: 30,
     searchFields: logSearchFields,
   });
-
-  // Full filtered+searched list (pre-pagination), mirroring useDataTable's internal
-  // filtering, needed for CSV/Excel/PDF export below.
-  const filtered = search.trim()
-    ? filteredBase.filter((l) =>
-        logSearchFields(l).some((f) => f.toLowerCase().includes(search.trim().toLowerCase())),
-      )
-    : filteredBase;
 
   const getExportRows = (list: AuditLog[]) =>
     list.map((l) => [
