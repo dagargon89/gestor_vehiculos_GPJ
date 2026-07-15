@@ -21,7 +21,7 @@ describe('ReservationsService', () => {
   let vehicleRepo: { update: jest.Mock };
   let dataSource: { transaction: jest.Mock };
   let notificationsService: { notifyUser: jest.Mock };
-  let usersService: { findUsersWithPermission: jest.Mock };
+  let usersService: { findUsersWithPermission: jest.Mock; findOne: jest.Mock };
 
   const pendingReservation = {
     id: 'r1',
@@ -53,6 +53,10 @@ describe('ReservationsService', () => {
     notificationsService = { notifyUser: jest.fn() };
     usersService = {
       findUsersWithPermission: jest.fn().mockResolvedValue([{ id: 'approver-1' }, { id: 'approver-2' }]),
+      // Consumed by the sanction/license check at the top of create() — defaults to a
+      // driver with no license-expiry data (never blocks) so pre-existing tests that
+      // don't care about this validation keep working unmodified.
+      findOne: jest.fn().mockResolvedValue({ id: 'driver-1', licenseExpiry: null }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -114,6 +118,30 @@ describe('ReservationsService', () => {
         expect.any(String),
         '/reservations',
       );
+    });
+  });
+
+  describe('create — sanciones y licencia', () => {
+    it('rechaza la reserva si el usuario tiene una sanción vigente', async () => {
+      (usersService as unknown as { findOne: jest.Mock }).findOne = jest
+        .fn()
+        .mockResolvedValue({ id: 'driver-1', licenseExpiry: null });
+      const sanctionsService = { isUserSanctioned: jest.fn().mockResolvedValue(true) };
+      (service as unknown as { sanctionsService: typeof sanctionsService }).sanctionsService = sanctionsService;
+      await expect(
+        service.create({ vehicleId: undefined, userId: 'driver-1', eventName: 'x' } as unknown as Partial<Reservation>),
+      ).rejects.toThrow('sanción vigente');
+    });
+
+    it('rechaza la reserva si la licencia del usuario está vencida', async () => {
+      (usersService as unknown as { findOne: jest.Mock }).findOne = jest
+        .fn()
+        .mockResolvedValue({ id: 'driver-1', licenseExpiry: '2020-01-01' });
+      const sanctionsService = { isUserSanctioned: jest.fn().mockResolvedValue(false) };
+      (service as unknown as { sanctionsService: typeof sanctionsService }).sanctionsService = sanctionsService;
+      await expect(
+        service.create({ vehicleId: undefined, userId: 'driver-1', eventName: 'x' } as unknown as Partial<Reservation>),
+      ).rejects.toThrow('licencia');
     });
   });
 

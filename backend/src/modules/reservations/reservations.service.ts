@@ -6,6 +6,7 @@ import { Vehicle } from '../../database/entities/vehicle.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SystemSettingsService } from '../system-settings/system-settings.service';
 import { UsersService } from '../users/users.service';
+import { SanctionsService } from '../sanctions/sanctions.service';
 
 @Injectable()
 export class ReservationsService {
@@ -17,6 +18,7 @@ export class ReservationsService {
     private notificationsService: NotificationsService,
     private systemSettingsService: SystemSettingsService,
     private usersService: UsersService,
+    private sanctionsService: SanctionsService,
     private dataSource: DataSource,
   ) {}
 
@@ -85,6 +87,17 @@ export class ReservationsService {
     }
     if (payload.endDatetime && typeof payload.endDatetime === 'string') {
       payload.endDatetime = new Date(payload.endDatetime as string);
+    }
+
+    if (payload.userId) {
+      const requester = await this.usersService.findOne(payload.userId as string);
+      if (requester.licenseExpiry && new Date(requester.licenseExpiry) < new Date()) {
+        throw new BadRequestException('No puedes reservar: tu licencia de conducir está vencida.');
+      }
+      const sanctioned = await this.sanctionsService.isUserSanctioned(payload.userId as string);
+      if (sanctioned) {
+        throw new BadRequestException('No puedes reservar: tienes una sanción vigente.');
+      }
     }
 
     let autoApproved = false;

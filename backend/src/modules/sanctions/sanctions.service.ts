@@ -50,6 +50,16 @@ export class SanctionsService {
     return this.findOne(id);
   }
 
+  async isUserSanctioned(userId: string, atDate: Date = new Date()): Promise<boolean> {
+    const count = await this.repo
+      .createQueryBuilder('s')
+      .where('s.userId = :userId', { userId })
+      .andWhere('s.effectiveDate <= :atDate', { atDate })
+      .andWhere('(s.endDate IS NULL OR s.endDate >= :atDate)', { atDate })
+      .getCount();
+    return count > 0;
+  }
+
   async remove(id: string): Promise<void> {
     await this.repo.softDelete(id);
   }
