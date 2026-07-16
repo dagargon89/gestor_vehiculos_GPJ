@@ -301,7 +301,7 @@ export function MainLayout() {
               </button>
               {notificationsOpen && (
                 <div
-                  className="absolute right-0 top-full mt-2 w-80 max-h-[400px] overflow-auto rounded-xl py-2 z-50"
+                  className="fixed inset-x-2 top-16 lg:absolute lg:inset-x-auto lg:top-full lg:right-0 lg:mt-2 lg:w-80 max-h-[70vh] lg:max-h-[400px] overflow-auto rounded-xl py-2 z-50"
                   style={dropdownStyle}
                 >
                     <div className="px-4 py-2 flex justify-between items-center shrink-0" style={{ borderBottom: '1px solid var(--color-border)' }}>
@@ -351,8 +351,8 @@ export function MainLayout() {
               </div>
             )}
 
-            {/* Menú de usuario */}
-            <div className="relative" ref={userMenuRef}>
+            {/* Menú de usuario (solo desktop; en mobile se usa el bloque usuario del drawer) */}
+            <div className="relative hidden lg:block" ref={userMenuRef}>
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((prev) => !prev)}
