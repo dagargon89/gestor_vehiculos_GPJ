@@ -14,6 +14,7 @@ import { Sanction } from '../database/entities/sanction.entity';
 import { Notification } from '../database/entities/notification.entity';
 import { AuditLog } from '../database/entities/audit-log.entity';
 import { StorageFile } from '../database/entities/storage-file.entity';
+import { VehicleDocument } from '../database/entities/vehicle-document.entity';
 
 export default new DataSource({
   type: 'postgres',
@@ -38,6 +39,7 @@ export default new DataSource({
     Notification,
     AuditLog,
     StorageFile,
+    VehicleDocument,
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
   synchronize: false,

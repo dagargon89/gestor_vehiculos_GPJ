@@ -23,6 +23,7 @@ import { MailModule } from './modules/mail/mail.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { IncidentsModule } from './modules/incidents/incidents.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
+import { VehicleDocumentsModule } from './modules/vehicle-documents/vehicle-documents.module';
 
 @Module({
   controllers: [AppController],
@@ -41,6 +42,7 @@ import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
     VehiclesModule,
     ReservationsModule,
     MaintenanceModule,
+    VehicleDocumentsModule,
     FuelRecordsModule,
     CostsModule,
     SanctionsModule,

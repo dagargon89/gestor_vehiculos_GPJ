@@ -49,6 +49,10 @@ export async function seedRolesAndPermissions(dataSource: DataSource): Promise<v
     { resource: 'maintenance', action: 'read' },
     { resource: 'maintenance', action: 'update' },
     { resource: 'maintenance', action: 'delete' },
+    { resource: 'vehicle_documents', action: 'create' },
+    { resource: 'vehicle_documents', action: 'read' },
+    { resource: 'vehicle_documents', action: 'update' },
+    { resource: 'vehicle_documents', action: 'delete' },
     { resource: 'fuel_records', action: 'create' },
     { resource: 'fuel_records', action: 'read' },
     { resource: 'fuel_records', action: 'update' },
@@ -98,7 +102,7 @@ export async function seedRolesAndPermissions(dataSource: DataSource): Promise<v
   }
   const permissions = [...existingPermissions, ...newPermissions];
 
-  const managerResources = ['vehicles', 'reservations', 'maintenance', 'fuel_records', 'costs', 'incidents', 'sanctions', 'providers', 'storage_files'];
+  const managerResources = ['vehicles', 'reservations', 'maintenance', 'fuel_records', 'costs', 'incidents', 'sanctions', 'providers', 'storage_files', 'vehicle_documents'];
 
   const roleDefs: { name: string; description: string; permissions: Permission[] }[] = [
     {
