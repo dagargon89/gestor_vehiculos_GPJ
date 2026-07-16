@@ -10,6 +10,7 @@ import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { Modal } from '../../components/ui/Modal';
 
 type Vehicle = { id: string; plate: string; brand: string; model: string };
 
@@ -90,20 +91,8 @@ function CostFormModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-lg max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-bold text-slate-900">
-            {cost ? 'Editar gasto' : 'Registrar gasto'}
-          </h3>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <Modal title={cost ? 'Editar gasto' : 'Registrar gasto'} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
           )}
@@ -187,9 +176,8 @@ function CostFormModal({
               {submitting ? 'Guardando...' : cost ? 'Actualizar' : 'Registrar'}
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -328,7 +316,7 @@ export function CostsList() {
           >
             Total gastos (filtrado)
           </p>
-          <p className="text-2xl font-bold mt-1" style={{ color: '#6384ff' }}>
+          <p className="text-2xl font-bold mt-1" style={{ color: 'var(--color-primary)' }}>
             {fmtCurrency(totalAmount)}
           </p>
         </div>
@@ -346,15 +334,21 @@ export function CostsList() {
       </div>
 
       {/* Filtros y tabla */}
-      <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+      <div
+        className="rounded-[16px] shadow-sm overflow-hidden"
+        style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
+      >
         {/* Barra de filtros */}
-        <div className="px-4 py-3 border-b border-slate-200 flex flex-wrap gap-3 items-center">
+        <div
+          className="px-4 py-3 flex flex-wrap gap-3 items-center"
+          style={{ borderBottom: '1px solid var(--color-border)' }}
+        >
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por vehículo, categoría..."
-            className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary w-64"
+            className="input-field w-64"
           />
           <SearchSelect
             options={[
@@ -461,25 +455,26 @@ export function CostsList() {
         {view === 'cards' && (
           <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {isLoading ? (
-              <div className="col-span-full text-center text-slate-400 py-8">Cargando...</div>
+              <div className="col-span-full text-center py-8" style={{ color: 'var(--color-text-muted)' }}>Cargando...</div>
             ) : paginatedCosts.length === 0 ? (
-              <div className="col-span-full text-center text-slate-500 py-8">
+              <div className="col-span-full text-center py-8" style={{ color: 'var(--color-text-muted)' }}>
                 No hay gastos registrados.
               </div>
             ) : (
               paginatedCosts.map((c: Cost) => (
                 <div
                   key={c.id}
-                  className="rounded-[14px] border border-slate-200 bg-white p-5 flex flex-col gap-2 shadow-sm"
+                  className="rounded-[14px] p-5 flex flex-col gap-2 shadow-sm"
+                  style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium" style={{ color: 'var(--color-text)' }}>
                         {c.vehicle
                           ? `${c.vehicle.plate} — ${c.vehicle.brand} ${c.vehicle.model}`
                           : c.vehicleId}
                       </p>
-                      <p className="text-xs text-slate-500 mt-0.5 font-mono-data">
+                      <p className="text-xs mt-0.5 font-mono-data" style={{ color: 'var(--color-text-muted)' }}>
                         {String(c.date).slice(0, 10)}
                       </p>
                     </div>
@@ -487,13 +482,13 @@ export function CostsList() {
                       {categoryLabel(c.category)}
                     </span>
                   </div>
-                  <p className="text-2xl font-bold font-mono-data" style={{ color: '#6384ff' }}>
+                  <p className="text-2xl font-bold font-mono-data" style={{ color: 'var(--color-primary)' }}>
                     {fmtCurrency(Number(c.amount))}
                   </p>
                   {c.description && (
-                    <p className="text-sm text-slate-500 line-clamp-2">{c.description}</p>
+                    <p className="text-sm line-clamp-2" style={{ color: 'var(--color-text-muted)' }}>{c.description}</p>
                   )}
-                  <div className="flex gap-3 pt-2 border-t border-slate-100 mt-auto">
+                  <div className="flex gap-3 pt-2 mt-auto" style={{ borderTop: '1px solid var(--color-border)' }}>
                     <button
                       type="button"
                       onClick={() => openEdit(c)}
