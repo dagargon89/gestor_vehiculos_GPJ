@@ -8,6 +8,7 @@ import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { Modal } from '../../components/ui/Modal';
 
 type SystemSetting = { id: string; key: string; value: string };
 
@@ -50,65 +51,47 @@ function SettingFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-md"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-bold text-slate-900">
-            {setting ? 'Editar configuración' : 'Nueva configuración'}
-          </h3>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
+    <Modal title={setting ? 'Editar configuración' : 'Nueva configuración'} onClose={onClose} maxWidth="max-w-md">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
+        )}
+        <div>
+          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Clave *</label>
+          <input
+            type="text"
+            required
+            value={form.key}
+            onChange={(e) => setForm((f) => ({ ...f, key: e.target.value }))}
+            disabled={!!setting}
+            placeholder="ej. max_reservation_days"
+            className="input-field disabled:opacity-60"
+          />
+          {setting && (
+            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>La clave no se puede modificar.</p>
           )}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Clave *</label>
-            <input
-              type="text"
-              required
-              value={form.key}
-              onChange={(e) => setForm((f) => ({ ...f, key: e.target.value }))}
-              disabled={!!setting}
-              placeholder="ej. max_reservation_days"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-slate-100 disabled:text-slate-500"
-            />
-            {setting && (
-              <p className="text-xs text-slate-500 mt-1">La clave no se puede modificar.</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Valor *</label>
-            <textarea
-              rows={3}
-              required
-              value={form.value}
-              onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
-              placeholder="Valor de la configuración"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-            />
-          </div>
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
-            >
-              {submitting ? 'Guardando...' : setting ? 'Guardar cambios' : 'Crear'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Valor *</label>
+          <textarea
+            rows={3}
+            required
+            value={form.value}
+            onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
+            placeholder="Valor de la configuración"
+            className="input-field"
+          />
+        </div>
+        <div className="flex gap-3 pt-4">
+          <button type="button" onClick={onClose} className="btn-ghost flex-1 py-2">
+            Cancelar
+          </button>
+          <button type="submit" disabled={submitting} className="btn-primary flex-1 py-2 disabled:opacity-50">
+            {submitting ? 'Guardando...' : setting ? 'Guardar cambios' : 'Crear'}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -141,6 +124,10 @@ export function SystemSettingsPage() {
   );
   // Absent = true (current behavior: admins subject to overdue like everyone else)
   const adminOverdueEnabled = adminOverdueSetting === undefined || adminOverdueSetting.value !== 'false';
+
+  const maxReservationDaysSetting: SystemSetting | undefined = settings.find(
+    (s: SystemSetting) => s.key === 'max_reservation_days',
+  );
 
   const handleToggleAutoApprove = async () => {
     setTogglingAutoApprove(true);
@@ -234,29 +221,25 @@ export function SystemSettingsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap justify-between items-center gap-4">
-        <h2 className="text-2xl font-bold text-slate-900">Configuración del sistema</h2>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium"
-        >
+        <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Configuración del sistema</h2>
+        <button type="button" onClick={openCreate} className="btn-primary">
           Nueva configuración
         </button>
       </div>
 
       {/* Opciones rápidas */}
-      <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 p-6">
-        <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+      <div className="rounded-[16px] shadow-sm p-6" style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}>
+        <h3 className="text-base font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
           <span className="material-icons text-primary text-xl">tune</span>
           Comportamiento de reservas
         </h3>
-        <div className="space-y-5 divide-y divide-slate-100">
+        <div className="space-y-5">
           {/* Auto-aprobación */}
           <div>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-slate-800">Auto-aprobación de reservas</p>
-                <p className="text-sm text-slate-500 mt-0.5">
+                <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Auto-aprobación de reservas</p>
+                <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                   Cuando está activo, las solicitudes de reserva se aprueban automáticamente si el
                   vehículo está disponible en las fechas solicitadas. Si hay conflicto, la reserva
                   queda en estado pendiente para revisión manual.
@@ -267,8 +250,9 @@ export function SystemSettingsPage() {
                 onClick={handleToggleAutoApprove}
                 disabled={togglingAutoApprove}
                 className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  autoApproveEnabled ? 'bg-primary' : 'bg-slate-200'
+                  autoApproveEnabled ? 'bg-primary' : ''
                 }`}
+                style={{ background: autoApproveEnabled ? undefined : 'var(--color-border-strong)' }}
                 role="switch"
                 aria-checked={autoApproveEnabled}
               >
@@ -280,25 +264,19 @@ export function SystemSettingsPage() {
               </button>
             </div>
             <div className="mt-3">
-              <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                  autoApproveEnabled
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-slate-100 text-slate-500'
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${autoApproveEnabled ? 'bg-green-500' : 'bg-slate-400'}`} />
+              <span className={`badge ${autoApproveEnabled ? 'badge-green' : 'badge-slate'} inline-flex items-center gap-1.5`}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} />
                 {autoApproveEnabled ? 'Activo' : 'Inactivo — aprobación manual requerida'}
               </span>
             </div>
           </div>
 
           {/* Vencimiento para administradores */}
-          <div className="pt-5">
+          <div className="pt-5" style={{ borderTop: '1px solid var(--color-border)' }}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-slate-800">Vencimiento de reservas para administradores</p>
-                <p className="text-sm text-slate-500 mt-0.5">
+                <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Vencimiento de reservas para administradores</p>
+                <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                   Cuando está activo, las reservas de administradores vencen igual que las del resto
                   de los usuarios. Si está desactivado, los administradores quedan exentos del
                   proceso automático de vencimiento.
@@ -309,8 +287,9 @@ export function SystemSettingsPage() {
                 onClick={handleToggleAdminOverdue}
                 disabled={togglingAdminOverdue}
                 className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  adminOverdueEnabled ? 'bg-primary' : 'bg-slate-200'
+                  adminOverdueEnabled ? 'bg-primary' : ''
                 }`}
+                style={{ background: adminOverdueEnabled ? undefined : 'var(--color-border-strong)' }}
                 role="switch"
                 aria-checked={adminOverdueEnabled}
               >
@@ -322,22 +301,32 @@ export function SystemSettingsPage() {
               </button>
             </div>
             <div className="mt-3">
-              <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                  adminOverdueEnabled
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-amber-100 text-amber-700'
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${adminOverdueEnabled ? 'bg-green-500' : 'bg-amber-400'}`} />
+              <span className={`badge ${adminOverdueEnabled ? 'badge-green' : 'badge-amber'} inline-flex items-center gap-1.5`}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} />
                 {adminOverdueEnabled ? 'Activo — aplica a todos los usuarios' : 'Inactivo — administradores exentos'}
               </span>
             </div>
           </div>
+
+          {maxReservationDaysSetting && (
+            <div className="pt-5" style={{ borderTop: '1px solid var(--color-border)' }}>
+              <div style={{ padding: 12, border: '1px solid var(--color-border)', borderRadius: 11 }}>
+                <div
+                  className="uppercase font-semibold"
+                  style={{ fontSize: 10.5, letterSpacing: '0.8px', color: 'var(--color-text-muted)' }}
+                >
+                  Duración máxima de reserva
+                </div>
+                <div className="font-mono-data text-sm mt-1" style={{ color: 'var(--color-text)' }}>
+                  {maxReservationDaysSetting.value} días
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+      <div className="rounded-[16px] shadow-sm overflow-hidden" style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}>
         <div className="px-4 pt-4">
           <input
             type="text"
