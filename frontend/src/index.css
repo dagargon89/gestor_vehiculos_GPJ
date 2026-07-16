@@ -133,8 +133,8 @@ a { color: var(--color-link); }
 }
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(99,132,255,0.08);
-  border-color: rgba(99,132,255,0.20);
+  box-shadow: 0 8px 32px rgba(245,165,36,0.08);
+  border-color: rgba(245,165,36,0.20);
 }
 .stat-card.blue::before   { background: linear-gradient(90deg, #60a5fa, #3b82f6); }
 .stat-card.green::before  { background: linear-gradient(90deg, #10b981, #34d399); }
@@ -149,7 +149,7 @@ a { color: var(--color-link); }
   flex-shrink: 0;
 }
 .stat-card__value {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'IBM Plex Mono', monospace;
   font-size: 28px;
   font-weight: 700;
   line-height: 1;
@@ -203,7 +203,7 @@ html[data-theme="light"] .stat-card.purple .stat-card__icon { background: rgba(1
   align-items: center;
   padding: 3px 10px;
   border-radius: 20px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'IBM Plex Mono', monospace;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.3px;
@@ -267,7 +267,7 @@ html[data-theme="light"] .badge-slate  { background: rgba(100,116,139,0.10); col
   color: var(--color-text);
   border: 1px solid var(--color-border);
   border-radius: 10px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Barlow', sans-serif;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -276,7 +276,7 @@ html[data-theme="light"] .badge-slate  { background: rgba(100,116,139,0.10); col
   line-height: 1;
 }
 .btn-ghost:hover {
-  background: rgba(99,132,255,0.05);
+  background: rgba(245,165,36,0.05);
   border-color: var(--color-border-strong);
 }
 
@@ -288,7 +288,7 @@ html[data-theme="light"] .badge-slate  { background: rgba(100,116,139,0.10); col
   color: var(--color-text);
   border: 1px solid var(--color-border);
   border-radius: 10px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Barlow', sans-serif;
   font-size: 13px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   outline: none;
@@ -326,7 +326,7 @@ html[data-theme="light"] .badge-slate  { background: rgba(100,116,139,0.10); col
 
 /* ─── Upload zone ────────────────────────────────────────────────────── */
 .upload-zone {
-  border: 2px dashed rgba(99,132,255,0.20);
+  border: 2px dashed rgba(245,165,36,0.20);
   border-radius: 16px;
   padding: 32px;
   text-align: center;
@@ -334,8 +334,8 @@ html[data-theme="light"] .badge-slate  { background: rgba(100,116,139,0.10); col
   cursor: pointer;
 }
 .upload-zone:hover {
-  border-color: rgba(99,132,255,0.40);
-  background: rgba(99,132,255,0.03);
+  border-color: rgba(245,165,36,0.40);
+  background: rgba(245,165,36,0.03);
 }
 
 /* ─── Table container ────────────────────────────────────────────────── */
@@ -367,7 +367,7 @@ html[data-theme="light"] .badge-slate  { background: rgba(100,116,139,0.10); col
 .table-container tr:last-child td { border-bottom: none; }
 .table-container tr:hover td { background: var(--color-table-row-hover); }
 .table-container td.mono {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
 }
 
@@ -390,7 +390,7 @@ html[data-theme="light"] .badge-slate  { background: rgba(100,116,139,0.10); col
 }
 
 .pulse { animation: pulse-opacity 2s ease-in-out infinite; }
-.font-mono-data { font-family: 'JetBrains Mono', monospace; }
+.font-mono-data { font-family: 'IBM Plex Mono', monospace; }
 
 /* ─── Calendar readonly ──────────────────────────────────────────────── */
 .rbc-readonly .rbc-date-cell a { cursor: default; pointer-events: none; }
@@ -432,9 +432,9 @@ html[data-theme="dark"] .bg-rose-100    { background-color: rgba(239,68,68,0.14)
 html[data-theme="dark"] .bg-red-100     { background-color: rgba(239,68,68,0.14)   !important; }
 
 /* ── Hover de fondo ── */
-html[data-theme="dark"] .hover\:bg-slate-50:hover  { background-color: rgba(99,132,255,0.05) !important; }
-html[data-theme="dark"] .hover\:bg-slate-100:hover { background-color: rgba(99,132,255,0.07) !important; }
-html[data-theme="dark"] .hover\:bg-gray-50:hover   { background-color: rgba(99,132,255,0.05) !important; }
+html[data-theme="dark"] .hover\:bg-slate-50:hover  { background-color: rgba(245,165,36,0.05) !important; }
+html[data-theme="dark"] .hover\:bg-slate-100:hover { background-color: rgba(245,165,36,0.07) !important; }
+html[data-theme="dark"] .hover\:bg-gray-50:hover   { background-color: rgba(245,165,36,0.05) !important; }
 
 /* ── Bordes ── */
 html[data-theme="dark"] .border-slate-100  { border-color: var(--color-border)        !important; }
@@ -446,7 +446,7 @@ html[data-theme="dark"] .border-gray-300   { border-color: var(--color-border-st
 
 /* ── Ring (box-shadow inset usado en cards y tablas) ── */
 html[data-theme="dark"] .ring-slate-200   { --tw-ring-color: var(--color-border)              !important; }
-html[data-theme="dark"] .ring-indigo-200  { --tw-ring-color: rgba(99,132,255,0.18)            !important; }
+html[data-theme="dark"] .ring-indigo-200  { --tw-ring-color: rgba(245,165,36,0.18)            !important; }
 html[data-theme="dark"] .ring-violet-200  { --tw-ring-color: rgba(139,92,246,0.18)            !important; }
 html[data-theme="dark"] .ring-blue-200    { --tw-ring-color: rgba(59,130,246,0.18)            !important; }
 html[data-theme="dark"] .ring-emerald-200 { --tw-ring-color: rgba(16,185,129,0.18)            !important; }
