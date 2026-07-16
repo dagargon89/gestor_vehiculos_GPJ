@@ -58,7 +58,7 @@ export function Login() {
   if (currentUser) return null;
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--color-bg)', fontFamily: "'DM Sans', 'Segoe UI', system-ui, sans-serif" }}>
+    <div className="min-h-screen flex" style={{ background: 'var(--color-bg)', fontFamily: "'Barlow', 'Segoe UI', system-ui, sans-serif" }}>
 
       {/* Panel izquierdo — formulario */}
       <div
@@ -73,18 +73,21 @@ export function Login() {
           <div className="flex items-center gap-3">
             <div style={{
               width: 48, height: 48, borderRadius: 16, flexShrink: 0,
-              background: 'rgba(99,132,255,0.1)',
+              background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 2px 12px rgba(99,132,255,0.2)',
+              boxShadow: '0 2px 12px rgba(245,165,36,0.3)',
             }}>
-              <span className="material-icons" style={{ fontSize: 26, color: '#6384ff' }}>local_shipping</span>
+              <span className="material-icons" style={{ fontSize: 26, color: 'var(--color-text-on-primary)' }}>local_shipping</span>
             </div>
             <div>
-              <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)', letterSpacing: '-0.3px' }}>
-                Gestión de Vehículos Institucionales
+              <h2
+                className="text-lg font-bold"
+                style={{ color: 'var(--color-text)', letterSpacing: '1.5px', fontFamily: "'Barlow Condensed', sans-serif", textTransform: 'uppercase' }}
+              >
+                Flota GPJ
               </h2>
-              <p className="text-xs font-semibold uppercase mt-0.5" style={{ color: '#6384ff', letterSpacing: '0.8px' }}>
-                Poder Judicial
+              <p className="text-xs font-semibold uppercase mt-0.5" style={{ color: 'var(--color-link)', letterSpacing: '0.8px' }}>
+                Gestión de Vehículos Institucionales
               </p>
             </div>
           </div>
@@ -102,7 +105,12 @@ export function Login() {
         {/* Formulario */}
         <div className="w-full max-w-md mx-auto space-y-8">
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold" style={{ color: 'var(--color-text)', letterSpacing: '-0.5px' }}>Bienvenido</h1>
+            <h1
+              className="font-bold"
+              style={{ color: 'var(--color-text)', fontSize: 42, letterSpacing: '.5px', fontFamily: "'Barlow Condensed', sans-serif", textTransform: 'uppercase', lineHeight: 1 }}
+            >
+              Bienvenido
+            </h1>
             <p className="text-lg" style={{ color: 'var(--color-text-muted)' }}>Acceso al panel de gestión de flota.</p>
           </div>
 
@@ -114,7 +122,7 @@ export function Login() {
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
                 className="h-5 w-5 cursor-pointer"
-                style={{ accentColor: '#6384ff' }}
+                style={{ accentColor: 'var(--color-primary)' }}
               />
               <span className="text-sm font-medium" style={{ color: 'var(--color-text-soft)' }}>Mantener sesión iniciada</span>
             </label>
@@ -170,48 +178,46 @@ export function Login() {
 
         {/* Footer del panel */}
         <div className="flex items-center gap-2" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-          <span className="w-2 h-2 rounded-full pulse" style={{ background: '#6384ff' }} />
-          Gestión de Vehículos Institucionales v3.1
+          <span className="w-2 h-2 rounded-full pulse" style={{ background: 'var(--color-primary)' }} />
+          Flota GPJ · Plan Juárez · v4.0
         </div>
       </div>
 
-      {/* Panel derecho — imagen decorativa (solo desktop) */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+      {/* Panel derecho — patrón decorativo + cifras (solo desktop) */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden" style={{ background: '#101216' }}>
         <div
-          className="absolute inset-0 bg-cover bg-center scale-105"
-          style={{ backgroundImage: "url('/fleet-bg.jpg')", filter: 'blur(3px)' }}
+          className="absolute inset-0"
+          style={{ background: 'repeating-linear-gradient(-55deg, transparent 0, transparent 46px, rgba(245,165,36,0.05) 46px, rgba(245,165,36,0.05) 50px)' }}
         />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(99,132,255,0.78), rgba(90,111,255,0.88))' }} />
-        <div className="relative z-10 h-full flex flex-col justify-center px-16 text-white max-w-2xl mx-auto">
+        <div className="absolute top-0 left-0 right-0" style={{ height: 5, background: 'linear-gradient(90deg, var(--color-primary), var(--color-primary-dark))' }} />
+        <div className="relative z-10 h-full flex flex-col justify-center px-16" style={{ color: '#edeae4' }}>
           <div
-            className="p-10"
-            style={{
-              background: 'rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              borderRadius: 24,
-              border: '1px solid rgba(255,255,255,0.15)',
-              boxShadow: '0 24px 80px rgba(0,0,0,0.3)',
-            }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 text-xs font-bold uppercase tracking-wider"
+            style={{ borderRadius: 20, background: 'rgba(245,165,36,0.14)', border: '1px solid rgba(245,165,36,0.3)', color: '#fbbf24' }}
           >
-            <div
-              className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 text-xs font-bold uppercase tracking-wider"
-              style={{
-                borderRadius: 20,
-                background: 'rgba(255,255,255,0.15)',
-                border: '1px solid rgba(255,255,255,0.25)',
-                backdropFilter: 'blur(4px)',
-              }}
-            >
-              <span className="material-icons text-sm">security</span>
-              Acceso seguro
-            </div>
-            <h2 className="text-4xl font-bold mb-4 leading-tight" style={{ letterSpacing: '-0.5px' }}>
-              Gestión de Vehículos Institucionales
-            </h2>
-            <p className="text-lg leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
-              Plataforma centralizada para la gestión eficiente de vehículos y reservas. Supervise el estado de la flota y programe mantenimientos.
-            </p>
+            <span className="material-icons text-sm">security</span>
+            Acceso seguro
+          </div>
+          <h2
+            className="mb-5"
+            style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 64, fontWeight: 700, lineHeight: 0.98, letterSpacing: '1px', textTransform: 'uppercase' }}
+          >
+            Tu flota,<br />en control.
+          </h2>
+          <p className="mb-9" style={{ fontSize: 16, lineHeight: 1.6, color: '#b9b5ac', maxWidth: 420 }}>
+            Solicitudes, reservas, mantenimiento y costos de los vehículos institucionales en una sola plataforma.
+          </p>
+          <div className="flex gap-3.5">
+            {[
+              { n: '12', label: 'Vehículos' },
+              { n: '86%', label: 'Disponibilidad' },
+              { n: '248', label: 'Reservas/año' },
+            ].map((s) => (
+              <div key={s.label} style={{ flex: 1, maxWidth: 150, padding: 16, border: '1px solid #2a2f38', borderRadius: 12, background: 'rgba(21,24,29,0.7)' }}>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 26, fontWeight: 600, color: '#fbbf24' }}>{s.n}</div>
+                <div style={{ fontSize: 11, letterSpacing: '.8px', textTransform: 'uppercase', color: '#807c73', marginTop: 4 }}>{s.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
