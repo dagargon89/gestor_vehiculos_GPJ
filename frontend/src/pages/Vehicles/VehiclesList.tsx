@@ -42,6 +42,16 @@ function getFirstPhotoUrl(photoUrls: string | null | undefined): string | null {
   return urls[0] ?? null;
 }
 
+// lastFuelLevel es texto libre (p. ej. "3/4", "Lleno"); solo se dibuja la barra
+// de combustible del rediseño cuando el valor es un entero 0-100 plano.
+function parseFuelPercent(level: string | null | undefined): number | null {
+  if (!level) return null;
+  const match = level.trim().match(/^(\d{1,3})\s*%?$/);
+  if (!match) return null;
+  const n = Number(match[1]);
+  return n >= 0 && n <= 100 ? n : null;
+}
+
 const STATUS_OPTIONS = [
   { value: 'available', label: 'Disponible' },
   { value: 'in_use', label: 'En uso' },
@@ -299,7 +309,7 @@ function VehicleFormModal({
                           onClick={() => handleEditExisting(i)}
                           disabled={fetchingExisting}
                           className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                          style={{ background: 'rgba(99,132,255,0.85)', color: '#fff' }}
+                          style={{ background: 'rgba(245,165,36,0.85)', color: '#fff' }}
                           title="Recortar foto"
                         >
                           {fetchingExisting ? (
@@ -376,9 +386,9 @@ function VehicleFormModal({
                 background: 'transparent',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.borderColor = '#6384ff';
-                e.currentTarget.style.color = '#818cf8';
-                e.currentTarget.style.background = 'rgba(99,132,255,0.05)';
+                e.currentTarget.style.borderColor = '#f5a524';
+                e.currentTarget.style.color = '#fbbf24';
+                e.currentTarget.style.background = 'rgba(245,165,36,0.05)';
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.borderColor = '';
@@ -488,6 +498,15 @@ export function VehiclesList() {
     ? vehicles.filter((v: Vehicle) => v.status === filterStatus)
     : vehicles;
 
+  const statusChips = [
+    { value: '', label: 'Todos', count: vehicles.length },
+    ...STATUS_OPTIONS.map((o) => ({
+      value: o.value,
+      label: o.label,
+      count: vehicles.filter((v: Vehicle) => v.status === o.value).length,
+    })),
+  ];
+
   const {
     search,
     setSearch,
@@ -532,51 +551,73 @@ export function VehiclesList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap justify-between items-center gap-4">
-        <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Vehículos</h2>
-        <div className="flex items-center gap-3">
-          <SearchSelect
-            options={[{ value: '', label: 'Todos los estados' }, ...STATUS_OPTIONS]}
-            value={filterStatus}
-            onChange={setFilterStatus}
-            placeholder="Todos los estados"
-            className="w-48"
-          />
-          <ViewToggle value={view} onChange={setView} storageKey="vehiclesView" />
-          <button
-            type="button"
-            onClick={openCreate}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium"
-          >
-            Nuevo vehículo
-          </button>
+      <div className="flex flex-wrap justify-between items-end gap-4">
+        <div>
+          <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Vehículos</h2>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
+            {vehicles.length} {vehicles.length === 1 ? 'unidad' : 'unidades'} en la flota
+          </p>
         </div>
+        <button
+          type="button"
+          onClick={openCreate}
+          className="btn-primary flex items-center gap-2 px-4 py-2.5"
+        >
+          <span className="material-icons text-lg">add</span>
+          Nuevo vehículo
+        </button>
       </div>
-      {view === 'table' && (
-        <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
-          <div className="px-4 pt-4">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por placa, marca o modelo..."
-              className="input-field w-full max-w-sm"
-            />
-          </div>
-          <TableToolbar
-            page={page}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            pageSize={pageSize}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-            startIndex={startIndex}
-            endIndex={endIndex}
-            pageSizeOptions={PAGE_SIZE_OPTIONS}
-            onExportCSV={() => exportToCSV(exportHeaders, getExportRows(filteredVehicles), 'vehiculos.csv')}
-            onExportExcel={() => exportToExcel(exportHeaders, getExportRows(filteredVehicles), 'vehiculos.xlsx', 'Vehículos')}
-            onExportPDF={() => exportToPDF(exportHeaders, getExportRows(filteredVehicles), 'vehiculos.pdf', 'Vehículos')}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative w-64">
+          <span
+            className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-lg"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            search
+          </span>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar placa o modelo…"
+            className="input-field w-full pl-10"
           />
+        </div>
+        {statusChips.map((chip) => (
+          <button
+            key={chip.value || 'all'}
+            type="button"
+            onClick={() => setFilterStatus(chip.value)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+            style={
+              filterStatus === chip.value
+                ? { background: 'var(--color-primary)', color: 'var(--color-text-on-primary)' }
+                : { background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)', color: 'var(--color-text-soft)' }
+            }
+          >
+            {chip.label}
+            <span className="font-mono-data" style={{ opacity: 0.75, fontSize: 11 }}>{chip.count}</span>
+          </button>
+        ))}
+        <div className="flex-1" />
+        <ViewToggle value={view} onChange={setView} storageKey="vehiclesView" />
+      </div>
+      <TableToolbar
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        startIndex={startIndex}
+        endIndex={endIndex}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
+        onExportCSV={() => exportToCSV(exportHeaders, getExportRows(filteredVehicles), 'vehiculos.csv')}
+        onExportExcel={() => exportToExcel(exportHeaders, getExportRows(filteredVehicles), 'vehiculos.xlsx', 'Vehículos')}
+        onExportPDF={() => exportToPDF(exportHeaders, getExportRows(filteredVehicles), 'vehiculos.pdf', 'Vehículos')}
+      />
+      {view === 'table' && (
+        <div className="rounded-[16px] overflow-hidden" style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}>
           <DataTable<Vehicle>
             columns={[
               { key: 'plate', header: 'Placa', sortAccessor: (v) => v.plate, cellClassName: 'font-medium', render: (v) => v.plate },
@@ -585,11 +626,14 @@ export function VehiclesList() {
               {
                 key: 'status',
                 header: 'Estado',
-                render: (v) => (
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
-                    {STATUS_OPTIONS.find((o) => o.value === v.status)?.label ?? v.status}
-                  </span>
-                ),
+                render: (v) => {
+                  const badgeClass = v.status === 'available' ? 'badge-green' : v.status === 'in_use' ? 'badge-amber' : 'badge-slate';
+                  return (
+                    <span className={`badge ${badgeClass}`}>
+                      {STATUS_OPTIONS.find((o) => o.value === v.status)?.label ?? v.status}
+                    </span>
+                  );
+                },
               },
               {
                 key: 'actions',
@@ -613,27 +657,27 @@ export function VehiclesList() {
         </div>
       )}
       {view === 'cards' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {vehicles.length === 0 ? (
-            <div className="col-span-full bg-white rounded-[16px] shadow-sm border border-slate-200 px-6 py-12 text-center text-slate-500">
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))' }}>
+          {paginatedVehicles.length === 0 ? (
+            <div
+              className="col-span-full rounded-[16px] px-6 py-12 text-center"
+              style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+            >
               No hay vehículos registrados.
             </div>
           ) : (
-            vehicles.map((v: Vehicle) => {
+            paginatedVehicles.map((v: Vehicle) => {
               const photoUrl = getFirstPhotoUrl(v.photoUrls);
               const statusLabel = STATUS_OPTIONS.find((o) => o.value === v.status)?.label ?? v.status;
-              const statusBadgeClass =
-                v.status === 'available'
-                  ? 'bg-green-100 text-green-800'
-                  : v.status === 'in_use'
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-slate-100 text-slate-700';
+              const badgeClass = v.status === 'available' ? 'badge-green' : v.status === 'in_use' ? 'badge-amber' : 'badge-slate';
+              const fuelPercent = parseFuelPercent(v.lastFuelLevel);
               return (
                 <div
                   key={v.id}
-                  className="bg-slate-50 rounded-[16px] shadow-sm border border-slate-200 overflow-hidden flex flex-col"
+                  className="rounded-[14px] overflow-hidden flex flex-col"
+                  style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
                 >
-                  <div className="aspect-[4/3] bg-slate-200 relative">
+                  <div className="aspect-[4/3] relative" style={{ background: 'var(--color-table-head-bg)' }}>
                     {photoUrl ? (
                       <img
                         src={photoUrl}
@@ -641,44 +685,73 @@ export function VehiclesList() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                      <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--color-text-muted)' }}>
                         <span className="material-icons text-6xl">directions_car</span>
                       </div>
                     )}
-                    <span
-                      className={`absolute top-2 right-2 px-2 py-1 rounded-lg text-xs font-medium ${statusBadgeClass}`}
-                    >
+                    <span className={`badge ${badgeClass} absolute top-2 right-2 flex items-center gap-1.5`}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }} />
                       {statusLabel}
                     </span>
                   </div>
                   <div className="p-4 flex-1 flex flex-col">
-                    <div className="font-bold text-slate-900 text-xl">{v.plate}</div>
-                    <div className="text-slate-600 text-sm mt-0.5">
-                      {v.brand} {v.model}
-                      {v.year != null && ` (${v.year})`}
+                    <div className="mb-3">
+                      <span className="badge badge-slate font-mono-data">{v.plate}</span>
                     </div>
-                    {v.color && (
-                      <div className="text-slate-600 text-sm">{v.color}</div>
-                    )}
-                    {v.currentOdometer != null && (
-                      <div className="text-slate-600 text-sm">
-                        Kilometraje: {v.currentOdometer.toLocaleString()} km
+                    <div className="flex items-center gap-3 mb-3">
+                      <span
+                        className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'rgba(245,165,36,0.14)', color: 'var(--color-primary)' }}
+                      >
+                        <span className="material-icons">directions_car</span>
+                      </span>
+                      <div>
+                        <div className="font-semibold" style={{ color: 'var(--color-text)' }}>
+                          {v.brand} {v.model}
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                          {v.color ?? '—'}{v.year != null && ` · ${v.year}`}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-xs mb-2" style={{ color: 'var(--color-text-soft)' }}>
+                      <span className="flex items-center gap-1.5">
+                        <span className="material-icons" style={{ fontSize: 15, color: 'var(--color-text-muted)' }}>speed</span>
+                        <span className="font-mono-data">{v.currentOdometer != null ? v.currentOdometer.toLocaleString() : '—'} km</span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="material-icons" style={{ fontSize: 15, color: 'var(--color-text-muted)' }}>local_gas_station</span>
+                        <span className="font-mono-data">{v.lastFuelLevel ?? '—'}{fuelPercent != null && '%'}</span>
+                      </span>
+                    </div>
+                    {fuelPercent != null && (
+                      <div className="h-[5px] rounded-full overflow-hidden mb-3" style={{ background: 'var(--color-table-head-bg)' }}>
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${fuelPercent}%`,
+                            background: fuelPercent > 50 ? '#34d399' : fuelPercent > 20 ? '#fbbf24' : '#f87171',
+                          }}
+                        />
                       </div>
                     )}
-                    <div className="text-slate-600 text-sm">Gasolina: {v.lastFuelLevel ?? '—'}</div>
-                    <div className="text-slate-600 text-sm">Último uso: {v.lastUsedByUser ?? '—'}</div>
-                    <div className="mt-4 flex flex-col gap-2">
+                    <div className="text-xs flex items-center gap-1.5 mb-4" style={{ color: 'var(--color-text-muted)' }}>
+                      <span className="material-icons" style={{ fontSize: 15 }}>person</span>
+                      {v.lastUsedByUser ?? '—'}
+                    </div>
+                    <div className="mt-auto flex flex-col gap-2">
                       <button
                         type="button"
                         onClick={() => openEdit(v)}
-                        className="w-full px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium text-sm"
+                        className="btn-primary w-full py-2.5 text-sm"
                       >
                         Editar
                       </button>
                       <button
                         type="button"
                         onClick={() => handleDelete(v)}
-                        className="text-red-600 font-medium hover:underline text-sm"
+                        className="text-sm font-medium hover:underline"
+                        style={{ color: '#f87171' }}
                       >
                         Eliminar
                       </button>
