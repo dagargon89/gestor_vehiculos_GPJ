@@ -30,6 +30,23 @@ const STATUS_OPTIONS = [
   { value: 'inactive', label: 'Inactivo' },
 ];
 
+const ROLE_ICONS: Record<string, string> = {
+  admin: 'admin_panel_settings',
+  manager_flotilla: 'supervisor_account',
+  conductor: 'directions_car',
+  solicitante: 'assignment_ind',
+};
+const ROLE_VARIANTS = ['blue', 'green', 'amber', 'purple', 'red'];
+const getRoleIcon = (roleName: string) => ROLE_ICONS[roleName] ?? 'group';
+const getInitials = (nameOrEmail: string) => {
+  const trimmed = nameOrEmail.trim();
+  if (!trimmed) return '?';
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  return parts.length >= 2
+    ? (parts[0][0] + parts[1][0]).toUpperCase()
+    : trimmed.slice(0, 2).toUpperCase();
+};
+
 function UserFormModal({
   user,
   roles,
@@ -238,10 +255,15 @@ export function UsersList() {
     );
   }
 
+  const getRoleUserCount = (roleId: string) => users.filter((u: User) => u.roleId === roleId).length;
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap justify-between items-center gap-4">
-        <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Usuarios</h2>
+      <div className="flex flex-wrap justify-between items-end gap-4">
+        <div>
+          <h2 className="text-2xl font-bold uppercase tracking-wide" style={{ color: 'var(--color-text)' }}>Usuarios y roles</h2>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Cuentas activas y permisos por rol.</p>
+        </div>
         <div className="flex flex-wrap items-center gap-3">
           <SearchSelect
             options={[{ value: '', label: 'Todos los roles' }, ...roles.map((r: Role) => ({ value: r.id, label: r.name }))]}
@@ -260,6 +282,22 @@ export function UsersList() {
           <ViewToggle value={view} onChange={setView} storageKey="usersView" />
         </div>
       </div>
+      {roles.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {roles.map((r: Role, i: number) => (
+            <div key={r.id} className={`stat-card ${ROLE_VARIANTS[i % ROLE_VARIANTS.length]}`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="stat-card__icon">
+                  <span className="material-icons" style={{ fontSize: 18 }}>{getRoleIcon(r.name)}</span>
+                </div>
+                <span className="stat-card__value" style={{ fontSize: 20 }}>{getRoleUserCount(r.id)}</span>
+              </div>
+              <div className="stat-card__label" style={{ textTransform: 'none' }}>{r.name}</div>
+              {r.description && <div className="stat-card__sub">{r.description}</div>}
+            </div>
+          ))}
+        </div>
+      )}
       {view === 'table' && (
         <div
           className="rounded-[16px] shadow-sm overflow-hidden"
@@ -290,18 +328,28 @@ export function UsersList() {
           />
           <DataTable<User>
             columns={[
-              { key: 'email', header: 'Email', sortAccessor: (u) => u.email, cellClassName: 'font-medium', render: (u) => u.email },
-              { key: 'displayName', header: 'Nombre', sortAccessor: (u) => u.displayName ?? '', render: (u) => u.displayName ?? '—' },
-              { key: 'department', header: 'Departamento', render: (u) => u.department ?? '—' },
-              { key: 'role', header: 'Rol', render: (u) => getRoleName(u) },
               {
-                key: 'status',
-                header: 'Estado',
+                key: 'email',
+                header: 'Usuario',
+                sortAccessor: (u) => u.displayName || u.email,
                 render: (u) => (
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
-                    {STATUS_OPTIONS.find((o) => o.value === u.status)?.label ?? u.status}
-                  </span>
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0"
+                      style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', color: 'var(--color-text-on-primary)' }}
+                    >
+                      {getInitials(u.displayName || u.email)}
+                    </span>
+                    <span className="font-medium">{u.displayName || u.email}</span>
+                  </div>
                 ),
+              },
+              { key: 'emailAddr', header: 'Correo', sortAccessor: (u) => u.email, render: (u) => u.email },
+              { key: 'department', header: 'Departamento', render: (u) => u.department ?? '—' },
+              {
+                key: 'role',
+                header: 'Rol',
+                render: (u) => <span className="badge badge-amber">{getRoleName(u)}</span>,
               },
               {
                 key: 'lastLoginAt',
@@ -315,6 +363,19 @@ export function UsersList() {
                         day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
                       })
                     : '—',
+              },
+              {
+                key: 'status',
+                header: 'Estado',
+                render: (u) => {
+                  const variant = u.status === 'active' ? 'green' : u.status === 'suspended' ? 'red' : 'slate';
+                  return (
+                    <span className={`badge badge-${variant} gap-1.5`}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} />
+                      {STATUS_OPTIONS.find((o) => o.value === u.status)?.label ?? u.status}
+                    </span>
+                  );
+                },
               },
               {
                 key: 'actions',
@@ -340,43 +401,45 @@ export function UsersList() {
       {view === 'cards' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {users.length === 0 ? (
-            <div className="col-span-full bg-white rounded-[16px] shadow-sm border border-slate-200 px-6 py-12 text-center text-slate-500">
+            <div
+              className="col-span-full rounded-[16px] px-6 py-12 text-center"
+              style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+            >
               No hay usuarios registrados.
             </div>
           ) : (
             users.map((u: User) => {
               const roleName = u.role?.name ?? (u.roleId && roles.find((r: Role) => r.id === u.roleId)?.name) ?? 'Sin rol';
+              const statusVariant = u.status === 'active' ? 'green' : u.status === 'suspended' ? 'red' : 'slate';
               return (
               <div
                 key={u.id}
-                className="bg-white rounded-[16px] shadow-sm border border-slate-200 p-5 flex flex-col"
+                className="rounded-[16px] p-5 flex flex-col"
+                style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
               >
-                <div className="font-medium text-slate-900">{u.displayName || u.email}</div>
-                <div className="text-slate-600 text-sm mt-0.5">{u.email}</div>
-                <div className="text-slate-500 text-sm mt-1">{u.department ?? '—'}</div>
-                <div className="mt-2">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
-                    {roleName}
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                    style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', color: 'var(--color-text-on-primary)' }}
+                  >
+                    {getInitials(u.displayName || u.email)}
                   </span>
-                  <span className="ml-2 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+                  <div>
+                    <div className="font-medium" style={{ color: 'var(--color-text)' }}>{u.displayName || u.email}</div>
+                    <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>{u.email}</div>
+                  </div>
+                </div>
+                <div className="text-sm mt-2" style={{ color: 'var(--color-text-muted)' }}>{u.department ?? '—'}</div>
+                <div className="mt-2 flex gap-2">
+                  <span className="badge badge-amber">{roleName}</span>
+                  <span className={`badge badge-${statusVariant} gap-1.5`}>
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} />
                     {STATUS_OPTIONS.find((o) => o.value === u.status)?.label ?? u.status}
                   </span>
                 </div>
-                <div className="mt-4 pt-4 border-t border-slate-100 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(u)}
-                    className="text-primary font-medium hover:underline text-sm"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(u)}
-                    className="text-red-600 font-medium hover:underline text-sm"
-                  >
-                    Eliminar
-                  </button>
+                <div className="mt-4 pt-4 flex gap-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+                  <button type="button" onClick={() => openEdit(u)} className="text-primary font-medium hover:underline text-sm">Editar</button>
+                  <button type="button" onClick={() => handleDelete(u)} className="text-red-600 font-medium hover:underline text-sm">Eliminar</button>
                 </div>
               </div>
               );
