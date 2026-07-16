@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsInt, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsInt, IsDate, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateVehicleDto {
@@ -42,4 +42,27 @@ export class UpdateVehicleDto {
   @IsInt()
   @Min(0)
   currentOdometer?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  maintenanceIntervalKm?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  maintenanceIntervalDays?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  nextServiceOdometer?: number;
+
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  nextServiceDate?: Date;
 }
