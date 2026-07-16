@@ -18,6 +18,7 @@ export function AssignRolesPage() {
   const [localRoleIds, setLocalRoleIds] = useState<Record<string, string>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['users'],
@@ -86,31 +87,33 @@ export function AssignRolesPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <h2 className="text-2xl font-bold text-slate-900">Asignar roles a usuarios</h2>
-      <p className="text-slate-600 text-sm">
-        Usuarios registrados en el sistema. Elige un rol y pulsa Guardar para actualizar.
-      </p>
+      <div>
+        <h2 className="text-2xl font-bold uppercase tracking-wide" style={{ color: 'var(--color-text)' }}>Asignar roles a usuarios</h2>
+        <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
+          Usuarios registrados en el sistema. Elige un rol y pulsa Guardar para actualizar.
+        </p>
+      </div>
 
       {error && (
         <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
       )}
 
-      <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+      <div className="rounded-[16px] overflow-hidden" style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}>
         <div className="overflow-x-auto">
         <table className="w-full min-w-[600px]">
-          <thead className="bg-slate-50 border-b border-slate-200">
+          <thead style={{ background: 'var(--color-table-head-bg)', borderBottom: '1px solid var(--color-border)' }}>
             <tr>
-              <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Usuario</th>
-              <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Email</th>
-              <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Rol actual</th>
-              <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Nuevo rol</th>
-              <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Acción</th>
+              <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Usuario</th>
+              <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Email</th>
+              <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Rol actual</th>
+              <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Nuevo rol</th>
+              <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Acción</th>
             </tr>
           </thead>
           <tbody>
             {users.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                <td colSpan={5} className="px-6 py-8 text-center" style={{ color: 'var(--color-text-muted)' }}>
                   No hay usuarios registrados.
                 </td>
               </tr>
@@ -118,14 +121,27 @@ export function AssignRolesPage() {
               users.map((u: User) => {
                 const currentRoleId = getCurrentRoleId(u);
                 const hasChange = (u.roleId ?? '') !== (currentRoleId.trim() || '');
+                const currentRoleName = u.role?.name ?? (u.roleId && roles.find((r: Role) => r.id === u.roleId)?.name) ?? null;
                 return (
-                  <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="px-6 py-4 font-medium text-slate-900">
+                  <tr
+                    key={u.id}
+                    style={{
+                      borderBottom: '1px solid var(--color-border)',
+                      background: hoveredId === u.id ? 'var(--color-table-row-hover)' : undefined,
+                    }}
+                    onMouseEnter={() => setHoveredId(u.id)}
+                    onMouseLeave={() => setHoveredId((id) => (id === u.id ? null : id))}
+                  >
+                    <td className="px-6 py-4 font-medium" style={{ color: 'var(--color-text)' }}>
                       {u.displayName || '—'}
                     </td>
-                    <td className="px-6 py-4 text-slate-600">{u.email}</td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {u.role?.name ?? (u.roleId && roles.find((r: Role) => r.id === u.roleId)?.name) ?? 'Sin rol'}
+                    <td className="px-6 py-4" style={{ color: 'var(--color-text-muted)' }}>{u.email}</td>
+                    <td className="px-6 py-4">
+                      {currentRoleName ? (
+                        <span className="badge badge-amber">{currentRoleName}</span>
+                      ) : (
+                        <span style={{ color: 'var(--color-text-muted)' }}>Sin rol</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <SearchSelect
@@ -144,7 +160,7 @@ export function AssignRolesPage() {
                         type="button"
                         onClick={() => handleSave(u)}
                         disabled={!hasChange || savingId === u.id}
-                        className="px-3 py-1.5 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:pointer-events-none"
+                        className="btn-primary text-sm px-3 py-1.5 disabled:opacity-50 disabled:pointer-events-none"
                       >
                         {savingId === u.id ? 'Guardando…' : 'Guardar'}
                       </button>
