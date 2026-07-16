@@ -147,7 +147,7 @@ function ReserveVehicleModal({
             onClick={onClose}
             className="p-2 rounded-lg transition-colors"
             style={{ color: 'var(--color-text-muted)' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,132,255,0.08)')}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,165,36,0.08)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             aria-label="Cerrar"
           >
@@ -305,7 +305,7 @@ export function VehicleRequestPage() {
       <div>
         <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Solicitud de vehículos</h2>
         <p className="mt-1" style={{ color: 'var(--color-text-muted)' }}>
-          Elige un vehículo y haz clic en Reservar para ver disponibilidad y enviar tu solicitud.
+          Elige un vehículo y haz clic en «Reservar» para ver su disponibilidad y enviar tu solicitud.
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -325,7 +325,7 @@ export function VehicleRequestPage() {
                 key={v.id}
                 className="rounded-[16px] overflow-hidden flex flex-col transition-shadow"
                 style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
-                onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 8px 32px rgba(99,132,255,0.12)')}
+                onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 8px 32px rgba(245,165,36,0.12)')}
                 onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}
               >
                 <div
