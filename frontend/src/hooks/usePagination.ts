@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 
 const DEFAULT_PAGE_SIZE = 25;
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
@@ -14,9 +14,11 @@ export function usePagination<T>(
   const totalItems = data.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
-  useEffect(() => {
-    if (page > totalPages) setPage(1);
-  }, [page, totalPages]);
+  // Si los datos se encogieron por debajo de la página actual, corregir durante
+  // el render (patrón recomendado por React en vez de setState dentro de un effect).
+  if (page > totalPages) {
+    setPage(1);
+  }
 
   const paginatedData = useMemo(() => {
     const start = (page - 1) * pageSize;

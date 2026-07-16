@@ -26,7 +26,7 @@ import { AssignRolesPage } from './pages/AssignRoles/AssignRolesPage';
 import { CostsList } from './pages/Costs/CostsList';
 import { AuditLogsPage } from './pages/AuditLogs/AuditLogsPage';
 import { canAccessDashboard, isConductor } from './config/routePermissions';
-import { useAuth } from './contexts/AuthContext';
+import { useAuth } from './contexts/useAuth';
 
 function DashboardOrRedirect() {
   const { userData } = useAuth();

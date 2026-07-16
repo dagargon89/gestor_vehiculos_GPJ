@@ -144,15 +144,17 @@ export function VehicleAvailabilityCalendar({
     return () => mq.removeEventListener('change', update);
   }, []);
 
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
   const monthStart = useMemo(() => {
-    const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const d = new Date(year, month, 1);
     d.setHours(0, 0, 0, 0);
     return d.toISOString();
-  }, [currentDate.getFullYear(), currentDate.getMonth()]);
+  }, [year, month]);
   const monthEnd = useMemo(() => {
-    const d = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59);
+    const d = new Date(year, month + 1, 0, 23, 59, 59);
     return d.toISOString();
-  }, [currentDate.getFullYear(), currentDate.getMonth()]);
+  }, [year, month]);
 
   const { data: reservations = [] } = useQuery({
     queryKey: ['reservations', vehicleId],

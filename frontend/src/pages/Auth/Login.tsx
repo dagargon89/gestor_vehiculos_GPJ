@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
-import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../theme/ThemeContext';
+import { useAuth } from '../../contexts/useAuth';
+import { useTheme } from '../../theme/useTheme';
 import { auth } from '../../config/firebase.config';
 
 function getFirebaseErrorMessage(code: string): string {

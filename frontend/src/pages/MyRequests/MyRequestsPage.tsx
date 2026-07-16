@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import apiClient from '../../services/api.service';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 import { notifySuccess, notifyError } from '../../lib/toast';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 import { useDataTable } from '../../hooks/useDataTable';

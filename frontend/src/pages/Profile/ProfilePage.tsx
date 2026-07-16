@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 import apiClient from '../../services/api.service';
 import { SearchSelect } from '../../components/ui/SearchSelect';
 import { notifySuccess, notifyError } from '../../lib/toast';

@@ -5,7 +5,7 @@ import { notifySuccess } from '../../lib/toast';
 import { validateReservationDates } from '../../lib/reservationDates';
 import { VehicleAvailabilityCalendar } from '../../components/calendar/VehicleAvailabilityCalendar';
 import { SearchSelect } from '../../components/ui/SearchSelect';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 import { isConductor } from '../../config/routePermissions';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 

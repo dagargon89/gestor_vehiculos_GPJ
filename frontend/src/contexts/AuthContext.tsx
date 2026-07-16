@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { User } from 'firebase/auth';
 import {
   signInWithPopup,
@@ -12,49 +12,17 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { auth } from '../config/firebase.config';
 import apiClient from '../services/api.service';
-
-interface UserData {
-  id: string;
-  email: string;
-  displayName?: string;
-  photoUrl?: string | null;
-  role?: { name: string };
-  permissions?: { resource: string; action: string }[];
-}
-
-interface AuthContextType {
-  currentUser: User | null;
-  userData: UserData | null;
-  loading: boolean;
-  /** Mensaje cuando falla la sincronización con el backend (ej. backend no está en marcha). */
-  authSyncError: string | null;
-  /** Refresca los datos del usuario desde el backend (útil tras actualizar perfil o foto). */
-  refreshUserData: () => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  sendPasswordResetEmail: (email: string) => Promise<void>;
-  getIdToken: () => Promise<string>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth debe usarse dentro de AuthProvider');
-  return context;
-}
+import { AuthContext, type AuthContextType, type UserData } from './auth-context';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!auth);
   const [authSyncError, setAuthSyncError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!auth) {
-      setLoading(false);
       return;
     }
     const unsubscribe = onAuthStateChanged(auth, async (user) => {

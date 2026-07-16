@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { usePermissions } from '../../hooks/usePermissions';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 
 type Permission = { resource: string; action: string };
 

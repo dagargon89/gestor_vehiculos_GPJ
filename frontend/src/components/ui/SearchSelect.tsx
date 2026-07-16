@@ -24,6 +24,7 @@ export function SearchSelect({
   id,
 }: SearchSelectProps) {
   const [open, setOpen] = useState(false);
+  const [wasOpen, setWasOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [highlightIndex, setHighlightIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -41,11 +42,18 @@ export function SearchSelect({
     return options.filter((o) => o.label.toLowerCase().includes(q));
   }, [options, search]);
 
+  // Al abrir el desplegable, reiniciar búsqueda/resaltado durante el render
+  // (patrón recomendado por React en vez de setState dentro de un effect).
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setSearch('');
+      setHighlightIndex(0);
+    }
+  }
+
   useEffect(() => {
-    if (!open) return;
-    setSearch('');
-    setHighlightIndex(0);
-    searchInputRef.current?.focus();
+    if (open) searchInputRef.current?.focus();
   }, [open]);
 
   useEffect(() => {

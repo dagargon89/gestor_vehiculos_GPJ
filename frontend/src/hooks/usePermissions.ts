@@ -1,4 +1,4 @@
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 
 const CONDUCTOR_DEFAULT_PERMISSIONS: { resource: string; action: string }[] = [
   { resource: 'vehicles', action: 'read' },

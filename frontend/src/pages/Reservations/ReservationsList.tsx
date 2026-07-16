@@ -8,7 +8,7 @@ import { useDataTable } from '../../hooks/useDataTable';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 import { isConductor } from '../../config/routePermissions';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 import { Modal } from '../../components/ui/Modal';
@@ -300,7 +300,11 @@ function OverduePanel() {
   const toggleOne = (id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };

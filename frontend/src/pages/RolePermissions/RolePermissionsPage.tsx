@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { notifySuccess, notifyError } from '../../lib/toast';
@@ -108,13 +108,18 @@ export function RolePermissionsPage() {
   const selectedRole = roles.find((r: Role) => r.id === selectedRoleId) as Role | undefined;
 
   const rolePermIdsJson = JSON.stringify(selectedRole?.permissions?.map((p: Permission) => p.id) ?? []);
-  useEffect(() => {
+  // Sincronizar los permisos marcados con el rol seleccionado durante el render
+  // (patrón recomendado por React en vez de setState dentro de un effect).
+  const roleKey = `${selectedRoleId ?? ''}|${rolePermIdsJson}`;
+  const [syncedRoleKey, setSyncedRoleKey] = useState<string | null>(null);
+  if (roleKey !== syncedRoleKey) {
+    setSyncedRoleKey(roleKey);
     if (!selectedRoleId || !selectedRole?.permissions) {
       setSelectedIds(new Set());
-      return;
+    } else {
+      setSelectedIds(new Set(selectedRole.permissions.map((p: Permission) => p.id)));
     }
-    setSelectedIds(new Set(selectedRole.permissions.map((p: Permission) => p.id)));
-  }, [selectedRoleId, rolePermIdsJson]);
+  }
 
   const handleSelectRole = (roleId: string) => {
     setSelectedRoleId(roleId);
