@@ -34,6 +34,13 @@ const STATUS_OPTIONS = [
   { value: 'closed', label: 'Cerrado' },
 ];
 
+const STATUS_BADGE: Record<string, string> = {
+  open: 'badge-red',
+  in_review: 'badge-amber',
+  resolved: 'badge-green',
+  closed: 'badge-slate',
+};
+
 function IncidentFormModal({
   incident,
   vehicles,
@@ -92,20 +99,21 @@ function IncidentFormModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="rounded-[16px] shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-bold text-slate-900">
+        <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
+          <h3 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
             {incident ? 'Editar incidente' : 'Nuevo incidente'}
           </h3>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
+            <div className="p-3 rounded-lg text-sm" style={{ background: 'rgba(239,68,68,0.12)', color: '#f87171' }}>{error}</div>
           )}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Vehículo *</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Vehículo *</label>
             <SearchSelect
               options={vehicles.map((v) => ({ value: v.id, label: `${v.plate} — ${v.brand} ${v.model}` }))}
               value={form.vehicleId}
@@ -116,10 +124,13 @@ function IncidentFormModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Usuario (opcional)</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Usuario (opcional)</label>
             {esConductor ? (
-              <div className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 font-medium flex items-center gap-2">
-                <span className="material-icons text-slate-400 text-base">person</span>
+              <div
+                className="w-full px-3 py-2 rounded-lg font-medium flex items-center gap-2"
+                style={{ background: 'var(--color-input-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+              >
+                <span className="material-icons text-base" style={{ color: 'var(--color-text-muted)' }}>person</span>
                 {userData?.displayName || userData?.email || 'Usuario actual'}
               </div>
             ) : (
@@ -133,17 +144,17 @@ function IncidentFormModal({
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Fecha *</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Fecha *</label>
             <input
               type="date"
               required
               value={form.date}
               onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              className="input-field"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Estado</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Estado</label>
             <SearchSelect
               options={STATUS_OPTIONS}
               value={form.status}
@@ -153,27 +164,27 @@ function IncidentFormModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Descripción *</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Descripción *</label>
             <textarea
               rows={3}
               required
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              className="input-field"
             />
           </div>
           <div className="flex gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50"
+              className="btn-ghost flex-1"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
+              className="btn-primary flex-1"
             >
               {submitting ? 'Guardando...' : incident ? 'Guardar cambios' : 'Crear incidente'}
             </button>
@@ -310,7 +321,7 @@ export function IncidentList() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap justify-between items-center gap-4">
-        <h2 className="text-2xl font-bold text-slate-900">Incidentes</h2>
+        <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Incidentes</h2>
         <div className="flex items-center gap-3">
           <SearchSelect
             options={[{ value: '', label: 'Todos los vehículos' }, ...vehicles.map((v: Vehicle) => ({ value: v.id, label: v.plate }))]}
@@ -327,18 +338,15 @@ export function IncidentList() {
             className="w-48"
           />
           <ViewToggle value={view} onChange={setView} storageKey="incidentView" />
-          <button
-            type="button"
-            onClick={openCreate}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium"
-          >
-            Nuevo incidente
+          <button type="button" onClick={openCreate} className="btn-primary">
+            <span className="material-icons" style={{ fontSize: 17 }}>add</span>
+            Reportar incidencia
           </button>
         </div>
       </div>
 
       {view === 'table' && (
-        <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+        <div className="rounded-[16px] shadow-sm overflow-hidden" style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}>
           <div className="px-4 pt-4">
             <input
               type="text"
@@ -371,7 +379,7 @@ export function IncidentList() {
                 key: 'status',
                 header: 'Estado',
                 render: (i) => (
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                  <span className={`badge ${STATUS_BADGE[i.status] ?? 'badge-slate'}`}>
                     {STATUS_OPTIONS.find((o) => o.value === i.status)?.label ?? i.status}
                   </span>
                 ),
@@ -402,24 +410,24 @@ export function IncidentList() {
       {view === 'cards' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {incidentList.length === 0 ? (
-            <div className="col-span-full bg-white rounded-[16px] shadow-sm border border-slate-200 px-6 py-12 text-center text-slate-500">
+            <div className="col-span-full rounded-[16px] shadow-sm px-6 py-12 text-center" style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
               No hay incidentes registrados.
             </div>
           ) : (
             incidentList.map((i: Incident) => (
-              <div key={i.id} className="bg-white rounded-[16px] shadow-sm border border-slate-200 p-5 flex flex-col">
-                <div className="font-medium text-slate-900">
+              <div key={i.id} className="rounded-[16px] shadow-sm p-5 flex flex-col" style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}>
+                <div className="font-medium" style={{ color: 'var(--color-text)' }}>
                   {getVehicleFullLabel(i)}
                 </div>
-                <div className="text-slate-600 text-sm mt-1">{getUserLabel(i)}</div>
-                <div className="text-slate-500 text-sm mt-0.5">{formatDate(i.date)}</div>
+                <div className="text-sm mt-1" style={{ color: 'var(--color-text-soft)' }}>{getUserLabel(i)}</div>
+                <div className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{formatDate(i.date)}</div>
                 <div className="mt-2">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                  <span className={`badge ${STATUS_BADGE[i.status] ?? 'badge-slate'}`}>
                     {STATUS_OPTIONS.find((o) => o.value === i.status)?.label ?? i.status}
                   </span>
                 </div>
-                <p className="text-slate-500 text-sm mt-2 line-clamp-3">{i.description}</p>
-                <div className="mt-4 pt-4 border-t border-slate-100 flex gap-3">
+                <p className="text-sm mt-2 line-clamp-3" style={{ color: 'var(--color-text-muted)' }}>{i.description}</p>
+                <div className="mt-4 pt-4 flex gap-3" style={{ borderTop: '1px solid var(--color-border)' }}>
                   <button type="button" onClick={() => openEdit(i)} className="text-primary font-medium hover:underline text-sm">Editar</button>
                   <button type="button" onClick={() => handleDelete(i)} className="text-red-600 font-medium hover:underline text-sm">Eliminar</button>
                 </div>
