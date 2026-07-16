@@ -100,7 +100,7 @@ export function ImageCropModal({
             onClick={onCancel}
             className="p-1.5 rounded-lg transition-colors"
             style={{ color: 'var(--color-text-muted)' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,132,255,0.08)')}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,165,36,0.08)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
             <span className="material-icons text-xl">close</span>
@@ -120,7 +120,7 @@ export function ImageCropModal({
             style={{
               containerStyle: { borderRadius: 0 },
               cropAreaStyle: {
-                border: '2px solid #6384ff',
+                border: '2px solid #f5a524',
                 boxShadow: '0 0 0 9999px rgba(0,0,0,0.55)',
               },
             }}
@@ -144,7 +144,7 @@ export function ImageCropModal({
             onChange={(e) => setZoom(Number(e.target.value))}
             className="flex-1 accent-primary"
             aria-label="Zoom"
-            style={{ accentColor: '#6384ff' }}
+            style={{ accentColor: 'var(--color-primary)' }}
           />
           <span className="material-icons text-base shrink-0" style={{ color: 'var(--color-text-muted)' }}>
             zoom_in

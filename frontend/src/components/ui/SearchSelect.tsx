@@ -120,7 +120,7 @@ export function SearchSelect({
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={handleKeyDown}
         style={triggerStyle}
-        onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,132,255,0.45)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 3px rgba(99,132,255,0.10)'; }}
+        onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(245,165,36,0.45)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 3px rgba(245,165,36,0.10)'; }}
         onBlur={e  => { (e.currentTarget as HTMLElement).style.borderColor = ''; (e.currentTarget as HTMLElement).style.boxShadow = ''; }}
       >
         <span className="truncate">{displayText}</span>
@@ -176,11 +176,11 @@ export function SearchSelect({
                     onMouseEnter={() => setHighlightIndex(i)}
                     className="w-full text-left px-3 py-2 text-sm transition-colors"
                     style={{
-                      color: opt.value === value ? '#818cf8' : 'var(--color-text-soft)',
+                      color: opt.value === value ? '#fbbf24' : 'var(--color-text-soft)',
                       background: opt.value === value
-                        ? 'rgba(99,132,255,0.10)'
+                        ? 'rgba(245,165,36,0.10)'
                         : i === highlightIndex
-                        ? 'rgba(99,132,255,0.07)'
+                        ? 'rgba(245,165,36,0.07)'
                         : 'transparent',
                       fontWeight: opt.value === value ? 600 : 400,
                     }}

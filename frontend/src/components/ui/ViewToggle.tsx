@@ -35,10 +35,10 @@ export function ViewToggle({ value, onChange, storageKey }: ViewToggleProps) {
           className="flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-sm font-medium transition-colors"
           style={
             value === mode
-              ? { background: 'linear-gradient(135deg,#6384ff,#5a6fff)', color: '#ffffff' }
+              ? { background: 'linear-gradient(135deg,#f5a524,#e08700)', color: 'var(--color-text-on-primary)' }
               : { color: 'var(--color-text-muted)', background: 'transparent' }
           }
-          onMouseEnter={e => { if (value !== mode) (e.currentTarget as HTMLElement).style.background = 'rgba(99,132,255,0.08)'; }}
+          onMouseEnter={e => { if (value !== mode) (e.currentTarget as HTMLElement).style.background = 'rgba(245,165,36,0.08)'; }}
           onMouseLeave={e => { if (value !== mode) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
           aria-label={mode === 'table' ? 'Vista tabla' : 'Vista tarjetas'}
         >

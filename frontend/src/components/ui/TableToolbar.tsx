@@ -131,7 +131,7 @@ export function TableToolbar({
                   onClick={() => { onExportCSV(); setExportOpen(false); }}
                   className="w-full text-left px-4 py-2 text-sm transition-colors"
                   style={{ color: 'var(--color-text-soft)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,132,255,0.07)')}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,165,36,0.07)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
                   CSV
@@ -143,7 +143,7 @@ export function TableToolbar({
                   onClick={() => { onExportExcel(); setExportOpen(false); }}
                   className="w-full text-left px-4 py-2 text-sm transition-colors"
                   style={{ color: 'var(--color-text-soft)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,132,255,0.07)')}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,165,36,0.07)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
                   Excel (.xlsx)
@@ -155,7 +155,7 @@ export function TableToolbar({
                   onClick={() => { onExportPDF(); setExportOpen(false); }}
                   className="w-full text-left px-4 py-2 text-sm transition-colors"
                   style={{ color: 'var(--color-text-soft)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,132,255,0.07)')}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,165,36,0.07)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
                   PDF
