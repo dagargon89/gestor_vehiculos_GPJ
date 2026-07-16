@@ -41,6 +41,22 @@ const STATUS_OPTIONS = [
   { value: 'cancelled', label: 'Cancelada' },
 ];
 
+// Folio corto derivado del id — solo de despliegue, no existe como campo en backend.
+function getFolio(r: { id: string }) {
+  return `RES-${r.id.replace(/-/g, '').slice(0, 6).toUpperCase()}`;
+}
+
+function statusBadgeStyle(status: string): React.CSSProperties {
+  switch (status) {
+    case 'pending':   return { background: 'rgba(245,158,11,0.15)', color: '#fbbf24' };
+    case 'active':    return { background: 'rgba(34,197,94,0.15)',  color: '#4ade80' };
+    case 'completed': return { background: 'rgba(148,163,184,0.15)', color: 'var(--color-text-muted)' };
+    case 'overdue':   return { background: 'rgba(239,68,68,0.15)',  color: '#f87171' };
+    case 'cancelled': return { background: 'rgba(148,163,184,0.12)', color: 'var(--color-text-muted)' };
+    default:          return { background: 'rgba(148,163,184,0.12)', color: 'var(--color-text-muted)' };
+  }
+}
+
 function ReservationFormModal({
   reservation,
   vehicles,
@@ -458,6 +474,15 @@ export function ReservationsList() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reservations'] }),
   });
 
+  const rejectMutation = useMutation({
+    mutationFn: (id: string) => apiClient.put(`/reservations/${id}`, { status: 'cancelled' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      notifySuccess('Reserva rechazada.');
+    },
+    onError: () => notifyError('No se pudo rechazar la reserva.'),
+  });
+
   const openCreate = () => {
     setEditingReservation(null);
     setModalOpen(true);
@@ -510,13 +535,14 @@ export function ReservationsList() {
     searchFields: (r) => [getVehicleLabel(r), getUserLabel(r), r.eventName ?? '', r.destination ?? ''],
   });
 
-  const exportHeaders = ['Vehículo', 'Usuario', 'Inicio', 'Fin', 'Estado'];
+  const exportHeaders = ['Folio', 'Vehículo', 'Solicitante', 'Destino', 'Salida', 'Estado'];
   const getExportRows = (list: Reservation[]) =>
     list.map((r) => [
+      getFolio(r),
       getVehicleLabel(r),
       getUserLabel(r),
+      r.destination ?? '',
       new Date(r.startDatetime).toLocaleString(),
-      new Date(r.endDatetime).toLocaleString(),
       STATUS_OPTIONS.find((o) => o.value === r.status)?.label ?? r.status,
     ]);
 
@@ -532,38 +558,57 @@ export function ReservationsList() {
     );
   }
 
+  const reservationStats = [
+    { n: reservations.filter((r: Reservation) => r.status === 'pending').length, label: 'Pendientes', c: 'var(--color-primary)' },
+    { n: reservations.filter((r: Reservation) => r.status === 'active').length, label: 'Activas', c: '#4ade80' },
+    { n: reservations.filter((r: Reservation) => r.status === 'overdue').length, label: 'Vencidas', c: '#f87171' },
+  ];
+
   return (
     <div className="space-y-6">
       <OverduePanel />
-      <div className="flex flex-wrap justify-between items-center gap-4">
-        <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Gestión de reservas</h2>
-        <div className="flex flex-wrap items-center gap-3">
-            <SearchSelect
-              options={[{ value: '', label: 'Todos los estados' }, ...STATUS_OPTIONS]}
-              value={filterStatus}
-              onChange={setFilterStatus}
-              placeholder="Todos los estados"
-              className="w-48"
-            />
-            <button
-              type="button"
-              onClick={openCreate}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium"
-            >
-              Nueva reserva (admin)
-            </button>
-          </div>
-      </div>
-      <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-4 pt-4">
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar por vehículo, usuario, evento o destino..."
-                className="input-field w-full max-w-sm"
-              />
+      <div className="flex flex-wrap justify-between items-end gap-4">
+        <div>
+          <h1
+            className="text-[28px] font-semibold uppercase tracking-wide m-0"
+            style={{ color: 'var(--color-text)', fontFamily: "'Barlow Condensed', sans-serif" }}
+          >
+            Reservas
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            Aprueba o rechaza directamente desde la tabla.
+          </p>
+        </div>
+        <div className="flex gap-4">
+          {reservationStats.map((s) => (
+            <div key={s.label} className="text-right">
+              <div className="font-mono-data text-[22px] font-semibold" style={{ color: s.c }}>{s.n}</div>
+              <div className="text-[10.5px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>{s.label}</div>
             </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchSelect
+          options={[{ value: '', label: 'Todos los estados' }, ...STATUS_OPTIONS]}
+          value={filterStatus}
+          onChange={setFilterStatus}
+          placeholder="Todos los estados"
+          className="w-48"
+        />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Folio, placa o solicitante..."
+          className="input-field w-60"
+        />
+        <div className="flex-1" />
+        <button type="button" onClick={openCreate} className="btn-primary">
+          Nueva reserva (admin)
+        </button>
+      </div>
+      <div className="rounded-[16px] shadow-sm overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
             <TableToolbar
               page={page}
               totalPages={totalPages}
@@ -580,15 +625,37 @@ export function ReservationsList() {
             />
             <DataTable<Reservation>
               columns={[
-                { key: 'vehicle', header: 'Vehículo', sortAccessor: (r) => getVehicleLabel(r), cellClassName: 'font-medium', render: (r) => getVehicleLabel(r) },
-                { key: 'user', header: 'Usuario', sortAccessor: (r) => getUserLabel(r), render: (r) => getUserLabel(r) },
-                { key: 'start', header: 'Inicio', sortAccessor: (r) => r.startDatetime, render: (r) => new Date(r.startDatetime).toLocaleString() },
-                { key: 'end', header: 'Fin', sortAccessor: (r) => r.endDatetime, render: (r) => new Date(r.endDatetime).toLocaleString() },
+                { key: 'folio', header: 'Folio', cellClassName: 'font-mono-data', cellStyle: { color: 'var(--color-primary)' }, render: (r) => getFolio(r) },
+                {
+                  key: 'vehicle',
+                  header: 'Vehículo',
+                  sortAccessor: (r) => getVehicleLabel(r),
+                  render: (r) => (
+                    <span
+                      className="font-mono-data text-xs font-semibold px-2 py-0.5 rounded"
+                      style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border-strong)' }}
+                    >
+                      {getVehicleLabel(r)}
+                    </span>
+                  ),
+                },
+                { key: 'user', header: 'Solicitante', sortAccessor: (r) => getUserLabel(r), cellClassName: 'font-medium', render: (r) => getUserLabel(r) },
+                { key: 'destination', header: 'Destino', cellStyle: { color: 'var(--color-text-soft)' }, render: (r) => r.destination || '—' },
+                {
+                  key: 'start',
+                  header: 'Salida',
+                  sortAccessor: (r) => r.startDatetime,
+                  cellClassName: 'font-mono-data whitespace-nowrap',
+                  cellStyle: { color: 'var(--color-text-soft)' },
+                  render: (r) => new Date(r.startDatetime).toLocaleString(),
+                },
                 {
                   key: 'status',
                   header: 'Estado',
+                  sortAccessor: (r) => r.status,
                   render: (r) => (
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-accent/10 text-accent">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold" style={statusBadgeStyle(r.status)}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} />
                       {STATUS_OPTIONS.find((o) => o.value === r.status)?.label ?? r.status}
                     </span>
                   ),
@@ -600,14 +667,28 @@ export function ReservationsList() {
                   render: (r) => (
                     <>
                       {r.status === 'pending' && (
-                        <button
-                          type="button"
-                          onClick={() => approveMutation.mutate(r.id)}
-                          disabled={approveMutation.isPending}
-                          className="mr-3 px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
-                        >
-                          Aprobar
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            title="Aprobar"
+                            onClick={() => approveMutation.mutate(r.id)}
+                            disabled={approveMutation.isPending}
+                            className="mr-1.5 w-8 h-8 rounded-lg inline-flex items-center justify-center disabled:opacity-50"
+                            style={{ border: '1px solid var(--color-border)', color: '#4ade80' }}
+                          >
+                            <span className="material-icons text-[17px]">check</span>
+                          </button>
+                          <button
+                            type="button"
+                            title="Rechazar"
+                            onClick={() => rejectMutation.mutate(r.id)}
+                            disabled={rejectMutation.isPending}
+                            className="mr-3 w-8 h-8 rounded-lg inline-flex items-center justify-center disabled:opacity-50"
+                            style={{ border: '1px solid var(--color-border)', color: '#f87171' }}
+                          >
+                            <span className="material-icons text-[17px]">close</span>
+                          </button>
+                        </>
                       )}
                       <button type="button" onClick={() => openEdit(r)} className="text-primary font-medium hover:underline mr-3">Editar</button>
                       <button type="button" onClick={() => handleDelete(r)} className="text-red-600 font-medium hover:underline">Eliminar</button>

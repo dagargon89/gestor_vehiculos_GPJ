@@ -106,7 +106,7 @@ export function MobileCalendar({
           onClick={() => onNavigate?.(subMonths(currentDate, 1))}
           className="p-2 rounded-lg transition-colors"
           style={{ color: 'var(--color-text-muted)' }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,132,255,0.08)')}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,165,36,0.08)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           aria-label="Mes anterior"
         >
@@ -120,7 +120,7 @@ export function MobileCalendar({
           onClick={() => onNavigate?.(addMonths(currentDate, 1))}
           className="p-2 rounded-lg transition-colors"
           style={{ color: 'var(--color-text-muted)' }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,132,255,0.08)')}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,165,36,0.08)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           aria-label="Mes siguiente"
         >
@@ -157,13 +157,13 @@ export function MobileCalendar({
               className="flex flex-col items-center justify-center py-1.5 rounded-lg transition-colors"
               style={
                 selected
-                  ? { background: 'linear-gradient(135deg,#6384ff,#5a6fff)', color: '#fff' }
+                  ? { background: 'linear-gradient(135deg,#f5a524,#e08700)', color: '#fff' }
                   : today
-                  ? { outline: '2px solid #6384ff', outlineOffset: '-2px' }
+                  ? { outline: '2px solid #f5a524', outlineOffset: '-2px' }
                   : {}
               }
               onMouseEnter={e => {
-                if (!selected) (e.currentTarget as HTMLElement).style.background = 'rgba(99,132,255,0.08)';
+                if (!selected) (e.currentTarget as HTMLElement).style.background = 'rgba(245,165,36,0.08)';
               }}
               onMouseLeave={e => {
                 if (!selected) (e.currentTarget as HTMLElement).style.background = '';
