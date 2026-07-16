@@ -8,6 +8,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { SystemSettingsService } from '../system-settings/system-settings.service';
 import { UsersService } from '../users/users.service';
 import { SanctionsService } from '../sanctions/sanctions.service';
+import { FuelRecordsService } from '../fuel-records/fuel-records.service';
 
 describe('ReservationsService', () => {
   let service: ReservationsService;
@@ -71,6 +72,10 @@ describe('ReservationsService', () => {
         // doesn't consume it yet — a later step in this sprint's plan wires it in,
         // and adding the provider now keeps this shared beforeEach forward-compatible.
         { provide: SanctionsService, useValue: { isUserSanctioned: jest.fn().mockResolvedValue(false) } },
+        // FuelRecordsService is registered here so the module can compile — the
+        // `checkOut` describe block below overwrites this instance field directly
+        // with its own mock to assert on `.create()` calls.
+        { provide: FuelRecordsService, useValue: { create: jest.fn().mockResolvedValue({}) } },
         // ReservationsService injects the real `DataSource` class from typeorm (no
         // custom token), so the provider token here must be that class itself —
         // the brief's `.overrideProvider(require('typeorm').DataSource)` pattern
@@ -165,6 +170,48 @@ describe('ReservationsService', () => {
       await expect(
         service.update('r1', { destination: 'x' }, { id: 'otro-conductor' }),
       ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('checkOut — sincronización de estado y combustible', () => {
+    let fuelRecordsService: { create: jest.Mock };
+
+    beforeEach(() => {
+      fuelRecordsService = { create: jest.fn().mockResolvedValue({}) };
+      (service as unknown as { fuelRecordsService: typeof fuelRecordsService }).fuelRecordsService = fuelRecordsService;
+      repo.findOne = jest.fn().mockResolvedValue({
+        id: 'r1',
+        userId: 'owner-1',
+        vehicleId: 'v1',
+        status: 'active',
+        checkinOdometer: 1000,
+        checkoutOdometer: null,
+      });
+    });
+
+    it('marca el vehículo como disponible al hacer check-out', async () => {
+      await service.checkOut('r1', 'owner-1', 1050);
+      expect(vehicleRepo.update).toHaveBeenCalledWith('v1', expect.objectContaining({ status: 'available' }));
+    });
+
+    it('crea un FuelRecord cuando se informan litros y costo', async () => {
+      await service.checkOut('r1', 'owner-1', 1050, undefined, undefined, 12.5, 350);
+      expect(fuelRecordsService.create).toHaveBeenCalledWith(
+        expect.objectContaining({ vehicleId: 'v1', liters: 12.5, cost: 350, odometer: 1050 }),
+      );
+    });
+
+    it('no crea FuelRecord si no se informan litros', async () => {
+      await service.checkOut('r1', 'owner-1', 1050);
+      expect(fuelRecordsService.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('checkIn — sincronización de estado', () => {
+    it('marca el vehículo como en uso al hacer check-in', async () => {
+      repo.findOne = jest.fn().mockResolvedValue({ id: 'r1', userId: 'owner-1', vehicleId: 'v1', status: 'active', checkinOdometer: null });
+      await service.checkIn('r1', 'owner-1', 1000);
+      expect(vehicleRepo.update).toHaveBeenCalledWith('v1', expect.objectContaining({ status: 'in_use' }));
     });
   });
 });

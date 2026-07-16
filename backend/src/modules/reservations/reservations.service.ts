@@ -13,6 +13,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { SystemSettingsService } from '../system-settings/system-settings.service';
 import { UsersService } from '../users/users.service';
 import { SanctionsService } from '../sanctions/sanctions.service';
+import { FuelRecordsService } from '../fuel-records/fuel-records.service';
 
 @Injectable()
 export class ReservationsService {
@@ -27,6 +28,7 @@ export class ReservationsService {
     private systemSettingsService: SystemSettingsService,
     private usersService: UsersService,
     private sanctionsService: SanctionsService,
+    private fuelRecordsService: FuelRecordsService,
     private dataSource: DataSource,
   ) {}
 
@@ -371,6 +373,7 @@ export class ReservationsService {
       payload.checkinConditionPhotoUrls = JSON.stringify(conditionPhotoUrls);
     }
     await this.repo.update(id, payload);
+    await this.vehicleRepo.update(reservation.vehicleId, { status: 'in_use' });
     return this.findOne(id);
   }
 
@@ -380,7 +383,8 @@ export class ReservationsService {
     odometer: number,
     fuelPhotoUrl?: string,
     conditionPhotoUrls?: string[],
-    fuelLevel?: string,
+    fuelLiters?: number,
+    fuelCost?: number,
   ): Promise<Reservation> {
     const reservation = await this.findOne(id);
     if (reservation.userId !== userId) {
@@ -404,12 +408,20 @@ export class ReservationsService {
       status: 'completed',
     };
     if (fuelPhotoUrl != null && fuelPhotoUrl !== '') payload.checkoutFuelPhotoUrl = fuelPhotoUrl;
-    if (fuelLevel != null && fuelLevel.trim() !== '') payload.checkoutFuelLevel = fuelLevel.trim();
     if (conditionPhotoUrls != null && conditionPhotoUrls.length > 0) {
       payload.checkoutConditionPhotoUrls = JSON.stringify(conditionPhotoUrls);
     }
     await this.repo.update(id, payload);
-    await this.vehicleRepo.update(reservation.vehicleId, { currentOdometer: odometerNum });
+    await this.vehicleRepo.update(reservation.vehicleId, { currentOdometer: odometerNum, status: 'available' });
+    if (fuelLiters != null && fuelLiters > 0) {
+      await this.fuelRecordsService.create({
+        vehicleId: reservation.vehicleId,
+        date: new Date(),
+        liters: fuelLiters,
+        cost: fuelCost,
+        odometer: odometerNum,
+      });
+    }
     return this.findOne(id);
   }
 }

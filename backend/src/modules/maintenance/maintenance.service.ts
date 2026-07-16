@@ -34,7 +34,11 @@ export class MaintenanceService {
 
   async create(data: Partial<Maintenance>): Promise<Maintenance> {
     const maintenance = this.repo.create(data);
-    return this.repo.save(maintenance);
+    const saved = await this.repo.save(maintenance);
+    if (saved.vehicleId && saved.status === 'scheduled') {
+      await this.vehiclesService.update(saved.vehicleId, { status: 'maintenance' } as never);
+    }
+    return saved;
   }
 
   async update(id: string, data: Partial<Maintenance>): Promise<Maintenance> {
@@ -48,7 +52,7 @@ export class MaintenanceService {
 
   private async scheduleNextService(maintenance: Maintenance): Promise<void> {
     const vehicle = await this.vehiclesService.findOne(maintenance.vehicleId);
-    const patch: Record<string, unknown> = {};
+    const patch: Record<string, unknown> = { status: 'available' };
     if (vehicle.maintenanceIntervalKm && maintenance.odometerAtService != null) {
       patch.nextServiceOdometer = maintenance.odometerAtService + vehicle.maintenanceIntervalKm;
     }
@@ -57,9 +61,7 @@ export class MaintenanceService {
       next.setDate(next.getDate() + vehicle.maintenanceIntervalDays);
       patch.nextServiceDate = next;
     }
-    if (Object.keys(patch).length > 0) {
-      await this.vehiclesService.update(maintenance.vehicleId, patch);
-    }
+    await this.vehiclesService.update(maintenance.vehicleId, patch);
   }
 
   async remove(id: string): Promise<void> {

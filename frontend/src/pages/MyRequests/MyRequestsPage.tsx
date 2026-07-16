@@ -182,7 +182,8 @@ function CheckInOutForm({
   onClose: () => void;
 }) {
   const [odometer, setOdometer] = useState('');
-  const [fuelLevel, setFuelLevel] = useState<string>('');
+  const [fuelLiters, setFuelLiters] = useState('');
+  const [fuelCost, setFuelCost] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [fuelPhotoUrl, setFuelPhotoUrl] = useState<string | null>(null);
   const [conditionPhotoUrls, setConditionPhotoUrls] = useState<string[]>([]);
@@ -200,7 +201,8 @@ function CheckInOutForm({
     mutationFn: async (payload: {
       odometer: number;
       fuelPhotoUrl?: string | null;
-      fuelLevel?: string;
+      fuelLiters?: number;
+      fuelCost?: number;
       conditionPhotoUrls?: string[];
     }) => {
       const url =
@@ -210,7 +212,8 @@ function CheckInOutForm({
       await apiClient.post(url, {
         odometer: payload.odometer,
         ...(payload.fuelPhotoUrl && { fuelPhotoUrl: payload.fuelPhotoUrl }),
-        ...(payload.fuelLevel?.trim() && { fuelLevel: payload.fuelLevel.trim() }),
+        ...(payload.fuelLiters != null && { fuelLiters: payload.fuelLiters }),
+        ...(payload.fuelCost != null && { fuelCost: payload.fuelCost }),
         ...(payload.conditionPhotoUrls?.length ? { conditionPhotoUrls: payload.conditionPhotoUrls } : {}),
       });
     },
@@ -271,7 +274,8 @@ function CheckInOutForm({
     mutation.mutate({
       odometer: km,
       fuelPhotoUrl: fuelPhotoUrl || undefined,
-      ...(action === 'checkout' && fuelLevel.trim() && { fuelLevel }),
+      ...(action === 'checkout' && fuelLiters.trim() && { fuelLiters: Number(fuelLiters) }),
+      ...(action === 'checkout' && fuelCost.trim() && { fuelCost: Number(fuelCost) }),
       conditionPhotoUrls: conditionPhotoUrls.length ? conditionPhotoUrls : undefined,
     });
   };
@@ -342,18 +346,29 @@ function CheckInOutForm({
           </div>
 
           {action === 'checkout' && (
-            <div>
-              <label htmlFor="fuel-level" className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-soft)' }}>
-                Nivel de gasolina (opcional)
-              </label>
-              <select id="fuel-level" value={fuelLevel} onChange={(e) => setFuelLevel(e.target.value)} className="input-field w-full">
-                <option value="">Seleccionar…</option>
-                <option value="Vacío">Vacío</option>
-                <option value="1/4">1/4</option>
-                <option value="1/2">1/2</option>
-                <option value="3/4">3/4</option>
-                <option value="Lleno">Lleno</option>
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Litros cargados (opcional)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={fuelLiters}
+                  onChange={(e) => setFuelLiters(e.target.value)}
+                  className="input-field w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Costo del combustible (opcional)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={fuelCost}
+                  onChange={(e) => setFuelCost(e.target.value)}
+                  className="input-field w-full"
+                />
+              </div>
             </div>
           )}
 
