@@ -24,7 +24,15 @@
     },
     "collectCoverageFrom": ["**/*.(t|j)s"],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "coverageThreshold": {
+      "global": {
+        "statements": 20,
+        "branches": 12,
+        "functions": 5,
+        "lines": 20
+      }
+    }
   },
   "dependencies": {
     "@nestjs/bull": "^10.0.1",
