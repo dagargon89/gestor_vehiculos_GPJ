@@ -9,6 +9,7 @@ import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { Modal } from '../../components/ui/Modal';
 
 type Provider = {
   id: string;
@@ -68,87 +69,67 @@ function ProviderFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-lg max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-bold text-slate-900">
-            {provider ? 'Editar proveedor' : 'Nuevo proveedor'}
-          </h3>
+    <Modal title={provider ? 'Editar proveedor' : 'Nuevo proveedor'} onClose={onClose} maxWidth="max-w-lg">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
+        )}
+        <div>
+          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Nombre *</label>
+          <input
+            type="text"
+            required
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            className="input-field w-full"
+          />
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
-          )}
+        <div>
+          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Contacto</label>
+          <input
+            type="text"
+            value={form.contactName}
+            onChange={(e) => setForm((f) => ({ ...f, contactName: e.target.value }))}
+            className="input-field w-full"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Nombre *</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Teléfono</label>
             <input
               type="text"
-              required
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              value={form.phone}
+              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+              className="input-field w-full"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Contacto</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Email</label>
             <input
-              type="text"
-              value={form.contactName}
-              onChange={(e) => setForm((f) => ({ ...f, contactName: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              className="input-field w-full"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Teléfono</label>
-              <input
-                type="text"
-                value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Dirección</label>
-            <textarea
-              rows={2}
-              value={form.address}
-              onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-            />
-          </div>
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
-            >
-              {submitting ? 'Guardando...' : provider ? 'Guardar cambios' : 'Crear proveedor'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Dirección</label>
+          <textarea
+            rows={2}
+            value={form.address}
+            onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+            className="input-field w-full"
+          />
+        </div>
+        <div className="flex gap-3 pt-4">
+          <button type="button" onClick={onClose} className="btn-ghost flex-1">Cancelar</button>
+          <button type="submit" disabled={submitting} className="btn-primary flex-1 disabled:opacity-50">
+            {submitting ? 'Guardando...' : provider ? 'Guardar cambios' : 'Crear proveedor'}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -230,21 +211,21 @@ export function ProvidersList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap justify-between items-center gap-4">
-        <h2 className="text-2xl font-bold text-slate-900">Proveedores</h2>
+      <div className="flex flex-wrap justify-between items-end gap-4">
+        <div>
+          <h2 className="text-2xl font-bold uppercase tracking-wide" style={{ color: 'var(--color-text)' }}>Proveedores</h2>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Talleres, agencias y servicios para la flota.</p>
+        </div>
         <div className="flex flex-wrap items-center gap-3">
           <ViewToggle value={view} onChange={setView} storageKey="providersView" />
-          <button
-            type="button"
-            onClick={openCreate}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium"
-          >
+          <button type="button" onClick={openCreate} className="btn-primary">
+            <span className="material-icons" style={{ fontSize: 17 }}>add</span>
             Nuevo proveedor
           </button>
         </div>
       </div>
       {view === 'table' && (
-        <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+        <div className="rounded-[16px] overflow-hidden" style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}>
           <div className="px-4 pt-4">
             <input
               type="text"
@@ -270,9 +251,21 @@ export function ProvidersList() {
           />
           <DataTable<Provider>
             columns={[
-              { key: 'name', header: 'Nombre', sortAccessor: (p) => p.name, cellClassName: 'font-medium', render: (p) => p.name },
+              {
+                key: 'name',
+                header: 'Proveedor',
+                sortAccessor: (p) => p.name,
+                render: (p) => (
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-primary/10 text-primary">
+                      <span className="material-icons" style={{ fontSize: 16 }}>business</span>
+                    </span>
+                    <span className="font-medium">{p.name}</span>
+                  </div>
+                ),
+              },
               { key: 'contactName', header: 'Contacto', sortAccessor: (p) => p.contactName ?? '', render: (p) => p.contactName ?? '—' },
-              { key: 'phone', header: 'Teléfono', render: (p) => p.phone ?? '—' },
+              { key: 'phone', header: 'Teléfono', cellClassName: 'font-mono-data', render: (p) => p.phone ?? '—' },
               { key: 'email', header: 'Email', sortAccessor: (p) => p.email ?? '', render: (p) => p.email ?? '—' },
               {
                 key: 'actions',
@@ -298,37 +291,34 @@ export function ProvidersList() {
       {view === 'cards' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {providers.length === 0 ? (
-            <div className="col-span-full bg-white rounded-[16px] shadow-sm border border-slate-200 px-6 py-12 text-center text-slate-500">
+            <div
+              className="col-span-full rounded-[16px] px-6 py-12 text-center"
+              style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+            >
               No hay proveedores registrados.
             </div>
           ) : (
             providers.map((p: Provider) => (
               <div
                 key={p.id}
-                className="bg-white rounded-[16px] shadow-sm border border-slate-200 p-5 flex flex-col"
+                className="rounded-[16px] p-5 flex flex-col"
+                style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
               >
-                <div className="font-medium text-slate-900 text-lg">{p.name}</div>
-                <div className="text-slate-600 text-sm mt-1">{p.contactName ?? '—'}</div>
-                <div className="text-slate-500 text-sm mt-1">{p.phone ?? '—'}</div>
-                <div className="text-slate-500 text-sm">{p.email ?? '—'}</div>
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-primary/10 text-primary">
+                    <span className="material-icons" style={{ fontSize: 18 }}>business</span>
+                  </span>
+                  <div className="font-medium text-lg" style={{ color: 'var(--color-text)' }}>{p.name}</div>
+                </div>
+                <div className="text-sm mt-2" style={{ color: 'var(--color-text-muted)' }}>{p.contactName ?? '—'}</div>
+                <div className="text-sm font-mono-data" style={{ color: 'var(--color-text-muted)' }}>{p.phone ?? '—'}</div>
+                <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>{p.email ?? '—'}</div>
                 {p.address && (
-                  <div className="text-slate-400 text-xs mt-2 line-clamp-2">{p.address}</div>
+                  <div className="text-xs mt-2 line-clamp-2" style={{ color: 'var(--color-text-muted)' }}>{p.address}</div>
                 )}
-                <div className="mt-4 pt-4 border-t border-slate-100 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(p)}
-                    className="text-primary font-medium hover:underline text-sm"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(p)}
-                    className="text-red-600 font-medium hover:underline text-sm"
-                  >
-                    Eliminar
-                  </button>
+                <div className="mt-4 pt-4 flex gap-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+                  <button type="button" onClick={() => openEdit(p)} className="text-primary font-medium hover:underline text-sm">Editar</button>
+                  <button type="button" onClick={() => handleDelete(p)} className="text-red-600 font-medium hover:underline text-sm">Eliminar</button>
                 </div>
               </div>
             ))
