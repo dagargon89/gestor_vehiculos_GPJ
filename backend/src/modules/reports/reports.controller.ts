@@ -66,4 +66,24 @@ export class ReportsController {
     const [start, end] = this.parseDates(startDate, endDate);
     return this.reportsService.getMaintenanceReport(start, end);
   }
+
+  @Get('fuel-efficiency')
+  @RequirePermission('reports', 'read')
+  getFuelEfficiency(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    const [start, end] = this.parseDates(startDate, endDate);
+    return this.reportsService.getFuelEfficiencyReport(start, end);
+  }
+
+  @Get('tco')
+  @RequirePermission('reports', 'read')
+  getTco(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    const [start, end] = this.parseDates(startDate, endDate);
+    return this.reportsService.getTcoReport(start, end);
+  }
 }

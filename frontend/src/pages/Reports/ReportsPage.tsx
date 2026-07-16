@@ -16,7 +16,7 @@ import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 
-type Tab = 'vehicle-usage' | 'driver-activity' | 'reservations-history' | 'fuel' | 'maintenance';
+type Tab = 'vehicle-usage' | 'driver-activity' | 'reservations-history' | 'fuel' | 'maintenance' | 'fuel-efficiency' | 'tco';
 
 type VehicleUsageRow = {
   id: string;
@@ -77,12 +77,34 @@ type MaintenanceRow = {
   serviceTypes: string;
 };
 
+type FuelEfficiencyRow = {
+  id: string;
+  plate: string;
+  brand: string;
+  model: string;
+  totalKmDriven: string;
+  totalLiters: string;
+  kmPerLiter: string;
+};
+
+type TcoRow = {
+  id: string;
+  plate: string;
+  brand: string;
+  model: string;
+  fuelCost: string;
+  otherCost: string;
+  totalCost: string;
+};
+
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'vehicle-usage', label: 'Uso de vehículos', icon: 'directions_car' },
   { id: 'driver-activity', label: 'Conductores', icon: 'people' },
   { id: 'reservations-history', label: 'Historial de reservas', icon: 'history' },
   { id: 'fuel', label: 'Combustible', icon: 'local_gas_station' },
   { id: 'maintenance', label: 'Mantenimiento', icon: 'build' },
+  { id: 'fuel-efficiency', label: 'Rendimiento (km/L)', icon: 'speed' },
+  { id: 'tco', label: 'Costo total (TCO)', icon: 'account_balance_wallet' },
 ];
 
 const RES_STATUS_LABELS: Record<string, string> = {
@@ -174,12 +196,27 @@ export function ReportsPage() {
     enabled: activeTab === 'maintenance',
   });
 
+  const fuelEfficiencyQ = useQuery({
+    queryKey: ['reports', 'fuel-efficiency', startDate, endDate],
+    queryFn: () =>
+      apiClient.get('/reports/fuel-efficiency', { params }).then((r) => r.data as FuelEfficiencyRow[]),
+    enabled: activeTab === 'fuel-efficiency',
+  });
+
+  const tcoQ = useQuery({
+    queryKey: ['reports', 'tco', startDate, endDate],
+    queryFn: () => apiClient.get('/reports/tco', { params }).then((r) => r.data as TcoRow[]),
+    enabled: activeTab === 'tco',
+  });
+
   // ---- Pagination ----
   const vuPag = usePagination<VehicleUsageRow>(vehicleUsageQ.data ?? []);
   const daPag = usePagination<DriverActivityRow>(driverActivityQ.data ?? []);
   const rhPag = usePagination<ReservationHistoryRow>(reservationsHistoryQ.data ?? []);
   const fuPag = usePagination<FuelRow>(fuelQ.data ?? []);
   const maPag = usePagination<MaintenanceRow>(maintenanceQ.data ?? []);
+  const fePag = usePagination<FuelEfficiencyRow>(fuelEfficiencyQ.data ?? []);
+  const tcoPag = usePagination<TcoRow>(tcoQ.data ?? []);
 
   // ---- Derived chart data (built from already-fetched tab data, no new endpoints) ----
   const topVehiclesByKm = [...(vehicleUsageQ.data ?? [])]
@@ -990,6 +1027,230 @@ export function ReportsPage() {
                     </tbody>
                   </table>
                 </div>
+              </>
+            )}
+          </>
+        )}
+
+        {/* ── Rendimiento (km/L) ── */}
+        {activeTab === 'fuel-efficiency' && (
+          <>
+            <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
+              <h3 className="font-bold" style={{ color: 'var(--color-text)' }}>Rendimiento de combustible</h3>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                Kilómetros recorridos, litros consumidos y rendimiento (km/L) por vehículo.
+              </p>
+            </div>
+            {fuelEfficiencyQ.isLoading ? (
+              <div className="px-6 py-8 text-primary font-bold">Cargando...</div>
+            ) : (
+              <>
+                <TableToolbar
+                  page={fePag.page}
+                  totalPages={fePag.totalPages}
+                  totalItems={fePag.totalItems}
+                  pageSize={fePag.pageSize}
+                  onPageChange={fePag.setPage}
+                  onPageSizeChange={fePag.setPageSize}
+                  startIndex={fePag.startIndex}
+                  endIndex={fePag.endIndex}
+                  pageSizeOptions={fePag.PAGE_SIZE_OPTIONS}
+                  onExportCSV={() =>
+                    exportToCSV(
+                      ['Placa', 'Marca / Modelo', 'Km recorridos', 'Litros', 'Km/L'],
+                      (fuelEfficiencyQ.data ?? []).map((r) => [
+                        r.plate,
+                        `${r.brand} ${r.model}`,
+                        r.totalKmDriven,
+                        r.totalLiters,
+                        r.kmPerLiter,
+                      ]),
+                      'rendimiento.csv',
+                    )
+                  }
+                  onExportExcel={() =>
+                    exportToExcel(
+                      ['Placa', 'Marca / Modelo', 'Km recorridos', 'Litros', 'Km/L'],
+                      (fuelEfficiencyQ.data ?? []).map((r) => [
+                        r.plate,
+                        `${r.brand} ${r.model}`,
+                        r.totalKmDriven,
+                        r.totalLiters,
+                        r.kmPerLiter,
+                      ]),
+                      'rendimiento.xlsx',
+                      'Rendimiento (km/L)',
+                    )
+                  }
+                  onExportPDF={() =>
+                    exportToPDF(
+                      ['Placa', 'Marca / Modelo', 'Km recorridos', 'Litros', 'Km/L'],
+                      (fuelEfficiencyQ.data ?? []).map((r) => [
+                        r.plate,
+                        `${r.brand} ${r.model}`,
+                        r.totalKmDriven,
+                        r.totalLiters,
+                        r.kmPerLiter,
+                      ]),
+                      'rendimiento.pdf',
+                      'Rendimiento de combustible',
+                    )
+                  }
+                />
+                <table className="w-full">
+                  <thead style={{ background: 'var(--color-table-head-bg)', borderBottom: '1px solid var(--color-border)' }}>
+                    <tr>
+                      <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Placa</th>
+                      <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Marca / Modelo</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Km recorridos</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Litros</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Km/L</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {fePag.paginatedData.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-8 text-center" style={{ color: 'var(--color-text-muted)' }}>
+                          Sin datos en el período seleccionado.
+                        </td>
+                      </tr>
+                    ) : (
+                      fePag.paginatedData.map((row) => (
+                        <tr
+                          key={row.id}
+                          className="hover:bg-[var(--color-table-row-hover)]"
+                          style={{ borderBottom: '1px solid var(--color-border)' }}
+                        >
+                          <td className="px-6 py-4 font-medium" style={{ color: 'var(--color-text)' }}>{row.plate}</td>
+                          <td className="px-6 py-4" style={{ color: 'var(--color-text-soft)' }}>
+                            {row.brand} {row.model}
+                          </td>
+                          <td className="px-6 py-4 text-right" style={{ color: 'var(--color-text-soft)' }}>
+                            {Number(row.totalKmDriven).toLocaleString()} km
+                          </td>
+                          <td className="px-6 py-4 text-right" style={{ color: 'var(--color-text-soft)' }}>
+                            {Number(row.totalLiters).toLocaleString()} L
+                          </td>
+                          <td className="px-6 py-4 text-right font-bold text-primary">
+                            {row.kmPerLiter}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </>
+        )}
+
+        {/* ── Costo total de propiedad (TCO) ── */}
+        {activeTab === 'tco' && (
+          <>
+            <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
+              <h3 className="font-bold" style={{ color: 'var(--color-text)' }}>Costo total de propiedad (TCO)</h3>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                Combustible y otros costos acumulados por vehículo en el período.
+              </p>
+            </div>
+            {tcoQ.isLoading ? (
+              <div className="px-6 py-8 text-primary font-bold">Cargando...</div>
+            ) : (
+              <>
+                <TableToolbar
+                  page={tcoPag.page}
+                  totalPages={tcoPag.totalPages}
+                  totalItems={tcoPag.totalItems}
+                  pageSize={tcoPag.pageSize}
+                  onPageChange={tcoPag.setPage}
+                  onPageSizeChange={tcoPag.setPageSize}
+                  startIndex={tcoPag.startIndex}
+                  endIndex={tcoPag.endIndex}
+                  pageSizeOptions={tcoPag.PAGE_SIZE_OPTIONS}
+                  onExportCSV={() =>
+                    exportToCSV(
+                      ['Placa', 'Marca / Modelo', 'Combustible', 'Otros costos', 'Total'],
+                      (tcoQ.data ?? []).map((r) => [
+                        r.plate,
+                        `${r.brand} ${r.model}`,
+                        r.fuelCost,
+                        r.otherCost,
+                        r.totalCost,
+                      ]),
+                      'tco.csv',
+                    )
+                  }
+                  onExportExcel={() =>
+                    exportToExcel(
+                      ['Placa', 'Marca / Modelo', 'Combustible', 'Otros costos', 'Total'],
+                      (tcoQ.data ?? []).map((r) => [
+                        r.plate,
+                        `${r.brand} ${r.model}`,
+                        r.fuelCost,
+                        r.otherCost,
+                        r.totalCost,
+                      ]),
+                      'tco.xlsx',
+                      'Costo total (TCO)',
+                    )
+                  }
+                  onExportPDF={() =>
+                    exportToPDF(
+                      ['Placa', 'Marca / Modelo', 'Combustible', 'Otros costos', 'Total'],
+                      (tcoQ.data ?? []).map((r) => [
+                        r.plate,
+                        `${r.brand} ${r.model}`,
+                        r.fuelCost,
+                        r.otherCost,
+                        r.totalCost,
+                      ]),
+                      'tco.pdf',
+                      'Costo total de propiedad (TCO)',
+                    )
+                  }
+                />
+                <table className="w-full">
+                  <thead style={{ background: 'var(--color-table-head-bg)', borderBottom: '1px solid var(--color-border)' }}>
+                    <tr>
+                      <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Placa</th>
+                      <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Marca / Modelo</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Combustible</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Otros costos</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tcoPag.paginatedData.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-8 text-center" style={{ color: 'var(--color-text-muted)' }}>
+                          Sin datos en el período seleccionado.
+                        </td>
+                      </tr>
+                    ) : (
+                      tcoPag.paginatedData.map((row) => (
+                        <tr
+                          key={row.id}
+                          className="hover:bg-[var(--color-table-row-hover)]"
+                          style={{ borderBottom: '1px solid var(--color-border)' }}
+                        >
+                          <td className="px-6 py-4 font-medium" style={{ color: 'var(--color-text)' }}>{row.plate}</td>
+                          <td className="px-6 py-4" style={{ color: 'var(--color-text-soft)' }}>
+                            {row.brand} {row.model}
+                          </td>
+                          <td className="px-6 py-4 text-right" style={{ color: 'var(--color-text-soft)' }}>
+                            Q {Number(row.fuelCost).toLocaleString()}
+                          </td>
+                          <td className="px-6 py-4 text-right" style={{ color: 'var(--color-text-soft)' }}>
+                            Q {Number(row.otherCost).toLocaleString()}
+                          </td>
+                          <td className="px-6 py-4 text-right font-bold" style={{ color: 'var(--color-text)' }}>
+                            Q {Number(row.totalCost).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </>
             )}
           </>

@@ -150,4 +150,68 @@ export class ReportsService {
     `;
     return this.reservationsRepo.query(query, [startDate, endDate]);
   }
+
+  /** Rendimiento (km/L) por vehículo en el período — requiere check-in y check-out completos */
+  async getFuelEfficiencyReport(startDate: Date, endDate: Date): Promise<unknown[]> {
+    const query = `
+      SELECT
+        v.id,
+        v.plate,
+        v.brand,
+        v.model,
+        COALESCE(SUM(r."checkoutOdometer" - r."checkinOdometer"), 0) as "totalKmDriven",
+        COALESCE(fr_totals."totalLiters", 0) as "totalLiters",
+        CASE WHEN COALESCE(fr_totals."totalLiters", 0) > 0
+          THEN ROUND((COALESCE(SUM(r."checkoutOdometer" - r."checkinOdometer"), 0) / fr_totals."totalLiters")::numeric, 2)
+          ELSE 0 END as "kmPerLiter"
+      FROM vehicles v
+      LEFT JOIN reservations r ON v.id = r."vehicle_id"
+        AND r."checkinOdometer" IS NOT NULL AND r."checkoutOdometer" IS NOT NULL
+        AND r."startDatetime" BETWEEN $1 AND $2
+        AND r."deletedAt" IS NULL
+      LEFT JOIN (
+        SELECT vehicle_id, SUM(liters) as "totalLiters"
+        FROM fuel_records
+        WHERE date BETWEEN $1 AND $2 AND "deletedAt" IS NULL
+        GROUP BY vehicle_id
+      ) fr_totals ON fr_totals.vehicle_id = v.id
+      WHERE v."deletedAt" IS NULL
+      GROUP BY v.id, v.plate, v.brand, v.model, fr_totals."totalLiters"
+      HAVING COALESCE(fr_totals."totalLiters", 0) > 0
+      ORDER BY "kmPerLiter" DESC
+    `;
+    return this.reservationsRepo.query(query, [startDate, endDate]);
+  }
+
+  /** Costo total de propiedad (TCO) por vehículo: combustible + otros costos (incluye mantenimiento vía categoría en costs) */
+  async getTcoReport(startDate: Date, endDate: Date): Promise<unknown[]> {
+    const query = `
+      SELECT
+        v.id,
+        v.plate,
+        v.brand,
+        v.model,
+        COALESCE(fuel_totals."fuelCost", 0) as "fuelCost",
+        COALESCE(cost_totals."otherCost", 0) as "otherCost",
+        COALESCE(fuel_totals."fuelCost", 0) + COALESCE(cost_totals."otherCost", 0) as "totalCost"
+      FROM vehicles v
+      LEFT JOIN (
+        SELECT vehicle_id, SUM(cost) as "fuelCost"
+        FROM fuel_records
+        WHERE date BETWEEN $1 AND $2 AND "deletedAt" IS NULL
+        GROUP BY vehicle_id
+      ) fuel_totals ON fuel_totals.vehicle_id = v.id
+      LEFT JOIN (
+        SELECT vehicle_id, SUM(amount) as "otherCost"
+        FROM costs
+        WHERE date BETWEEN $1 AND $2 AND "deletedAt" IS NULL
+        GROUP BY vehicle_id
+      ) cost_totals ON cost_totals.vehicle_id = v.id
+      WHERE v."deletedAt" IS NULL
+      GROUP BY v.id, v.plate, v.brand, v.model, fuel_totals."fuelCost", cost_totals."otherCost"
+      HAVING COALESCE(fuel_totals."fuelCost", 0) + COALESCE(cost_totals."otherCost", 0) > 0
+      ORDER BY "totalCost" DESC
+    `;
+    return this.reservationsRepo.query(query, [startDate, endDate]);
+  }
 }
