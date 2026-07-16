@@ -44,6 +44,20 @@ function statusBadgeStyle(status: string): React.CSSProperties {
   }
 }
 
+// Folio corto derivado del id — solo de despliegue, no existe como campo en backend.
+function getFolio(r: { id: string }) {
+  return `RES-${r.id.replace(/-/g, '').slice(0, 6).toUpperCase()}`;
+}
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium" style={statusBadgeStyle(status)}>
+      <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} />
+      {STATUS_LABELS[status] ?? status}
+    </span>
+  );
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-MX', {
     day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -61,17 +75,16 @@ function ReservationCard({ r }: { r: Reservation }) {
     <div
       className="rounded-xl p-4 transition-shadow"
       style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
-      onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 20px rgba(99,132,255,0.10)')}
+      onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 20px rgba(245,165,36,0.10)')}
       onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
+          <p className="font-mono-data text-xs" style={{ color: 'var(--color-primary)' }}>{getFolio(r)}</p>
           <h4 className="font-semibold" style={{ color: 'var(--color-text)' }}>{r.eventName || 'Reserva'}</h4>
           <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-soft)' }}>{vehicleLabel}</p>
         </div>
-        <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={statusBadgeStyle(r.status)}>
-          {STATUS_LABELS[r.status] ?? r.status}
-        </span>
+        <StatusBadge status={r.status} />
       </div>
       <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm" style={{ color: 'var(--color-text-soft)' }}>
         <div><span style={{ color: 'var(--color-text-muted)' }}>Salida:</span> {formatDate(r.startDatetime)}</div>
@@ -106,12 +119,11 @@ function OverdueCard({ r, onCheckOut }: { r: Reservation; onCheckOut: () => void
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
+          <p className="font-mono-data text-xs" style={{ color: '#f87171' }}>{getFolio(r)}</p>
           <h4 className="font-semibold" style={{ color: '#f87171' }}>{r.eventName || 'Reserva'}</h4>
           <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-soft)' }}>{vehicleLabel}</p>
         </div>
-        <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={statusBadgeStyle('overdue')}>
-          Vencida
-        </span>
+        <StatusBadge status="overdue" />
       </div>
       <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm" style={{ color: 'var(--color-text-soft)' }}>
         <div><span style={{ color: 'var(--color-text-muted)' }}>Salida:</span> {formatDate(r.startDatetime)}</div>
@@ -295,7 +307,7 @@ function CheckInOutForm({
             onClick={onClose}
             className="p-2 rounded-lg transition-colors"
             style={{ color: 'var(--color-text-muted)' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,132,255,0.08)')}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,165,36,0.08)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             aria-label="Cerrar"
           >
@@ -435,17 +447,16 @@ function ActiveReservationCard({
     <div
       className="rounded-xl p-4 transition-shadow"
       style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
-      onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 20px rgba(99,132,255,0.10)')}
+      onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 20px rgba(245,165,36,0.10)')}
       onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
+          <p className="font-mono-data text-xs" style={{ color: 'var(--color-primary)' }}>{getFolio(r)}</p>
           <h4 className="font-semibold" style={{ color: 'var(--color-text)' }}>{r.eventName || 'Reserva'}</h4>
           <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-soft)' }}>{vehicleLabel}</p>
         </div>
-        <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={statusBadgeStyle(r.status)}>
-          {STATUS_LABELS[r.status] ?? r.status}
-        </span>
+        <StatusBadge status={r.status} />
       </div>
       <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm" style={{ color: 'var(--color-text-soft)' }}>
         <div><span style={{ color: 'var(--color-text-muted)' }}>Salida:</span> {formatDate(r.startDatetime)}</div>
@@ -559,20 +570,37 @@ export function MyRequestsPage() {
         />
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Mis solicitudes</h1>
-          <p className="mt-1" style={{ color: 'var(--color-text-muted)' }}>
-            Tus reservas pendientes y el historial de solicitudes de vehículos.
+          <h1
+            className="text-[28px] font-semibold uppercase tracking-wide m-0"
+            style={{ color: 'var(--color-text)', fontFamily: "'Barlow Condensed', sans-serif" }}
+          >
+            Mis solicitudes
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            Historial y estado de tus solicitudes de vehículo.
           </p>
         </div>
-        <Link
-          to="/solicitud-vehiculos"
-          className="btn-primary inline-flex items-center gap-2 px-4 py-2.5"
-        >
-          <span className="material-icons text-lg">add</span>
-          Nueva solicitud
-        </Link>
+        <div className="flex items-end gap-4">
+          {[
+            { n: pending.length, label: 'Pendientes', c: 'var(--color-primary)' },
+            { n: active.length, label: 'En curso', c: '#4ade80' },
+            { n: overdue.length, label: 'Vencidas', c: '#f87171' },
+          ].map((s) => (
+            <div key={s.label} className="text-right">
+              <div className="font-mono-data text-[22px] font-semibold" style={{ color: s.c }}>{s.n}</div>
+              <div className="text-[10.5px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>{s.label}</div>
+            </div>
+          ))}
+          <Link
+            to="/solicitud-vehiculos"
+            className="btn-primary inline-flex items-center gap-2 px-4 py-2.5"
+          >
+            <span className="material-icons text-lg">add</span>
+            Nueva solicitud
+          </Link>
+        </div>
       </div>
 
       {/* Vencidas — aviso prominente */}
@@ -656,6 +684,13 @@ export function MyRequestsPage() {
               columns={
                 [
                   {
+                    key: 'folio',
+                    header: 'Folio',
+                    cellClassName: 'font-mono-data whitespace-nowrap',
+                    cellStyle: { color: 'var(--color-primary)' },
+                    render: (r) => getFolio(r),
+                  },
+                  {
                     key: 'vehicle',
                     header: 'Vehículo',
                     sortAccessor: (r) => getHistoryVehicleLabel(r),
@@ -679,26 +714,14 @@ export function MyRequestsPage() {
                     key: 'start',
                     header: 'Salida',
                     sortAccessor: (r) => r.startDatetime,
-                    cellClassName: 'whitespace-nowrap',
+                    cellClassName: 'font-mono-data whitespace-nowrap',
                     cellStyle: { color: 'var(--color-text-muted)' },
                     render: (r) => formatDate(r.startDatetime),
                   },
                   {
-                    key: 'end',
-                    header: 'Regreso',
-                    sortAccessor: (r) => r.endDatetime,
-                    cellClassName: 'whitespace-nowrap',
-                    cellStyle: { color: 'var(--color-text-muted)' },
-                    render: (r) => formatDate(r.endDatetime),
-                  },
-                  {
                     key: 'status',
                     header: 'Estado',
-                    render: (r) => (
-                      <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={statusBadgeStyle(r.status)}>
-                        {STATUS_LABELS[r.status] ?? r.status}
-                      </span>
-                    ),
+                    render: (r) => <StatusBadge status={r.status} />,
                   },
                 ] satisfies DataTableColumn<Reservation>[]
               }
