@@ -41,6 +41,18 @@ export class Vehicle {
   @Column({ type: 'int', nullable: true })
   currentOdometer: number;
 
+  @Column({ type: 'int', nullable: true })
+  maintenanceIntervalKm: number;
+
+  @Column({ type: 'int', nullable: true })
+  maintenanceIntervalDays: number;
+
+  @Column({ type: 'int', nullable: true })
+  nextServiceOdometer: number;
+
+  @Column({ type: 'date', nullable: true })
+  nextServiceDate: Date;
+
   @CreateDateColumn()
   createdAt: Date;
 

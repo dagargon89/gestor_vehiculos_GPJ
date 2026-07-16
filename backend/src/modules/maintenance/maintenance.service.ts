@@ -2,12 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Maintenance } from '../../database/entities/maintenance.entity';
+import { VehiclesService } from '../vehicles/vehicles.service';
 
 @Injectable()
 export class MaintenanceService {
   constructor(
     @InjectRepository(Maintenance)
     private repo: Repository<Maintenance>,
+    private vehiclesService: VehiclesService,
   ) {}
 
   async findAll(filters?: { vehicleId?: string; status?: string }): Promise<Maintenance[]> {
@@ -37,7 +39,27 @@ export class MaintenanceService {
 
   async update(id: string, data: Partial<Maintenance>): Promise<Maintenance> {
     await this.repo.update(id, data);
-    return this.findOne(id);
+    const updated = await this.findOne(id);
+    if (data.status === 'completed') {
+      await this.scheduleNextService(updated);
+    }
+    return updated;
+  }
+
+  private async scheduleNextService(maintenance: Maintenance): Promise<void> {
+    const vehicle = await this.vehiclesService.findOne(maintenance.vehicleId);
+    const patch: Record<string, unknown> = {};
+    if (vehicle.maintenanceIntervalKm && maintenance.odometerAtService != null) {
+      patch.nextServiceOdometer = maintenance.odometerAtService + vehicle.maintenanceIntervalKm;
+    }
+    if (vehicle.maintenanceIntervalDays) {
+      const next = new Date();
+      next.setDate(next.getDate() + vehicle.maintenanceIntervalDays);
+      patch.nextServiceDate = next;
+    }
+    if (Object.keys(patch).length > 0) {
+      await this.vehiclesService.update(maintenance.vehicleId, patch);
+    }
   }
 
   async remove(id: string): Promise<void> {
