@@ -1,5 +1,16 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import {
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 import apiClient from '../../services/api.service';
 import { usePagination } from '../../hooks/usePagination';
 import { TableToolbar } from '../../components/ui/TableToolbar';
@@ -170,6 +181,32 @@ export function ReportsPage() {
   const fuPag = usePagination<FuelRow>(fuelQ.data ?? []);
   const maPag = usePagination<MaintenanceRow>(maintenanceQ.data ?? []);
 
+  // ---- Derived chart data (built from already-fetched tab data, no new endpoints) ----
+  const topVehiclesByKm = [...(vehicleUsageQ.data ?? [])]
+    .sort((a, b) => Number(b.totalKmDriven ?? 0) - Number(a.totalKmDriven ?? 0))
+    .slice(0, 5)
+    .map((r) => ({ label: r.plate, km: Number(r.totalKmDriven ?? 0) }));
+
+  const monthlyReservations = (() => {
+    const counts = new Map<string, number>();
+    for (const r of reservationsHistoryQ.data ?? []) {
+      if (!r.startDatetime) continue;
+      const d = new Date(r.startDatetime);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, reservas]) => {
+        const [y, m] = key.split('-');
+        const label = new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('es-GT', {
+          month: 'short',
+          year: '2-digit',
+        });
+        return { label, reservas };
+      });
+  })();
+
   return (
     <div className="space-y-6">
       <h2
@@ -253,6 +290,55 @@ export function ReportsPage() {
               <div className="px-6 py-8 text-primary font-bold">Cargando...</div>
             ) : (
               <>
+                {topVehiclesByKm.length > 0 && (
+                  <div className="px-6 pt-4 pb-2">
+                    <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>
+                      Top 5 vehículos por kilometraje
+                    </h4>
+                    <div style={{ width: '100%', height: 220 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={topVehiclesByKm}
+                          layout="vertical"
+                          margin={{ top: 4, right: 24, left: 8, bottom: 4 }}
+                        >
+                          <defs>
+                            <linearGradient id="topVehKmGradient" x1="0" y1="0" x2="1" y2="0">
+                              <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.85} />
+                              <stop offset="100%" stopColor="var(--color-primary-dark)" stopOpacity={0.85} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} />
+                          <XAxis
+                            type="number"
+                            tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <YAxis
+                            type="category"
+                            dataKey="label"
+                            width={90}
+                            tick={{ fontSize: 12, fill: 'var(--color-text-soft)' }}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              background: 'var(--color-surface)',
+                              border: '1px solid var(--color-border)',
+                              borderRadius: 8,
+                              fontSize: 12,
+                              color: 'var(--color-text)',
+                            }}
+                            formatter={(value) => [`${Number(value).toLocaleString()} km`, 'Kilometraje']}
+                          />
+                          <Bar dataKey="km" fill="url(#topVehKmGradient)" radius={[0, 6, 6, 0]} barSize={18} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
                 <TableToolbar
                   page={vuPag.page}
                   totalPages={vuPag.totalPages}
@@ -481,6 +567,60 @@ export function ReportsPage() {
               <div className="px-6 py-8 text-primary font-bold">Cargando...</div>
             ) : (
               <>
+                {monthlyReservations.length > 0 && (
+                  <div className="px-6 pt-4 pb-2">
+                    <h4 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>
+                      Reservas por mes
+                    </h4>
+                    <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
+                      Conteo de reservas por mes en el período seleccionado.
+                    </p>
+                    <div style={{ width: '100%', height: 200 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={monthlyReservations} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="reservasPorMesGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                          <XAxis
+                            dataKey="label"
+                            tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <YAxis
+                            allowDecimals={false}
+                            tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              background: 'var(--color-surface)',
+                              border: '1px solid var(--color-border)',
+                              borderRadius: 8,
+                              fontSize: 12,
+                              color: 'var(--color-text)',
+                            }}
+                            formatter={(value) => [String(value), 'Reservas']}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="reservas"
+                            stroke="var(--color-primary)"
+                            strokeWidth={2}
+                            fill="url(#reservasPorMesGradient)"
+                            dot={{ r: 3, fill: 'var(--color-primary)', strokeWidth: 0 }}
+                            activeDot={{ r: 5, fill: 'var(--color-primary)' }}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
                 <TableToolbar
                   page={rhPag.page}
                   totalPages={rhPag.totalPages}
