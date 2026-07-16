@@ -31,7 +31,7 @@ let ReservationsController = class ReservationsController {
         return this.reservationsService.checkIn(id, user.id, body.odometer, body.fuelPhotoUrl, body.conditionPhotoUrls);
     }
     checkOut(id, user, body) {
-        return this.reservationsService.checkOut(id, user.id, body.odometer, body.fuelPhotoUrl, body.conditionPhotoUrls, body.fuelLevel);
+        return this.reservationsService.checkOut(id, user.id, body.odometer, body.fuelPhotoUrl, body.conditionPhotoUrls, body.fuelLiters, body.fuelCost);
     }
     findNoCheckIn() {
         return this.reservationsService.findNoCheckIn();
@@ -42,11 +42,13 @@ let ReservationsController = class ReservationsController {
     create(body) {
         return this.reservationsService.create(body);
     }
-    async update(id, body) {
+    async update(id, body, user) {
         try {
-            return await this.reservationsService.update(id, body);
+            return await this.reservationsService.update(id, body, user);
         }
         catch (err) {
+            if (err instanceof common_1.HttpException)
+                throw err;
             const message = err instanceof Error ? err.message : String(err);
             throw new common_1.InternalServerErrorException(message);
         }
@@ -116,8 +118,9 @@ __decorate([
     (0, permissions_decorator_1.RequirePermission)('reservations', 'update'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", Promise)
 ], ReservationsController.prototype, "update", null);
 __decorate([

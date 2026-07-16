@@ -13,6 +13,8 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StorageService = void 0;
+const https = require("https");
+const http = require("http");
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
@@ -91,6 +93,29 @@ let StorageService = class StorageService {
         if (!file)
             throw new common_1.NotFoundException('Archivo no encontrado');
         return file;
+    }
+    async fetchRemoteImage(url) {
+        const allowed = /^https:\/\/storage\.googleapis\.com\//;
+        if (!allowed.test(url)) {
+            throw new common_1.BadRequestException('URL no permitida para proxy');
+        }
+        return new Promise((resolve, reject) => {
+            const client = url.startsWith('https') ? https : http;
+            const req = client.get(url, (res) => {
+                if (res.statusCode && res.statusCode >= 400) {
+                    reject(new common_1.BadRequestException(`Error al obtener imagen: ${res.statusCode}`));
+                    return;
+                }
+                const chunks = [];
+                res.on('data', (c) => chunks.push(c));
+                res.on('end', () => resolve({
+                    buffer: Buffer.concat(chunks),
+                    contentType: res.headers['content-type'] || 'image/jpeg',
+                }));
+                res.on('error', reject);
+            });
+            req.on('error', reject);
+        });
     }
 };
 exports.StorageService = StorageService;

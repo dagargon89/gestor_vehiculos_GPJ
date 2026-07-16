@@ -1,8 +1,8 @@
 import { Vehicle } from './vehicle.entity';
 export declare class Maintenance {
     id: string;
-    vehicleId: string;
     vehicle: Vehicle;
+    vehicleId: string;
     scheduledDate: Date;
     type: string;
     description: string;

@@ -26,4 +26,7 @@ export declare class UsersService {
     private static readonly UPDATE_ALLOWED_KEYS;
     update(id: string, data: Partial<User>): Promise<User>;
     remove(id: string): Promise<void>;
+    findUsersWithPermission(resource: string, action: string): Promise<User[]>;
+    private static readonly SELF_SERVICE_ALLOWED_KEYS;
+    updateOwnProfile(id: string, data: Partial<User>): Promise<User>;
 }

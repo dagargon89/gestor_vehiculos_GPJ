@@ -20,14 +20,14 @@ __decorate([
     __metadata("design:type", String)
 ], Cost.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], Cost.prototype, "vehicleId", void 0);
-__decorate([
     (0, typeorm_1.ManyToOne)(() => vehicle_entity_1.Vehicle),
     (0, typeorm_1.JoinColumn)({ name: 'vehicle_id' }),
     __metadata("design:type", vehicle_entity_1.Vehicle)
 ], Cost.prototype, "vehicle", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'vehicle_id' }),
+    __metadata("design:type", String)
+], Cost.prototype, "vehicleId", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)

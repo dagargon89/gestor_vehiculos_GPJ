@@ -9,5 +9,6 @@ export declare class SanctionsService {
     findOne(id: string): Promise<Sanction>;
     create(data: Partial<Sanction>): Promise<Sanction>;
     update(id: string, data: Partial<Sanction>): Promise<Sanction>;
+    isUserSanctioned(userId: string, atDate?: Date): Promise<boolean>;
     remove(id: string): Promise<void>;
 }

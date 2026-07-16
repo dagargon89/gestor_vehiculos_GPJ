@@ -20,7 +20,7 @@ __decorate([
     __metadata("design:type", String)
 ], Vehicle.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ unique: true }),
     __metadata("design:type", String)
 ], Vehicle.prototype, "plate", void 0);
 __decorate([
@@ -40,7 +40,7 @@ __decorate([
     __metadata("design:type", String)
 ], Vehicle.prototype, "color", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ nullable: true, unique: true }),
     __metadata("design:type", String)
 ], Vehicle.prototype, "vin", void 0);
 __decorate([
@@ -55,6 +55,22 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'int', nullable: true }),
     __metadata("design:type", Number)
 ], Vehicle.prototype, "currentOdometer", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'int', nullable: true }),
+    __metadata("design:type", Number)
+], Vehicle.prototype, "maintenanceIntervalKm", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'int', nullable: true }),
+    __metadata("design:type", Number)
+], Vehicle.prototype, "maintenanceIntervalDays", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'int', nullable: true }),
+    __metadata("design:type", Number)
+], Vehicle.prototype, "nextServiceOdometer", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'date', nullable: true }),
+    __metadata("design:type", Date)
+], Vehicle.prototype, "nextServiceDate", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

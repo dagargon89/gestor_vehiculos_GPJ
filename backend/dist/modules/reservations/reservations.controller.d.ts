@@ -12,12 +12,13 @@ export declare class ReservationsController {
     checkOut(id: string, user: CurrentUserPayload, body: {
         odometer: number;
         fuelPhotoUrl?: string;
-        fuelLevel?: string;
         conditionPhotoUrls?: string[];
+        fuelLiters?: number;
+        fuelCost?: number;
     }): Promise<import("../../database/entities/reservation.entity").Reservation>;
     findNoCheckIn(): Promise<import("../../database/entities/reservation.entity").Reservation[]>;
     findOne(id: string): Promise<import("../../database/entities/reservation.entity").Reservation>;
     create(body: Record<string, unknown>): Promise<import("../../database/entities/reservation.entity").Reservation>;
-    update(id: string, body: Record<string, unknown>): Promise<import("../../database/entities/reservation.entity").Reservation>;
+    update(id: string, body: Record<string, unknown>, user: CurrentUserPayload): Promise<import("../../database/entities/reservation.entity").Reservation>;
     remove(id: string): Promise<void>;
 }

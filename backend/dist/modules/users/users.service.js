@@ -114,6 +114,29 @@ let UsersService = UsersService_1 = class UsersService {
     async remove(id) {
         await this.userRepo.softDelete(id);
     }
+    async findUsersWithPermission(resource, action) {
+        return this.userRepo
+            .createQueryBuilder('user')
+            .innerJoin('user.role', 'role')
+            .innerJoin('role.permissions', 'permission')
+            .where('permission.resource = :resource', { resource })
+            .andWhere('permission.action = :action', { action })
+            .andWhere('user.status = :status', { status: 'active' })
+            .getMany();
+    }
+    async updateOwnProfile(id, data) {
+        const payload = {};
+        for (const key of UsersService_1.SELF_SERVICE_ALLOWED_KEYS) {
+            if (key in data) {
+                payload[key] = data[key];
+            }
+        }
+        if (Object.keys(payload).length === 0) {
+            return this.findOne(id);
+        }
+        await this.userRepo.update(id, payload);
+        return this.findOne(id);
+    }
 };
 exports.UsersService = UsersService;
 UsersService.UPDATE_ALLOWED_KEYS = [
@@ -132,6 +155,19 @@ UsersService.UPDATE_ALLOWED_KEYS = [
     'emergencyContactRelationship',
     'emailNotifications',
     'autoApprovalEnabled',
+];
+UsersService.SELF_SERVICE_ALLOWED_KEYS = [
+    'displayName',
+    'photoUrl',
+    'phone',
+    'licenseNumber',
+    'licenseType',
+    'licenseExpiry',
+    'licenseRestrictions',
+    'emergencyContactName',
+    'emergencyContactPhone',
+    'emergencyContactRelationship',
+    'emailNotifications',
 ];
 exports.UsersService = UsersService = UsersService_1 = __decorate([
     (0, common_1.Injectable)(),

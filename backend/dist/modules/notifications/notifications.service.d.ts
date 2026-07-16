@@ -14,5 +14,6 @@ export declare class NotificationsService {
     create(data: Partial<Notification>): Promise<Notification>;
     update(id: string, data: Partial<Notification>): Promise<Notification>;
     markAsRead(id: string): Promise<Notification>;
+    markAllAsRead(userId: string): Promise<void>;
     remove(id: string): Promise<void>;
 }

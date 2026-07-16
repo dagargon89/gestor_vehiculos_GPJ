@@ -20,14 +20,15 @@ __decorate([
     __metadata("design:type", String)
 ], Notification.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], Notification.prototype, "userId", void 0);
-__decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User),
     (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
     __metadata("design:type", user_entity_1.User)
 ], Notification.prototype, "user", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'user_id' }),
+    (0, typeorm_1.Index)(),
+    __metadata("design:type", String)
+], Notification.prototype, "userId", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)

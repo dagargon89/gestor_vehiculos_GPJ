@@ -14,4 +14,6 @@ export declare class ReportsService {
     getReservationsHistoryReport(startDate: Date, endDate: Date): Promise<unknown[]>;
     getFuelReport(startDate: Date, endDate: Date): Promise<unknown[]>;
     getMaintenanceReport(startDate: Date, endDate: Date): Promise<unknown[]>;
+    getFuelEfficiencyReport(startDate: Date, endDate: Date): Promise<unknown[]>;
+    getTcoReport(startDate: Date, endDate: Date): Promise<unknown[]>;
 }

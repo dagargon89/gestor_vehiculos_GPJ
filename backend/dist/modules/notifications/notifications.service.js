@@ -79,6 +79,9 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         await this.repo.update(id, { read: true });
         return this.findOne(id);
     }
+    async markAllAsRead(userId) {
+        await this.repo.update({ userId, read: false }, { read: true });
+    }
     async remove(id) {
         await this.repo.delete(id);
     }

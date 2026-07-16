@@ -32,6 +32,14 @@ let StorageController = class StorageController {
         const result = await this.storageService.uploadFile(file, entityType, entityId, user.id);
         return { firebaseUrl: result.firebaseUrl, id: result.id };
     }
+    async proxyImage(url, res) {
+        if (!url)
+            throw new common_1.BadRequestException('Falta parámetro url');
+        const { buffer, contentType } = await this.storageService.fetchRemoteImage(decodeURIComponent(url));
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Cache-Control', 'private, max-age=3600');
+        res.send(buffer);
+    }
     getOne(id) {
         return this.storageService.findOne(id);
     }
@@ -45,6 +53,7 @@ let StorageController = class StorageController {
 exports.StorageController = StorageController;
 __decorate([
     (0, common_1.Post)('upload'),
+    (0, permissions_decorator_1.RequirePermission)('storage_files', 'create'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file')),
     __param(0, (0, common_1.UploadedFile)()),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
@@ -53,6 +62,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], StorageController.prototype, "upload", null);
+__decorate([
+    (0, common_1.Get)('proxy'),
+    __param(0, (0, common_1.Query)('url')),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], StorageController.prototype, "proxyImage", null);
 __decorate([
     (0, common_1.Get)('record/:id'),
     (0, permissions_decorator_1.RequirePermission)('storage_files', 'read'),
@@ -72,6 +89,7 @@ __decorate([
 ], StorageController.prototype, "getByEntity", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('storage_files', 'delete'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

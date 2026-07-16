@@ -8,4 +8,6 @@ export declare class ReportsController {
     getReservationsHistory(startDate: string, endDate: string): Promise<unknown[]>;
     getFuel(startDate: string, endDate: string): Promise<unknown[]>;
     getMaintenance(startDate: string, endDate: string): Promise<unknown[]>;
+    getFuelEfficiency(startDate: string, endDate: string): Promise<unknown[]>;
+    getTco(startDate: string, endDate: string): Promise<unknown[]>;
 }

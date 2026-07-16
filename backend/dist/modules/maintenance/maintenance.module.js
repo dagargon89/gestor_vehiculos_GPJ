@@ -10,16 +10,26 @@ exports.MaintenanceModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const maintenance_entity_1 = require("../../database/entities/maintenance.entity");
+const vehicle_entity_1 = require("../../database/entities/vehicle.entity");
 const maintenance_service_1 = require("./maintenance.service");
 const maintenance_controller_1 = require("./maintenance.controller");
+const maintenance_scheduler_service_1 = require("./maintenance-scheduler.service");
+const vehicles_module_1 = require("../vehicles/vehicles.module");
+const notifications_module_1 = require("../notifications/notifications.module");
+const users_module_1 = require("../users/users.module");
 let MaintenanceModule = class MaintenanceModule {
 };
 exports.MaintenanceModule = MaintenanceModule;
 exports.MaintenanceModule = MaintenanceModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([maintenance_entity_1.Maintenance])],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([maintenance_entity_1.Maintenance, vehicle_entity_1.Vehicle]),
+            vehicles_module_1.VehiclesModule,
+            notifications_module_1.NotificationsModule,
+            users_module_1.UsersModule,
+        ],
         controllers: [maintenance_controller_1.MaintenanceController],
-        providers: [maintenance_service_1.MaintenanceService],
+        providers: [maintenance_service_1.MaintenanceService, maintenance_scheduler_service_1.MaintenanceSchedulerService],
         exports: [maintenance_service_1.MaintenanceService],
     })
 ], MaintenanceModule);

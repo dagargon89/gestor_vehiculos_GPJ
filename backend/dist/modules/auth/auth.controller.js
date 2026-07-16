@@ -18,6 +18,7 @@ const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const firebase_auth_guard_1 = require("../../common/guards/firebase-auth.guard");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
+const sync_user_dto_1 = require("./dto/sync-user.dto");
 let AuthController = AuthController_1 = class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -64,7 +65,7 @@ __decorate([
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, sync_user_dto_1.SyncUserDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "syncUser", null);
 __decorate([

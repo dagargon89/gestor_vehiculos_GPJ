@@ -1,5 +1,6 @@
 import { AuthService } from './auth.service';
 import { CurrentUserPayload } from '../../common/decorators/current-user.decorator';
+import { SyncUserDto } from './dto/sync-user.dto';
 export declare class AuthController {
     private authService;
     private readonly logger;
@@ -24,7 +25,7 @@ export declare class AuthController {
             action: string;
         }[];
     };
-    syncUser(user: CurrentUserPayload, body: Record<string, unknown>): Promise<import("../../database/entities/user.entity").User>;
+    syncUser(user: CurrentUserPayload, body: SyncUserDto): Promise<import("../../database/entities/user.entity").User>;
     deleteAccount(user: CurrentUserPayload): Promise<{
         message: string;
     }>;

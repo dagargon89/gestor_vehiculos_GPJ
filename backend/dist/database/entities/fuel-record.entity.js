@@ -20,14 +20,14 @@ __decorate([
     __metadata("design:type", String)
 ], FuelRecord.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], FuelRecord.prototype, "vehicleId", void 0);
-__decorate([
     (0, typeorm_1.ManyToOne)(() => vehicle_entity_1.Vehicle),
     (0, typeorm_1.JoinColumn)({ name: 'vehicle_id' }),
     __metadata("design:type", vehicle_entity_1.Vehicle)
 ], FuelRecord.prototype, "vehicle", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'vehicle_id' }),
+    __metadata("design:type", String)
+], FuelRecord.prototype, "vehicleId", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'date' }),
     __metadata("design:type", Date)

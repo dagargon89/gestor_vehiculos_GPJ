@@ -49,6 +49,14 @@ let ReportsController = class ReportsController {
         const [start, end] = this.parseDates(startDate, endDate);
         return this.reportsService.getMaintenanceReport(start, end);
     }
+    getFuelEfficiency(startDate, endDate) {
+        const [start, end] = this.parseDates(startDate, endDate);
+        return this.reportsService.getFuelEfficiencyReport(start, end);
+    }
+    getTco(startDate, endDate) {
+        const [start, end] = this.parseDates(startDate, endDate);
+        return this.reportsService.getTcoReport(start, end);
+    }
 };
 exports.ReportsController = ReportsController;
 __decorate([
@@ -96,6 +104,24 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "getMaintenance", null);
+__decorate([
+    (0, common_1.Get)('fuel-efficiency'),
+    (0, permissions_decorator_1.RequirePermission)('reports', 'read'),
+    __param(0, (0, common_1.Query)('startDate')),
+    __param(1, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ReportsController.prototype, "getFuelEfficiency", null);
+__decorate([
+    (0, common_1.Get)('tco'),
+    (0, permissions_decorator_1.RequirePermission)('reports', 'read'),
+    __param(0, (0, common_1.Query)('startDate')),
+    __param(1, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ReportsController.prototype, "getTco", null);
 exports.ReportsController = ReportsController = __decorate([
     (0, common_1.Controller)('reports'),
     (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard, permissions_guard_1.PermissionsGuard),

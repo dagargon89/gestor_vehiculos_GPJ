@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var ReservationsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReservationsService = void 0;
 const common_1 = require("@nestjs/common");
@@ -20,12 +21,20 @@ const reservation_entity_1 = require("../../database/entities/reservation.entity
 const vehicle_entity_1 = require("../../database/entities/vehicle.entity");
 const notifications_service_1 = require("../notifications/notifications.service");
 const system_settings_service_1 = require("../system-settings/system-settings.service");
-let ReservationsService = class ReservationsService {
-    constructor(repo, vehicleRepo, notificationsService, systemSettingsService) {
+const users_service_1 = require("../users/users.service");
+const sanctions_service_1 = require("../sanctions/sanctions.service");
+const fuel_records_service_1 = require("../fuel-records/fuel-records.service");
+let ReservationsService = ReservationsService_1 = class ReservationsService {
+    constructor(repo, vehicleRepo, notificationsService, systemSettingsService, usersService, sanctionsService, fuelRecordsService, dataSource) {
         this.repo = repo;
         this.vehicleRepo = vehicleRepo;
         this.notificationsService = notificationsService;
         this.systemSettingsService = systemSettingsService;
+        this.usersService = usersService;
+        this.sanctionsService = sanctionsService;
+        this.fuelRecordsService = fuelRecordsService;
+        this.dataSource = dataSource;
+        this.logger = new common_1.Logger(ReservationsService_1.name);
     }
     async findAll(filters) {
         const where = {};
@@ -68,7 +77,6 @@ let ReservationsService = class ReservationsService {
             'userId',
             'startDatetime',
             'endDatetime',
-            'status',
             'eventName',
             'description',
             'destination',
@@ -88,34 +96,72 @@ let ReservationsService = class ReservationsService {
         if (payload.endDatetime && typeof payload.endDatetime === 'string') {
             payload.endDatetime = new Date(payload.endDatetime);
         }
-        let autoApproved = false;
-        if (payload.vehicleId && payload.startDatetime && payload.endDatetime) {
-            await this.assertNoConflict(payload.vehicleId, payload.startDatetime, payload.endDatetime);
-            const autoApproveSetting = await this.systemSettingsService.findByKey('auto_approve_reservations');
-            if (autoApproveSetting?.value === 'true') {
-                payload.status = 'active';
-                autoApproved = true;
+        if (payload.userId) {
+            const requester = await this.usersService.findOne(payload.userId);
+            if (requester.licenseExpiry && new Date(requester.licenseExpiry) < new Date()) {
+                throw new common_1.BadRequestException('No puedes reservar: tu licencia de conducir está vencida.');
+            }
+            const sanctioned = await this.sanctionsService.isUserSanctioned(payload.userId);
+            if (sanctioned) {
+                throw new common_1.BadRequestException('No puedes reservar: tienes una sanción vigente.');
             }
         }
-        const r = this.repo.create(payload);
-        const saved = await this.repo.save(r);
+        let autoApproved = false;
+        let saved;
+        if (payload.vehicleId && payload.startDatetime && payload.endDatetime) {
+            saved = await this.dataSource.transaction(async (em) => {
+                await em.query('SELECT pg_advisory_xact_lock(hashtext($1))', [payload.vehicleId]);
+                await this.assertNoConflict(payload.vehicleId, payload.startDatetime, payload.endDatetime);
+                const autoApproveSetting = await this.systemSettingsService.findByKey('auto_approve_reservations');
+                if (autoApproveSetting?.value === 'true') {
+                    payload.status = 'active';
+                    autoApproved = true;
+                }
+                const r = em.getRepository(reservation_entity_1.Reservation).create(payload);
+                return em.getRepository(reservation_entity_1.Reservation).save(r);
+            });
+        }
+        else {
+            const r = this.repo.create(payload);
+            saved = await this.repo.save(r);
+        }
+        const full = await this.findOne(saved.id);
+        const vehicleLabel = full.vehicle
+            ? `${full.vehicle.plate} – ${full.vehicle.brand} ${full.vehicle.model}`
+            : 'vehículo';
         if (autoApproved) {
-            const full = await this.findOne(saved.id);
-            const vehicleLabel = full.vehicle
-                ? `${full.vehicle.plate} – ${full.vehicle.brand} ${full.vehicle.model}`
-                : 'vehículo';
-            await this.notificationsService.notifyUser(full.userId, 'reservation_approved', 'Reserva aprobada automáticamente', `Tu solicitud de ${vehicleLabel} ha sido aprobada automáticamente. Ya puedes hacer check-in cuando retires el vehículo.`, '/mis-solicitudes');
+            try {
+                await this.notificationsService.notifyUser(full.userId, 'reservation_approved', 'Reserva aprobada automáticamente', `Tu solicitud de ${vehicleLabel} ha sido aprobada automáticamente. Ya puedes hacer check-in cuando retires el vehículo.`, '/mis-solicitudes');
+            }
+            catch (err) {
+                this.logger.error(`Failed to notify user ${full.userId} of auto-approved reservation ${full.id}: ${err instanceof Error ? err.message : err}`);
+            }
+        }
+        else {
+            try {
+                const requesterLabel = full.user?.displayName || full.user?.email || 'Un conductor';
+                const approvers = await this.usersService.findUsersWithPermission('reservations', 'delete');
+                await Promise.all(approvers.map((approver) => this.notificationsService.notifyUser(approver.id, 'reservation_requested', 'Nueva solicitud de reserva pendiente', `${requesterLabel} solicitó ${vehicleLabel} y espera aprobación.`, '/reservations')));
+            }
+            catch (err) {
+                this.logger.error(`Failed to notify approvers of pending reservation ${full.id}: ${err instanceof Error ? err.message : err}`);
+            }
         }
         return saved;
     }
-    async update(id, data) {
+    async update(id, data, currentUser) {
         const previous = await this.findOne(id);
-        const allowedKeys = [
+        const isOwner = previous.userId === currentUser.id;
+        const roleName = currentUser.role?.name?.toLowerCase();
+        const isElevated = roleName === 'admin' || roleName === 'manager_flotilla';
+        if (!isOwner && !isElevated) {
+            throw new common_1.ForbiddenException('No tienes permiso para modificar esta reserva');
+        }
+        const baseAllowedKeys = [
             'vehicleId',
             'userId',
             'startDatetime',
             'endDatetime',
-            'status',
             'eventName',
             'description',
             'destination',
@@ -126,6 +172,7 @@ let ReservationsService = class ReservationsService {
             'checkoutFuelPhotoUrl',
             'checkoutConditionPhotoUrls',
         ];
+        const allowedKeys = isElevated ? [...baseAllowedKeys, 'status'] : baseAllowedKeys;
         const payload = {};
         for (const key of allowedKeys) {
             const value = data[key];
@@ -147,9 +194,15 @@ let ReservationsService = class ReservationsService {
             const newVehicleId = payload.vehicleId ?? previous.vehicleId;
             const newStart = payload.startDatetime ?? previous.startDatetime;
             const newEnd = payload.endDatetime ?? previous.endDatetime;
-            await this.assertNoConflict(newVehicleId, newStart, newEnd, id);
+            await this.dataSource.transaction(async (em) => {
+                await em.query('SELECT pg_advisory_xact_lock(hashtext($1))', [newVehicleId]);
+                await this.assertNoConflict(newVehicleId, newStart, newEnd, id);
+                await em.getRepository(reservation_entity_1.Reservation).update(id, payload);
+            });
         }
-        await this.repo.update(id, payload);
+        else {
+            await this.repo.update(id, payload);
+        }
         const updated = await this.findOne(id);
         const vehicleLabel = previous.vehicle
             ? `${previous.vehicle.plate} – ${previous.vehicle.brand} ${previous.vehicle.model}`
@@ -169,7 +222,7 @@ let ReservationsService = class ReservationsService {
         let qb = this.repo
             .createQueryBuilder('r')
             .where('r.vehicleId = :vehicleId', { vehicleId })
-            .andWhere('r.status IN (:...statuses)', { statuses: ['pending', 'active'] })
+            .andWhere('(r.status IN (:...blocking) OR (r.status = :overdue AND r.checkinOdometer IS NOT NULL AND r.checkoutOdometer IS NULL))', { blocking: ['pending', 'active'], overdue: 'overdue' })
             .andWhere('r.startDatetime < :end', { end })
             .andWhere('r.endDatetime > :start', { start });
         if (excludeId) {
@@ -177,7 +230,7 @@ let ReservationsService = class ReservationsService {
         }
         const count = await qb.getCount();
         if (count > 0) {
-            throw new common_1.BadRequestException('El vehículo ya tiene una reserva en ese horario. Elige otro horario o vehículo.');
+            throw new common_1.BadRequestException('El vehículo ya tiene una reserva activa en ese horario. Elige otro horario o vehículo.');
         }
     }
     async findOverdue() {
@@ -231,9 +284,10 @@ let ReservationsService = class ReservationsService {
             payload.checkinConditionPhotoUrls = JSON.stringify(conditionPhotoUrls);
         }
         await this.repo.update(id, payload);
+        await this.vehicleRepo.update(reservation.vehicleId, { status: 'in_use' });
         return this.findOne(id);
     }
-    async checkOut(id, userId, odometer, fuelPhotoUrl, conditionPhotoUrls, fuelLevel) {
+    async checkOut(id, userId, odometer, fuelPhotoUrl, conditionPhotoUrls, fuelLiters, fuelCost) {
         const reservation = await this.findOne(id);
         if (reservation.userId !== userId) {
             throw new common_1.ForbiddenException('Solo el titular de la reserva puede hacer check-out');
@@ -257,24 +311,35 @@ let ReservationsService = class ReservationsService {
         };
         if (fuelPhotoUrl != null && fuelPhotoUrl !== '')
             payload.checkoutFuelPhotoUrl = fuelPhotoUrl;
-        if (fuelLevel != null && fuelLevel.trim() !== '')
-            payload.checkoutFuelLevel = fuelLevel.trim();
         if (conditionPhotoUrls != null && conditionPhotoUrls.length > 0) {
             payload.checkoutConditionPhotoUrls = JSON.stringify(conditionPhotoUrls);
         }
         await this.repo.update(id, payload);
-        await this.vehicleRepo.update(reservation.vehicleId, { currentOdometer: odometerNum });
+        await this.vehicleRepo.update(reservation.vehicleId, { currentOdometer: odometerNum, status: 'available' });
+        if (fuelLiters != null && fuelLiters > 0) {
+            await this.fuelRecordsService.create({
+                vehicleId: reservation.vehicleId,
+                date: new Date(),
+                liters: fuelLiters,
+                cost: fuelCost,
+                odometer: odometerNum,
+            });
+        }
         return this.findOne(id);
     }
 };
 exports.ReservationsService = ReservationsService;
-exports.ReservationsService = ReservationsService = __decorate([
+exports.ReservationsService = ReservationsService = ReservationsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(reservation_entity_1.Reservation)),
     __param(1, (0, typeorm_1.InjectRepository)(vehicle_entity_1.Vehicle)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         notifications_service_1.NotificationsService,
-        system_settings_service_1.SystemSettingsService])
+        system_settings_service_1.SystemSettingsService,
+        users_service_1.UsersService,
+        sanctions_service_1.SanctionsService,
+        fuel_records_service_1.FuelRecordsService,
+        typeorm_2.DataSource])
 ], ReservationsService);
 //# sourceMappingURL=reservations.service.js.map

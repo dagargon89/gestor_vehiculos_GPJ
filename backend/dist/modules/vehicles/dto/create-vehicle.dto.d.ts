@@ -8,4 +8,8 @@ export declare class CreateVehicleDto {
     photoUrls?: string;
     status?: string;
     currentOdometer?: number;
+    maintenanceIntervalKm?: number;
+    maintenanceIntervalDays?: number;
+    nextServiceOdometer?: number;
+    nextServiceDate?: Date;
 }

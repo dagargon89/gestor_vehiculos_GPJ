@@ -10,6 +10,10 @@ export declare class Vehicle {
     photoUrls: string;
     status: string;
     currentOdometer: number;
+    maintenanceIntervalKm: number;
+    maintenanceIntervalDays: number;
+    nextServiceOdometer: number;
+    nextServiceDate: Date;
     createdAt: Date;
     updatedAt: Date;
     deletedAt: Date;

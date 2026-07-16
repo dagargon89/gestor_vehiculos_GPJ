@@ -1,8 +1,8 @@
 import { Vehicle } from './vehicle.entity';
 export declare class Cost {
     id: string;
-    vehicleId: string;
     vehicle: Vehicle;
+    vehicleId: string;
     category: string;
     amount: number;
     date: Date;

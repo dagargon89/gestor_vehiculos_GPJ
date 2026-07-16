@@ -27,6 +27,7 @@ const CONDUCTOR_DEFAULT_PERMISSIONS = [
     { resource: 'incidents', action: 'create' },
     { resource: 'incidents', action: 'update' },
     { resource: 'notifications', action: 'read' },
+    { resource: 'storage_files', action: 'create' },
 ];
 let PermissionsGuard = class PermissionsGuard {
     constructor(reflector) {

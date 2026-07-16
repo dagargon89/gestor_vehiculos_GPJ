@@ -17,9 +17,11 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const maintenance_entity_1 = require("../../database/entities/maintenance.entity");
+const vehicles_service_1 = require("../vehicles/vehicles.service");
 let MaintenanceService = class MaintenanceService {
-    constructor(repo) {
+    constructor(repo, vehiclesService) {
         this.repo = repo;
+        this.vehiclesService = vehiclesService;
     }
     async findAll(filters) {
         const where = {};
@@ -44,11 +46,32 @@ let MaintenanceService = class MaintenanceService {
     }
     async create(data) {
         const maintenance = this.repo.create(data);
-        return this.repo.save(maintenance);
+        const saved = await this.repo.save(maintenance);
+        if (saved.vehicleId && saved.status === 'scheduled') {
+            await this.vehiclesService.update(saved.vehicleId, { status: 'maintenance' });
+        }
+        return saved;
     }
     async update(id, data) {
         await this.repo.update(id, data);
-        return this.findOne(id);
+        const updated = await this.findOne(id);
+        if (data.status === 'completed') {
+            await this.scheduleNextService(updated);
+        }
+        return updated;
+    }
+    async scheduleNextService(maintenance) {
+        const vehicle = await this.vehiclesService.findOne(maintenance.vehicleId);
+        const patch = { status: 'available' };
+        if (vehicle.maintenanceIntervalKm && maintenance.odometerAtService != null) {
+            patch.nextServiceOdometer = maintenance.odometerAtService + vehicle.maintenanceIntervalKm;
+        }
+        if (vehicle.maintenanceIntervalDays) {
+            const next = new Date();
+            next.setDate(next.getDate() + vehicle.maintenanceIntervalDays);
+            patch.nextServiceDate = next;
+        }
+        await this.vehiclesService.update(maintenance.vehicleId, patch);
     }
     async remove(id) {
         await this.repo.softDelete(id);
@@ -58,6 +81,7 @@ exports.MaintenanceService = MaintenanceService;
 exports.MaintenanceService = MaintenanceService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(maintenance_entity_1.Maintenance)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        vehicles_service_1.VehiclesService])
 ], MaintenanceService);
 //# sourceMappingURL=maintenance.service.js.map

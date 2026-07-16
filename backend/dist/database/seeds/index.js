@@ -35,15 +35,11 @@ function addDays(d, days) {
     out.setDate(out.getDate() + days);
     return out;
 }
+const permKey = (p) => `${p.resource}:${p.action}`;
 async function seedRolesAndPermissions(dataSource) {
     const permRepo = dataSource.getRepository(permission_entity_1.Permission);
     const roleRepo = dataSource.getRepository(role_entity_1.Role);
-    const existingPerms = await permRepo.count();
-    if (existingPerms > 0) {
-        console.log('  permissions ya tienen datos, omitiendo.');
-        return;
-    }
-    const permissions = await permRepo.save([
+    const permissionDefs = [
         { resource: 'vehicles', action: 'create' },
         { resource: 'vehicles', action: 'read' },
         { resource: 'vehicles', action: 'update' },
@@ -64,6 +60,10 @@ async function seedRolesAndPermissions(dataSource) {
         { resource: 'maintenance', action: 'read' },
         { resource: 'maintenance', action: 'update' },
         { resource: 'maintenance', action: 'delete' },
+        { resource: 'vehicle_documents', action: 'create' },
+        { resource: 'vehicle_documents', action: 'read' },
+        { resource: 'vehicle_documents', action: 'update' },
+        { resource: 'vehicle_documents', action: 'delete' },
         { resource: 'fuel_records', action: 'create' },
         { resource: 'fuel_records', action: 'read' },
         { resource: 'fuel_records', action: 'update' },
@@ -76,8 +76,10 @@ async function seedRolesAndPermissions(dataSource) {
         { resource: 'sanctions', action: 'read' },
         { resource: 'sanctions', action: 'update' },
         { resource: 'sanctions', action: 'delete' },
+        { resource: 'notifications', action: 'create' },
         { resource: 'notifications', action: 'read' },
         { resource: 'notifications', action: 'update' },
+        { resource: 'notifications', action: 'delete' },
         { resource: 'incidents', action: 'create' },
         { resource: 'incidents', action: 'read' },
         { resource: 'incidents', action: 'update' },
@@ -85,40 +87,72 @@ async function seedRolesAndPermissions(dataSource) {
         { resource: 'system_settings', action: 'read' },
         { resource: 'system_settings', action: 'update' },
         { resource: 'audit_logs', action: 'read' },
+        { resource: 'storage_files', action: 'create' },
         { resource: 'storage_files', action: 'read' },
+        { resource: 'storage_files', action: 'delete' },
         { resource: 'roles', action: 'read' },
         { resource: 'roles', action: 'update' },
+        { resource: 'permissions', action: 'create' },
         { resource: 'permissions', action: 'read' },
+        { resource: 'permissions', action: 'update' },
+        { resource: 'permissions', action: 'delete' },
         { resource: 'reports', action: 'read' },
-    ]);
-    const existingRoles = await roleRepo.count();
-    if (existingRoles > 0) {
-        console.log('  roles ya tienen datos, omitiendo.');
-        return;
+    ];
+    const existingPermissions = await permRepo.find();
+    const existingPermKeys = new Set(existingPermissions.map(permKey));
+    const missingPermissionDefs = permissionDefs.filter((d) => !existingPermKeys.has(permKey(d)));
+    const newPermissions = missingPermissionDefs.length > 0 ? await permRepo.save(missingPermissionDefs) : [];
+    if (newPermissions.length > 0) {
+        console.log(`  permissions: ${newPermissions.length} nuevos insertados.`);
     }
-    const adminRole = roleRepo.create({
-        name: 'admin',
-        description: 'Administrador del sistema con acceso total',
-        permissions,
-    });
-    await roleRepo.save(adminRole);
-    const managerResources = ['vehicles', 'reservations', 'maintenance', 'fuel_records', 'costs', 'incidents', 'sanctions', 'providers'];
-    const managerRole = roleRepo.create({
-        name: 'manager_flotilla',
-        description: 'Manager de flotilla: gestión operativa (vehículos, reservas, mantenimiento, costos, incidentes, sanciones, proveedores, reportes, notificaciones)',
-        permissions: permissions.filter((p) => (managerResources.includes(p.resource) && ['create', 'read', 'update', 'delete'].includes(p.action)) ||
-            (p.resource === 'reports' && p.action === 'read') ||
-            (p.resource === 'notifications' && ['read', 'update'].includes(p.action))),
-    });
-    await roleRepo.save(managerRole);
-    const conductorRole = roleRepo.create({
-        name: 'conductor',
-        description: 'Conductor de vehículos',
-        permissions: permissions.filter((p) => ['vehicles', 'reservations', 'fuel_records', 'incidents'].includes(p.resource) &&
-            ['read', 'create', 'update'].includes(p.action)),
-    });
-    await roleRepo.save(conductorRole);
-    console.log('  roles y permissions sembrados (admin, manager_flotilla, conductor).');
+    else {
+        console.log('  permissions ya tienen datos, sin nuevos que insertar.');
+    }
+    const permissions = [...existingPermissions, ...newPermissions];
+    const managerResources = ['vehicles', 'reservations', 'maintenance', 'fuel_records', 'costs', 'incidents', 'sanctions', 'providers', 'storage_files', 'vehicle_documents'];
+    const roleDefs = [
+        {
+            name: 'admin',
+            description: 'Administrador del sistema con acceso total',
+            permissions,
+        },
+        {
+            name: 'manager_flotilla',
+            description: 'Manager de flotilla: gestión operativa (vehículos, reservas, mantenimiento, costos, incidentes, sanciones, proveedores, reportes, notificaciones)',
+            permissions: permissions.filter((p) => (managerResources.includes(p.resource) && ['create', 'read', 'update', 'delete'].includes(p.action)) ||
+                (p.resource === 'reports' && p.action === 'read') ||
+                (p.resource === 'notifications' && ['read', 'update'].includes(p.action))),
+        },
+        {
+            name: 'conductor',
+            description: 'Conductor de vehículos',
+            permissions: permissions.filter((p) => ['vehicles', 'reservations', 'fuel_records', 'incidents'].includes(p.resource) &&
+                ['read', 'create', 'update'].includes(p.action)),
+        },
+    ];
+    for (const def of roleDefs) {
+        const existingRole = await roleRepo.findOne({ where: { name: def.name }, relations: ['permissions'] });
+        if (!existingRole) {
+            const role = roleRepo.create({
+                name: def.name,
+                description: def.description,
+                permissions: def.permissions,
+            });
+            await roleRepo.save(role);
+            console.log(`  rol ${def.name} creado con ${def.permissions.length} permisos.`);
+            continue;
+        }
+        const currentPermKeys = new Set(existingRole.permissions.map(permKey));
+        const missingForRole = def.permissions.filter((p) => !currentPermKeys.has(permKey(p)));
+        if (missingForRole.length === 0) {
+            console.log(`  rol ${def.name} ya tiene sus permisos al día, sin cambios.`);
+            continue;
+        }
+        existingRole.permissions = [...existingRole.permissions, ...missingForRole];
+        await roleRepo.save(existingRole);
+        console.log(`  rol ${def.name}: ${missingForRole.length} permisos nuevos asociados.`);
+    }
+    console.log('  roles y permissions sembrados/actualizados (admin, manager_flotilla, conductor).');
 }
 async function seedBootstrapAdminUser(dataSource) {
     const userRepo = dataSource.getRepository(user_entity_1.User);

@@ -16,6 +16,7 @@ const sanction_entity_1 = require("../database/entities/sanction.entity");
 const notification_entity_1 = require("../database/entities/notification.entity");
 const audit_log_entity_1 = require("../database/entities/audit-log.entity");
 const storage_file_entity_1 = require("../database/entities/storage-file.entity");
+const vehicle_document_entity_1 = require("../database/entities/vehicle-document.entity");
 exports.default = new typeorm_1.DataSource({
     type: 'postgres',
     host: process.env.DB_HOST || 'localhost',
@@ -39,6 +40,7 @@ exports.default = new typeorm_1.DataSource({
         notification_entity_1.Notification,
         audit_log_entity_1.AuditLog,
         storage_file_entity_1.StorageFile,
+        vehicle_document_entity_1.VehicleDocument,
     ],
     migrations: ['src/database/migrations/*{.ts,.js}'],
     synchronize: false,

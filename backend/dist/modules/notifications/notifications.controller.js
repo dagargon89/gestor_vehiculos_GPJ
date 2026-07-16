@@ -32,6 +32,9 @@ let NotificationsController = class NotificationsController {
     create(body) {
         return this.notificationsService.create(body);
     }
+    markAllAsRead(userId) {
+        return this.notificationsService.markAllAsRead(userId);
+    }
     markAsRead(id) {
         return this.notificationsService.markAsRead(id);
     }
@@ -62,11 +65,20 @@ __decorate([
 ], NotificationsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
+    (0, permissions_decorator_1.RequirePermission)('notifications', 'create'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], NotificationsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Put)('read-all'),
+    (0, permissions_decorator_1.RequirePermission)('notifications', 'update'),
+    __param(0, (0, common_1.Query)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], NotificationsController.prototype, "markAllAsRead", null);
 __decorate([
     (0, common_1.Put)(':id/read'),
     (0, permissions_decorator_1.RequirePermission)('notifications', 'update'),
@@ -86,6 +98,7 @@ __decorate([
 ], NotificationsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('notifications', 'delete'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

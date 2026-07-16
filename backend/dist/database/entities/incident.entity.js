@@ -21,23 +21,23 @@ __decorate([
     __metadata("design:type", String)
 ], Incident.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], Incident.prototype, "vehicleId", void 0);
-__decorate([
     (0, typeorm_1.ManyToOne)(() => vehicle_entity_1.Vehicle),
     (0, typeorm_1.JoinColumn)({ name: 'vehicle_id' }),
     __metadata("design:type", vehicle_entity_1.Vehicle)
 ], Incident.prototype, "vehicle", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ name: 'vehicle_id' }),
     __metadata("design:type", String)
-], Incident.prototype, "userId", void 0);
+], Incident.prototype, "vehicleId", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User),
     (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
     __metadata("design:type", user_entity_1.User)
 ], Incident.prototype, "user", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'user_id', nullable: true }),
+    __metadata("design:type", String)
+], Incident.prototype, "userId", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'date' }),
     __metadata("design:type", Date)

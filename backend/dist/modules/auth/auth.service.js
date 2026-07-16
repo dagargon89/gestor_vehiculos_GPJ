@@ -17,7 +17,7 @@ let AuthService = class AuthService {
         this.usersService = usersService;
     }
     async updateUserData(userId, data) {
-        return this.usersService.updateUserData(userId, data);
+        return this.usersService.updateOwnProfile(userId, data);
     }
     async deleteAccount(userId, _firebaseUid) {
         await this.usersService.updateUserData(userId, { status: 'inactive' });

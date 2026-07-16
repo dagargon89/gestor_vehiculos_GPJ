@@ -62,4 +62,31 @@ __decorate([
     (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateVehicleDto.prototype, "currentOdometer", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreateVehicleDto.prototype, "maintenanceIntervalKm", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreateVehicleDto.prototype, "maintenanceIntervalDays", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreateVehicleDto.prototype, "nextServiceOdometer", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Date),
+    (0, class_validator_1.IsDate)(),
+    __metadata("design:type", Date)
+], CreateVehicleDto.prototype, "nextServiceDate", void 0);
 //# sourceMappingURL=create-vehicle.dto.js.map

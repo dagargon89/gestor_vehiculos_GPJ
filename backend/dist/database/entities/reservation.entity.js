@@ -27,6 +27,7 @@ __decorate([
 ], Reservation.prototype, "user", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'user_id' }),
+    (0, typeorm_1.Index)(),
     __metadata("design:type", String)
 ], Reservation.prototype, "userId", void 0);
 __decorate([
@@ -36,6 +37,7 @@ __decorate([
 ], Reservation.prototype, "vehicle", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'vehicle_id' }),
+    (0, typeorm_1.Index)(),
     __metadata("design:type", String)
 ], Reservation.prototype, "vehicleId", void 0);
 __decorate([
@@ -48,6 +50,7 @@ __decorate([
 ], Reservation.prototype, "endDatetime", void 0);
 __decorate([
     (0, typeorm_1.Column)({ default: 'pending' }),
+    (0, typeorm_1.Index)(),
     __metadata("design:type", String)
 ], Reservation.prototype, "status", void 0);
 __decorate([

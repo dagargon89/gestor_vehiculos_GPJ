@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
+const schedule_1 = require("@nestjs/schedule");
 const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
 const database_config_1 = require("./config/database.config");
@@ -31,6 +32,7 @@ const mail_module_1 = require("./modules/mail/mail.module");
 const notifications_module_1 = require("./modules/notifications/notifications.module");
 const incidents_module_1 = require("./modules/incidents/incidents.module");
 const audit_logs_module_1 = require("./modules/audit-logs/audit-logs.module");
+const vehicle_documents_module_1 = require("./modules/vehicle-documents/vehicle-documents.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -39,6 +41,7 @@ exports.AppModule = AppModule = __decorate([
         controllers: [app_controller_1.AppController],
         imports: [
             config_1.ConfigModule.forRoot({ isGlobal: true }),
+            schedule_1.ScheduleModule.forRoot(),
             typeorm_1.TypeOrmModule.forRoot((0, database_config_1.getDatabaseConfig)()),
             common_module_1.CommonModule,
             auth_module_1.AuthModule,
@@ -51,6 +54,7 @@ exports.AppModule = AppModule = __decorate([
             vehicles_module_1.VehiclesModule,
             reservations_module_1.ReservationsModule,
             maintenance_module_1.MaintenanceModule,
+            vehicle_documents_module_1.VehicleDocumentsModule,
             fuel_records_module_1.FuelRecordsModule,
             costs_module_1.CostsModule,
             sanctions_module_1.SanctionsModule,

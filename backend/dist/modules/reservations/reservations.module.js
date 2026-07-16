@@ -13,6 +13,9 @@ const reservation_entity_1 = require("../../database/entities/reservation.entity
 const vehicle_entity_1 = require("../../database/entities/vehicle.entity");
 const notifications_module_1 = require("../notifications/notifications.module");
 const system_settings_module_1 = require("../system-settings/system-settings.module");
+const users_module_1 = require("../users/users.module");
+const sanctions_module_1 = require("../sanctions/sanctions.module");
+const fuel_records_module_1 = require("../fuel-records/fuel-records.module");
 const reservations_service_1 = require("./reservations.service");
 const reservations_controller_1 = require("./reservations.controller");
 const reservations_scheduler_service_1 = require("./reservations-scheduler.service");
@@ -25,6 +28,9 @@ exports.ReservationsModule = ReservationsModule = __decorate([
             typeorm_1.TypeOrmModule.forFeature([reservation_entity_1.Reservation, vehicle_entity_1.Vehicle]),
             notifications_module_1.NotificationsModule,
             system_settings_module_1.SystemSettingsModule,
+            users_module_1.UsersModule,
+            sanctions_module_1.SanctionsModule,
+            fuel_records_module_1.FuelRecordsModule,
         ],
         controllers: [reservations_controller_1.ReservationsController],
         providers: [reservations_service_1.ReservationsService, reservations_scheduler_service_1.ReservationsSchedulerService],

@@ -64,7 +64,7 @@ let ReportsService = class ReportsService {
       LEFT JOIN reservations r ON u.id = r."user_id"
         AND r."startDatetime" BETWEEN $1 AND $2
         AND r."deletedAt" IS NULL
-      LEFT JOIN incidents i ON u.id = i."userId"
+      LEFT JOIN incidents i ON u.id = i."user_id"
         AND i.date BETWEEN $1 AND $2
         AND i."deletedAt" IS NULL
       WHERE u."deletedAt" IS NULL
@@ -115,7 +115,7 @@ let ReportsService = class ReportsService {
           THEN ROUND((SUM(fr.cost) / SUM(fr.liters))::numeric, 2)
           ELSE 0 END as "avgCostPerLiter"
       FROM vehicles v
-      LEFT JOIN fuel_records fr ON v.id = fr."vehicleId"
+      LEFT JOIN fuel_records fr ON v.id = fr."vehicle_id"
         AND fr.date BETWEEN $1 AND $2
         AND fr."deletedAt" IS NULL
       WHERE v."deletedAt" IS NULL
@@ -139,13 +139,73 @@ let ReportsService = class ReportsService {
         MAX(m."scheduledDate") as "lastServiceDate",
         STRING_AGG(DISTINCT m.type, ', ') FILTER (WHERE m.type IS NOT NULL) as "serviceTypes"
       FROM vehicles v
-      LEFT JOIN maintenance m ON v.id = m."vehicleId"
+      LEFT JOIN maintenance m ON v.id = m."vehicle_id"
         AND m."scheduledDate" BETWEEN $1 AND $2
         AND m."deletedAt" IS NULL
       WHERE v."deletedAt" IS NULL
       GROUP BY v.id, v.plate, v.brand, v.model
       HAVING COUNT(m.id) > 0
       ORDER BY "totalServices" DESC
+    `;
+        return this.reservationsRepo.query(query, [startDate, endDate]);
+    }
+    async getFuelEfficiencyReport(startDate, endDate) {
+        const query = `
+      SELECT
+        v.id,
+        v.plate,
+        v.brand,
+        v.model,
+        COALESCE(SUM(r."checkoutOdometer" - r."checkinOdometer"), 0) as "totalKmDriven",
+        COALESCE(fr_totals."totalLiters", 0) as "totalLiters",
+        CASE WHEN COALESCE(fr_totals."totalLiters", 0) > 0
+          THEN ROUND((COALESCE(SUM(r."checkoutOdometer" - r."checkinOdometer"), 0) / fr_totals."totalLiters")::numeric, 2)
+          ELSE 0 END as "kmPerLiter"
+      FROM vehicles v
+      LEFT JOIN reservations r ON v.id = r."vehicle_id"
+        AND r."checkinOdometer" IS NOT NULL AND r."checkoutOdometer" IS NOT NULL
+        AND r."startDatetime" BETWEEN $1 AND $2
+        AND r."deletedAt" IS NULL
+      LEFT JOIN (
+        SELECT vehicle_id, SUM(liters) as "totalLiters"
+        FROM fuel_records
+        WHERE date BETWEEN $1 AND $2 AND "deletedAt" IS NULL
+        GROUP BY vehicle_id
+      ) fr_totals ON fr_totals.vehicle_id = v.id
+      WHERE v."deletedAt" IS NULL
+      GROUP BY v.id, v.plate, v.brand, v.model, fr_totals."totalLiters"
+      HAVING COALESCE(fr_totals."totalLiters", 0) > 0
+      ORDER BY "kmPerLiter" DESC
+    `;
+        return this.reservationsRepo.query(query, [startDate, endDate]);
+    }
+    async getTcoReport(startDate, endDate) {
+        const query = `
+      SELECT
+        v.id,
+        v.plate,
+        v.brand,
+        v.model,
+        COALESCE(fuel_totals."fuelCost", 0) as "fuelCost",
+        COALESCE(cost_totals."otherCost", 0) as "otherCost",
+        COALESCE(fuel_totals."fuelCost", 0) + COALESCE(cost_totals."otherCost", 0) as "totalCost"
+      FROM vehicles v
+      LEFT JOIN (
+        SELECT vehicle_id, SUM(cost) as "fuelCost"
+        FROM fuel_records
+        WHERE date BETWEEN $1 AND $2 AND "deletedAt" IS NULL
+        GROUP BY vehicle_id
+      ) fuel_totals ON fuel_totals.vehicle_id = v.id
+      LEFT JOIN (
+        SELECT vehicle_id, SUM(amount) as "otherCost"
+        FROM costs
+        WHERE date BETWEEN $1 AND $2 AND "deletedAt" IS NULL
+        GROUP BY vehicle_id
+      ) cost_totals ON cost_totals.vehicle_id = v.id
+      WHERE v."deletedAt" IS NULL
+      GROUP BY v.id, v.plate, v.brand, v.model, fuel_totals."fuelCost", cost_totals."otherCost"
+      HAVING COALESCE(fuel_totals."fuelCost", 0) + COALESCE(cost_totals."otherCost", 0) > 0
+      ORDER BY "totalCost" DESC
     `;
         return this.reservationsRepo.query(query, [startDate, endDate]);
     }

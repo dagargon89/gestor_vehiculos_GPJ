@@ -56,6 +56,7 @@ __decorate([
 ], PermissionsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
+    (0, permissions_decorator_1.RequirePermission)('permissions', 'create'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -63,6 +64,7 @@ __decorate([
 ], PermissionsController.prototype, "create", null);
 __decorate([
     (0, common_1.Put)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('permissions', 'update'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -71,6 +73,7 @@ __decorate([
 ], PermissionsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, permissions_decorator_1.RequirePermission)('permissions', 'delete'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

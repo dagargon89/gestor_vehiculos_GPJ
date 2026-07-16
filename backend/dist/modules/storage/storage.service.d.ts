@@ -7,4 +7,8 @@ export declare class StorageService {
     deleteFile(fileId: string): Promise<void>;
     getFilesByEntity(entityType: string, entityId: string): Promise<StorageFile[]>;
     findOne(id: string): Promise<StorageFile>;
+    fetchRemoteImage(url: string): Promise<{
+        buffer: Buffer;
+        contentType: string;
+    }>;
 }

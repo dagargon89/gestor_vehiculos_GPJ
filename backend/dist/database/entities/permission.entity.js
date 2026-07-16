@@ -32,6 +32,7 @@ __decorate([
     __metadata("design:type", Array)
 ], Permission.prototype, "roles", void 0);
 exports.Permission = Permission = __decorate([
-    (0, typeorm_1.Entity)('permissions')
+    (0, typeorm_1.Entity)('permissions'),
+    (0, typeorm_1.Unique)(['resource', 'action'])
 ], Permission);
 //# sourceMappingURL=permission.entity.js.map
