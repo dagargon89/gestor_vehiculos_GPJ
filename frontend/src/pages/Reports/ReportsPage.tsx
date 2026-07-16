@@ -83,11 +83,11 @@ const RES_STATUS_LABELS: Record<string, string> = {
 };
 
 const RES_STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-amber-100 text-amber-800',
-  active: 'bg-blue-100 text-blue-800',
-  completed: 'bg-green-100 text-green-800',
-  cancelled: 'bg-slate-100 text-slate-600',
-  rejected: 'bg-red-100 text-red-700',
+  pending: 'badge badge-amber',
+  active: 'badge badge-blue',
+  completed: 'badge badge-green',
+  cancelled: 'badge badge-slate',
+  rejected: 'badge badge-red',
 };
 
 function fmtDate(d: string | null): string {
@@ -172,42 +172,61 @@ export function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-slate-900">Reportes</h2>
+      <h2
+        className="text-2xl font-bold"
+        style={{
+          color: 'var(--color-text)',
+          fontFamily: "'Barlow Condensed', sans-serif",
+          fontWeight: 600,
+          letterSpacing: '0.6px',
+          textTransform: 'uppercase',
+        }}
+      >
+        Reportes y estadísticas
+      </h2>
 
       {/* Date range */}
       <div className="flex flex-wrap gap-4 items-center">
         <label className="flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-700">Desde</span>
+          <span className="text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Desde</span>
           <input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="rounded-[16px] border border-slate-200 px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="rounded-[16px] px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent"
+            style={{ border: '1px solid var(--color-border)', background: 'var(--color-input-bg)', color: 'var(--color-text)' }}
           />
         </label>
         <label className="flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-700">Hasta</span>
+          <span className="text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Hasta</span>
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="rounded-[16px] border border-slate-200 px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="rounded-[16px] px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent"
+            style={{ border: '1px solid var(--color-border)', background: 'var(--color-input-bg)', color: 'var(--color-text)' }}
           />
         </label>
       </div>
 
       {/* Tab bar */}
-      <div className="flex flex-wrap gap-1 border-b border-slate-200">
+      <div className="flex flex-wrap gap-1" style={{ borderBottom: '1px solid var(--color-border)' }}>
         {TABS.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setActiveTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors -mb-px hover:opacity-80"
+            style={
               activeTab === t.id
-                ? 'bg-white border border-b-white border-slate-200 text-primary -mb-px'
-                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-            }`}
+                ? {
+                    background: 'var(--color-bg-soft)',
+                    border: '1px solid var(--color-border)',
+                    borderBottom: '1px solid var(--color-bg-soft)',
+                    color: 'var(--color-primary)',
+                  }
+                : { color: 'var(--color-text-muted)' }
+            }
           >
             <span className="material-icons text-base">{t.icon}</span>
             <span className="hidden sm:inline">{t.label}</span>
@@ -216,14 +235,17 @@ export function ReportsPage() {
       </div>
 
       {/* Panel */}
-      <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+      <div
+        className="rounded-[16px] shadow-sm overflow-hidden"
+        style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
+      >
 
         {/* ── Uso de vehículos ── */}
         {activeTab === 'vehicle-usage' && (
           <>
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h3 className="font-bold text-slate-900">Uso de vehículos</h3>
-              <p className="text-sm text-slate-500 mt-0.5">
+            <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
+              <h3 className="font-bold" style={{ color: 'var(--color-text)' }}>Uso de vehículos</h3>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                 Reservas, kilómetros recorridos y tasa de utilización por vehículo.
               </p>
             </div>
@@ -284,33 +306,37 @@ export function ReportsPage() {
                   }
                 />
                 <table className="w-full">
-                  <thead className="bg-slate-50 border-b border-slate-200">
+                  <thead style={{ background: 'var(--color-table-head-bg)', borderBottom: '1px solid var(--color-border)' }}>
                     <tr>
-                      <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Placa</th>
-                      <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Marca / Modelo</th>
-                      <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Reservas</th>
-                      <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Km recorridos</th>
-                      <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">% Utilización</th>
+                      <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Placa</th>
+                      <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Marca / Modelo</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Reservas</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Km recorridos</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>% Utilización</th>
                     </tr>
                   </thead>
                   <tbody>
                     {vuPag.paginatedData.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                        <td colSpan={5} className="px-6 py-8 text-center" style={{ color: 'var(--color-text-muted)' }}>
                           Sin datos en el período seleccionado.
                         </td>
                       </tr>
                     ) : (
                       vuPag.paginatedData.map((row) => (
-                        <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="px-6 py-4 font-medium text-slate-900">{row.plate}</td>
-                          <td className="px-6 py-4 text-slate-600">
+                        <tr
+                          key={row.id}
+                          className="hover:bg-[var(--color-table-row-hover)]"
+                          style={{ borderBottom: '1px solid var(--color-border)' }}
+                        >
+                          <td className="px-6 py-4 font-medium" style={{ color: 'var(--color-text)' }}>{row.plate}</td>
+                          <td className="px-6 py-4" style={{ color: 'var(--color-text-soft)' }}>
                             {row.brand} {row.model}
                           </td>
-                          <td className="px-6 py-4 text-right text-slate-600">
+                          <td className="px-6 py-4 text-right" style={{ color: 'var(--color-text-soft)' }}>
                             {row.totalReservations}
                           </td>
-                          <td className="px-6 py-4 text-right text-slate-600">
+                          <td className="px-6 py-4 text-right" style={{ color: 'var(--color-text-soft)' }}>
                             {Number(row.totalKmDriven).toLocaleString()} km
                           </td>
                           <td className="px-6 py-4 text-right font-bold text-primary">
@@ -329,9 +355,9 @@ export function ReportsPage() {
         {/* ── Actividad de conductores ── */}
         {activeTab === 'driver-activity' && (
           <>
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h3 className="font-bold text-slate-900">Actividad de conductores</h3>
-              <p className="text-sm text-slate-500 mt-0.5">
+            <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
+              <h3 className="font-bold" style={{ color: 'var(--color-text)' }}>Actividad de conductores</h3>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                 Reservas realizadas, kilómetros recorridos e incidentes registrados por conductor.
               </p>
             </div>
@@ -392,37 +418,43 @@ export function ReportsPage() {
                   }
                 />
                 <table className="w-full">
-                  <thead className="bg-slate-50 border-b border-slate-200">
+                  <thead style={{ background: 'var(--color-table-head-bg)', borderBottom: '1px solid var(--color-border)' }}>
                     <tr>
-                      <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Conductor</th>
-                      <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Email</th>
-                      <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Reservas</th>
-                      <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Km recorridos</th>
-                      <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Incidentes</th>
+                      <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Conductor</th>
+                      <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Email</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Reservas</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Km recorridos</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Incidentes</th>
                     </tr>
                   </thead>
                   <tbody>
                     {daPag.paginatedData.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                        <td colSpan={5} className="px-6 py-8 text-center" style={{ color: 'var(--color-text-muted)' }}>
                           Sin datos en el período seleccionado.
                         </td>
                       </tr>
                     ) : (
                       daPag.paginatedData.map((row) => (
-                        <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="px-6 py-4 font-medium text-slate-900">{row.driverName}</td>
-                          <td className="px-6 py-4 text-slate-500 text-sm">{row.email}</td>
-                          <td className="px-6 py-4 text-right text-slate-600">
+                        <tr
+                          key={row.id}
+                          className="hover:bg-[var(--color-table-row-hover)]"
+                          style={{ borderBottom: '1px solid var(--color-border)' }}
+                        >
+                          <td className="px-6 py-4 font-medium" style={{ color: 'var(--color-text)' }}>{row.driverName}</td>
+                          <td className="px-6 py-4 text-sm" style={{ color: 'var(--color-text-muted)' }}>{row.email}</td>
+                          <td className="px-6 py-4 text-right" style={{ color: 'var(--color-text-soft)' }}>
                             {row.totalReservations}
                           </td>
-                          <td className="px-6 py-4 text-right text-slate-600">
+                          <td className="px-6 py-4 text-right" style={{ color: 'var(--color-text-soft)' }}>
                             {Number(row.totalKmDriven).toLocaleString()} km
                           </td>
                           <td
-                            className={`px-6 py-4 text-right font-bold ${
-                              Number(row.totalIncidents) > 0 ? 'text-red-600' : 'text-slate-400'
-                            }`}
+                            className="px-6 py-4 text-right font-bold"
+                            style={{
+                              color:
+                                Number(row.totalIncidents) > 0 ? '#f87171' : 'var(--color-text-muted)',
+                            }}
                           >
                             {row.totalIncidents}
                           </td>
@@ -439,9 +471,9 @@ export function ReportsPage() {
         {/* ── Historial de reservas ── */}
         {activeTab === 'reservations-history' && (
           <>
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h3 className="font-bold text-slate-900">Historial de reservas</h3>
-              <p className="text-sm text-slate-500 mt-0.5">
+            <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
+              <h3 className="font-bold" style={{ color: 'var(--color-text)' }}>Historial de reservas</h3>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                 Listado detallado de todas las reservas realizadas en el período.
               </p>
             </div>
@@ -511,58 +543,58 @@ export function ReportsPage() {
                 />
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[860px]">
-                    <thead className="bg-slate-50 border-b border-slate-200">
+                    <thead style={{ background: 'var(--color-table-head-bg)', borderBottom: '1px solid var(--color-border)' }}>
                       <tr>
-                        <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Vehículo</th>
-                        <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Conductor</th>
-                        <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Evento / Destino</th>
-                        <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Salida</th>
-                        <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Regreso</th>
-                        <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Estado</th>
-                        <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Km</th>
+                        <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Vehículo</th>
+                        <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Conductor</th>
+                        <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Evento / Destino</th>
+                        <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Salida</th>
+                        <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Regreso</th>
+                        <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Estado</th>
+                        <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Km</th>
                       </tr>
                     </thead>
                     <tbody>
                       {rhPag.paginatedData.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
+                          <td colSpan={7} className="px-6 py-8 text-center" style={{ color: 'var(--color-text-muted)' }}>
                             Sin datos en el período seleccionado.
                           </td>
                         </tr>
                       ) : (
                         rhPag.paginatedData.map((row) => (
-                          <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50">
+                          <tr
+                          key={row.id}
+                          className="hover:bg-[var(--color-table-row-hover)]"
+                          style={{ borderBottom: '1px solid var(--color-border)' }}
+                        >
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="font-medium text-slate-900">{row.plate}</span>{' '}
-                              <span className="text-slate-500 text-sm">
+                              <span className="font-medium" style={{ color: 'var(--color-text)' }}>{row.plate}</span>{' '}
+                              <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                                 {row.brand} {row.model}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-slate-600 whitespace-nowrap">
+                            <td className="px-6 py-4 whitespace-nowrap" style={{ color: 'var(--color-text-soft)' }}>
                               {row.userName ?? '—'}
                             </td>
                             <td className="px-6 py-4 max-w-[180px]">
-                              <div className="truncate text-slate-700">{row.eventName || '—'}</div>
+                              <div className="truncate" style={{ color: 'var(--color-text-soft)' }}>{row.eventName || '—'}</div>
                               {row.destination && (
-                                <div className="truncate text-xs text-slate-400">{row.destination}</div>
+                                <div className="truncate text-xs" style={{ color: 'var(--color-text-muted)' }}>{row.destination}</div>
                               )}
                             </td>
-                            <td className="px-6 py-4 text-slate-500 text-sm whitespace-nowrap">
+                            <td className="px-6 py-4 text-sm whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>
                               {fmtDT(row.startDatetime)}
                             </td>
-                            <td className="px-6 py-4 text-slate-500 text-sm whitespace-nowrap">
+                            <td className="px-6 py-4 text-sm whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>
                               {fmtDT(row.endDatetime)}
                             </td>
                             <td className="px-6 py-4 text-right">
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                  RES_STATUS_COLORS[row.status] ?? 'bg-slate-100 text-slate-600'
-                                }`}
-                              >
+                              <span className={RES_STATUS_COLORS[row.status] ?? 'badge badge-slate'}>
                                 {RES_STATUS_LABELS[row.status] ?? row.status}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-right text-slate-600">
+                            <td className="px-6 py-4 text-right" style={{ color: 'var(--color-text-soft)' }}>
                               {row.kmDriven != null ? Number(row.kmDriven).toLocaleString() : '—'}
                             </td>
                           </tr>
@@ -579,9 +611,9 @@ export function ReportsPage() {
         {/* ── Combustible ── */}
         {activeTab === 'fuel' && (
           <>
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h3 className="font-bold text-slate-900">Consumo de combustible</h3>
-              <p className="text-sm text-slate-500 mt-0.5">
+            <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
+              <h3 className="font-bold" style={{ color: 'var(--color-text)' }}>Consumo de combustible</h3>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                 Registros de combustible, litros cargados, costo total y costo promedio por litro.
               </p>
             </div>
@@ -645,38 +677,42 @@ export function ReportsPage() {
                   }
                 />
                 <table className="w-full">
-                  <thead className="bg-slate-50 border-b border-slate-200">
+                  <thead style={{ background: 'var(--color-table-head-bg)', borderBottom: '1px solid var(--color-border)' }}>
                     <tr>
-                      <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Placa</th>
-                      <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Marca / Modelo</th>
-                      <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Registros</th>
-                      <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Litros</th>
-                      <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Costo total</th>
-                      <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Q / litro</th>
+                      <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Placa</th>
+                      <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Marca / Modelo</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Registros</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Litros</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Costo total</th>
+                      <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Q / litro</th>
                     </tr>
                   </thead>
                   <tbody>
                     {fuPag.paginatedData.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                        <td colSpan={6} className="px-6 py-8 text-center" style={{ color: 'var(--color-text-muted)' }}>
                           Sin datos en el período seleccionado.
                         </td>
                       </tr>
                     ) : (
                       fuPag.paginatedData.map((row) => (
-                        <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="px-6 py-4 font-medium text-slate-900">{row.plate}</td>
-                          <td className="px-6 py-4 text-slate-600">
+                        <tr
+                          key={row.id}
+                          className="hover:bg-[var(--color-table-row-hover)]"
+                          style={{ borderBottom: '1px solid var(--color-border)' }}
+                        >
+                          <td className="px-6 py-4 font-medium" style={{ color: 'var(--color-text)' }}>{row.plate}</td>
+                          <td className="px-6 py-4" style={{ color: 'var(--color-text-soft)' }}>
                             {row.brand} {row.model}
                           </td>
-                          <td className="px-6 py-4 text-right text-slate-600">{row.totalRecords}</td>
-                          <td className="px-6 py-4 text-right text-slate-600">
+                          <td className="px-6 py-4 text-right" style={{ color: 'var(--color-text-soft)' }}>{row.totalRecords}</td>
+                          <td className="px-6 py-4 text-right" style={{ color: 'var(--color-text-soft)' }}>
                             {Number(row.totalLiters).toLocaleString()} L
                           </td>
-                          <td className="px-6 py-4 text-right font-bold text-slate-900">
+                          <td className="px-6 py-4 text-right font-bold" style={{ color: 'var(--color-text)' }}>
                             Q {Number(row.totalCost).toLocaleString()}
                           </td>
-                          <td className="px-6 py-4 text-right text-slate-500">
+                          <td className="px-6 py-4 text-right" style={{ color: 'var(--color-text-muted)' }}>
                             Q {row.avgCostPerLiter}
                           </td>
                         </tr>
@@ -692,9 +728,9 @@ export function ReportsPage() {
         {/* ── Mantenimiento ── */}
         {activeTab === 'maintenance' && (
           <>
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h3 className="font-bold text-slate-900">Mantenimiento de vehículos</h3>
-              <p className="text-sm text-slate-500 mt-0.5">
+            <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
+              <h3 className="font-bold" style={{ color: 'var(--color-text)' }}>Mantenimiento de vehículos</h3>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                 Servicios programados, completados y cancelados por vehículo.
               </p>
             </div>
@@ -764,44 +800,48 @@ export function ReportsPage() {
                 />
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[800px]">
-                    <thead className="bg-slate-50 border-b border-slate-200">
+                    <thead style={{ background: 'var(--color-table-head-bg)', borderBottom: '1px solid var(--color-border)' }}>
                       <tr>
-                        <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Placa</th>
-                        <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Marca / Modelo</th>
-                        <th className="text-right px-6 py-4 text-sm font-bold text-slate-700">Servicios</th>
-                        <th className="text-right px-6 py-4 text-sm font-bold text-green-700">Completados</th>
-                        <th className="text-right px-6 py-4 text-sm font-bold text-amber-600">Programados</th>
-                        <th className="text-right px-6 py-4 text-sm font-bold text-slate-500">Cancelados</th>
-                        <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Último</th>
-                        <th className="text-left px-6 py-4 text-sm font-bold text-slate-700">Tipos</th>
+                        <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Placa</th>
+                        <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Marca / Modelo</th>
+                        <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Servicios</th>
+                        <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: '#34d399' }}>Completados</th>
+                        <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: '#fbbf24' }}>Programados</th>
+                        <th className="text-right px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-muted)' }}>Cancelados</th>
+                        <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Último</th>
+                        <th className="text-left px-6 py-4 text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>Tipos</th>
                       </tr>
                     </thead>
                     <tbody>
                       {maPag.paginatedData.length === 0 ? (
                         <tr>
-                          <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
+                          <td colSpan={8} className="px-6 py-8 text-center" style={{ color: 'var(--color-text-muted)' }}>
                             Sin datos en el período seleccionado.
                           </td>
                         </tr>
                       ) : (
                         maPag.paginatedData.map((row) => (
-                          <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50">
-                            <td className="px-6 py-4 font-medium text-slate-900">{row.plate}</td>
-                            <td className="px-6 py-4 text-slate-600">
+                          <tr
+                          key={row.id}
+                          className="hover:bg-[var(--color-table-row-hover)]"
+                          style={{ borderBottom: '1px solid var(--color-border)' }}
+                        >
+                            <td className="px-6 py-4 font-medium" style={{ color: 'var(--color-text)' }}>{row.plate}</td>
+                            <td className="px-6 py-4" style={{ color: 'var(--color-text-soft)' }}>
                               {row.brand} {row.model}
                             </td>
-                            <td className="px-6 py-4 text-right font-bold text-slate-900">
+                            <td className="px-6 py-4 text-right font-bold" style={{ color: 'var(--color-text)' }}>
                               {row.totalServices}
                             </td>
-                            <td className="px-6 py-4 text-right text-green-700 font-medium">
+                            <td className="px-6 py-4 text-right font-medium" style={{ color: '#34d399' }}>
                               {row.completed}
                             </td>
-                            <td className="px-6 py-4 text-right text-amber-600">{row.scheduled}</td>
-                            <td className="px-6 py-4 text-right text-slate-400">{row.cancelled}</td>
-                            <td className="px-6 py-4 text-slate-500 text-sm whitespace-nowrap">
+                            <td className="px-6 py-4 text-right" style={{ color: '#fbbf24' }}>{row.scheduled}</td>
+                            <td className="px-6 py-4 text-right" style={{ color: 'var(--color-text-muted)' }}>{row.cancelled}</td>
+                            <td className="px-6 py-4 text-sm whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>
                               {fmtDate(row.lastServiceDate)}
                             </td>
-                            <td className="px-6 py-4 text-slate-500 text-sm max-w-[200px]">
+                            <td className="px-6 py-4 text-sm max-w-[200px]" style={{ color: 'var(--color-text-muted)' }}>
                               <div className="truncate">{row.serviceTypes ?? '—'}</div>
                             </td>
                           </tr>
