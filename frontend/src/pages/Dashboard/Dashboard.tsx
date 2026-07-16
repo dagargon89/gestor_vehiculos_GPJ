@@ -152,6 +152,29 @@ export function Dashboard() {
   const totalFleet = vehicles.length;
   const utilization = totalFleet > 0 ? Math.round((activeCount / totalFleet) * 100) : 0;
 
+  const fleetByStatus = {
+    available: vehicles.filter((v: { status: string }) => v.status === 'available').length,
+    in_use: vehicles.filter((v: { status: string }) => v.status === 'in_use').length,
+    maintenance: vehicles.filter((v: { status: string }) => v.status === 'maintenance').length,
+    inactive: vehicles.filter((v: { status: string }) => v.status === 'inactive').length,
+  };
+  const fleetLegend = [
+    { label: 'Disponibles', n: fleetByStatus.available, c: '#4ade80' },
+    { label: 'En uso', n: fleetByStatus.in_use, c: '#60a5fa' },
+    { label: 'Mantenimiento', n: fleetByStatus.maintenance, c: '#fbbf24' },
+    { label: 'Inactivos', n: fleetByStatus.inactive, c: 'var(--color-border-strong)' },
+  ];
+  const donutTotal = Math.max(totalFleet, 1);
+  let donutOffset = 0;
+  const donutSegments = fleetLegend
+    .filter((l) => l.n > 0)
+    .map((l) => {
+      const dash = (l.n / donutTotal) * 251.2;
+      const seg = { c: l.c, dash: `${dash} 251.2`, offset: -donutOffset };
+      donutOffset += dash;
+      return seg;
+    });
+
   const reservationsInRange = reservations.filter((r) => {
     const d = new Date(r.startDatetime);
     return d >= start && d <= end;
@@ -266,6 +289,30 @@ export function Dashboard() {
             <span className="material-icons text-base">bar_chart</span>
             <span>Ver reportes</span>
           </button>
+        </div>
+      </div>
+
+      {/* Gauge de disponibilidad */}
+      <div className="glass-panel p-6 mb-8 flex flex-col items-center">
+        <svg viewBox="0 0 200 116" style={{ width: 200 }}>
+          <path d="M 20 106 A 80 80 0 0 1 180 106" fill="none" stroke="var(--color-border)" strokeWidth="13" strokeLinecap="round" />
+          <path
+            d="M 20 106 A 80 80 0 0 1 180 106"
+            fill="none"
+            stroke="var(--color-primary)"
+            strokeWidth="13"
+            strokeLinecap="round"
+            strokeDasharray={`${(utilization / 100) * 251.2} 251.2`}
+            style={{ transition: 'stroke-dasharray .6s cubic-bezier(.4,0,.2,1)' }}
+          />
+        </svg>
+        <div style={{ marginTop: -58, textAlign: 'center' }}>
+          <div className="font-mono-data font-bold" style={{ fontSize: 42, color: 'var(--color-text)', lineHeight: 1 }}>{utilization}%</div>
+          <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginTop: 2 }}>Disponibilidad</div>
+        </div>
+        <div className="flex gap-4 mt-5" style={{ fontSize: 12, color: 'var(--color-text-soft)' }}>
+          <span className="flex items-center gap-1.5"><span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-primary)' }} />{activeCount} operativos</span>
+          <span className="flex items-center gap-1.5"><span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-border-strong)' }} />{totalFleet} en flota</span>
         </div>
       </div>
 
@@ -471,113 +518,69 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Donut estado de flota */}
+        {/* Donut estado de flota (4 categorías) */}
         <div className="glass-panel p-6 flex flex-col">
-          <h3
-            className="text-base font-bold mb-6"
-            style={{ color: 'var(--color-text)' }}
-          >
+          <h3 className="text-base font-bold mb-6" style={{ color: 'var(--color-text)' }}>
             Estado de la flota
           </h3>
           <div className="relative flex-1 flex items-center justify-center min-h-[200px]">
-            <svg
-              className="w-44 h-44 transform -rotate-90"
-              viewBox="0 0 100 100"
-            >
-              <circle
-                cx="50"
-                cy="50"
-                fill="transparent"
-                r="40"
-                stroke="var(--color-border)"
-                strokeWidth="12"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                fill="transparent"
-                r="40"
-                stroke="#6384ff"
-                strokeDasharray={
-                  totalFleet > 0
-                    ? `${(utilization / 100) * 251.2} 251.2`
-                    : '0 251.2'
-                }
-                strokeDashoffset="0"
-                strokeLinecap="round"
-                strokeWidth="12"
-              />
+            <svg className="w-44 h-44 transform -rotate-90" viewBox="0 0 100 100">
+              {donutSegments.map((s, i) => (
+                <circle
+                  key={i}
+                  cx="50" cy="50" r="40" fill="transparent"
+                  stroke={s.c} strokeWidth="11"
+                  strokeDasharray={s.dash} strokeDashoffset={s.offset}
+                />
+              ))}
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span
-                className="font-mono-data font-bold"
-                style={{ fontSize: 28, color: 'var(--color-text)' }}
-              >
-                {totalFleet > 0 ? utilization : 0}%
-              </span>
-              <span
-                className="text-xs mt-1"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                Operativos
-              </span>
+              <span className="font-mono-data font-bold" style={{ fontSize: 24, color: 'var(--color-text)' }}>{totalFleet}</span>
+              <span className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>unidades</span>
             </div>
           </div>
-          <div className="mt-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ background: '#6384ff' }}
-                />
-                <span
-                  className="text-sm"
-                  style={{ color: 'var(--color-text-soft)' }}
-                >
-                  Disponibles
+          <div className="mt-4 space-y-2.5">
+            {fleetLegend.map((l) => (
+              <div key={l.label} className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2" style={{ color: 'var(--color-text-soft)' }}>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: l.c }} />
+                  {l.label}
                 </span>
+                <span className="font-semibold font-mono-data" style={{ color: 'var(--color-text)' }}>{l.n}</span>
               </div>
-              <span
-                className="text-sm font-semibold font-mono-data"
-                style={{ color: 'var(--color-text)' }}
-              >
-                {activeCount}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ background: 'var(--color-border-strong)' }}
-                />
-                <span
-                  className="text-sm"
-                  style={{ color: 'var(--color-text-soft)' }}
-                >
-                  Total
-                </span>
-              </div>
-              <span
-                className="text-sm font-semibold font-mono-data"
-                style={{ color: 'var(--color-text)' }}
-              >
-                {totalFleet}
-              </span>
-            </div>
-            {maintenanceAlerts.length > 0 && (
-              <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#f59e0b' }} />
-                  <span className="text-sm" style={{ color: 'var(--color-text-soft)' }}>
-                    Mantenimiento próximo
-                  </span>
-                </div>
-                <span className="text-sm font-semibold font-mono-data" style={{ color: '#f59e0b' }}>
-                  {maintenanceAlerts.length}
-                </span>
-              </div>
-            )}
+            ))}
           </div>
+        </div>
+
+        {/* Próximos mantenimientos */}
+        <div className="lg:col-span-3 glass-panel p-6">
+          <div className="flex justify-between items-baseline mb-4">
+            <h3 className="text-base font-bold" style={{ color: 'var(--color-text)' }}>Próximos mantenimientos</h3>
+            <Link to="/maintenance" className="text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: 'var(--color-link)' }}>Ver todos</Link>
+          </div>
+          {maintenanceAlerts.length === 0 ? (
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Sin mantenimientos programados en los próximos 30 días.</p>
+          ) : (
+            <div className="space-y-3">
+              {maintenanceAlerts.slice(0, 3).map((m) => {
+                const d = new Date(m.scheduledDate);
+                return (
+                  <div key={m.id} className="flex gap-3 items-center p-3 rounded-[11px]" style={{ border: '1px solid var(--color-border)' }}>
+                    <div className="text-center rounded-[9px]" style={{ minWidth: 44, padding: '6px 8px', background: 'var(--color-bg-soft)' }}>
+                      <div className="font-mono-data font-semibold" style={{ fontSize: 16, lineHeight: 1 }}>{d.getDate()}</div>
+                      <div style={{ fontSize: 9.5, letterSpacing: '.8px', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginTop: 2 }}>
+                        {d.toLocaleDateString('es-MX', { month: 'short' })}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold">{m.vehicle?.plate ?? '—'}</div>
+                      <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Mantenimiento programado</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
