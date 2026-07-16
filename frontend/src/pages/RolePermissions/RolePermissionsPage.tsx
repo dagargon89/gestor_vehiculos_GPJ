@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api.service';
 import { notifySuccess, notifyError } from '../../lib/toast';
+import { Modal } from '../../components/ui/Modal';
 
 type Permission = { id: string; resource: string; action: string };
 type Role = { id: string; name: string; description?: string; permissions?: Permission[] };
@@ -45,58 +46,40 @@ function CreateRoleModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-md"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-bold text-slate-900">Nuevo rol</h3>
+    <Modal title="Nuevo rol" onClose={onClose} maxWidth="max-w-md">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
+        )}
+        <div>
+          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Nombre *</label>
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Ej: supervisor"
+            className="input-field w-full"
+          />
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
-          )}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Nombre *</label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ej: supervisor"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Descripción (opcional)</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Breve descripción del rol"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-            />
-          </div>
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
-            >
-              {submitting ? 'Creando...' : 'Crear rol'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div>
+          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Descripción (opcional)</label>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Breve descripción del rol"
+            className="input-field w-full"
+          />
+        </div>
+        <div className="flex gap-3 pt-2">
+          <button type="button" onClick={onClose} className="btn-ghost flex-1">Cancelar</button>
+          <button type="submit" disabled={submitting} className="btn-primary flex-1 disabled:opacity-50">
+            {submitting ? 'Creando...' : 'Crear rol'}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -188,20 +171,26 @@ export function RolePermissionsPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-slate-900">Permisos por rol</h2>
+      <div>
+        <h2 className="text-2xl font-bold uppercase tracking-wide" style={{ color: 'var(--color-text)' }}>Permisos por rol</h2>
+        <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Matriz de acceso por recurso del sistema.</p>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 p-5">
-          <h3 className="text-sm font-bold text-slate-700 mb-3">Seleccionar rol</h3>
+        <div className="rounded-[16px] p-5" style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}>
+          <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--color-text-soft)' }}>Seleccionar rol</h3>
           <ul className="space-y-1">
             {roles.map((r: Role) => (
               <li key={r.id}>
                 <button
                   type="button"
                   onClick={() => handleSelectRole(r.id)}
-                  className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    selectedRoleId === r.id ? 'bg-primary text-white' : 'text-slate-700 hover:bg-slate-100'
-                  }`}
+                  className="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                  style={
+                    selectedRoleId === r.id
+                      ? { background: 'var(--color-primary)', color: 'var(--color-text-on-primary)' }
+                      : { color: 'var(--color-text-soft)' }
+                  }
                 >
                   {r.name}
                 </button>
@@ -211,36 +200,34 @@ export function RolePermissionsPage() {
           <button
             type="button"
             onClick={() => setCreateModalOpen(true)}
-            className="mt-4 w-full px-4 py-2.5 border border-dashed border-slate-300 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-primary hover:text-primary transition-colors"
+            className="mt-4 w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+            style={{ border: '1px dashed var(--color-border-strong)', color: 'var(--color-text-muted)' }}
           >
             + Nuevo rol
           </button>
           {roles.length === 0 && (
-            <p className="text-slate-500 text-sm mt-2">No hay roles cargados.</p>
+            <p className="text-sm mt-2" style={{ color: 'var(--color-text-muted)' }}>No hay roles cargados.</p>
           )}
         </div>
 
-        <div className="lg:col-span-2 bg-white rounded-[16px] shadow-sm border border-slate-200 p-5">
+        <div className="lg:col-span-2 rounded-[16px] p-5" style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}>
           {!selectedRoleId ? (
-            <p className="text-slate-500">Selecciona un rol para asignar permisos.</p>
+            <p style={{ color: 'var(--color-text-muted)' }}>Selecciona un rol para asignar permisos.</p>
           ) : (
             <>
               <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-                <h3 className="text-sm font-bold text-slate-700">
+                <h3 className="text-sm font-bold" style={{ color: 'var(--color-text-soft)' }}>
                   Permisos para: {selectedRole?.name}
                 </h3>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={selectAll}
-                    className="text-sm text-primary font-medium hover:underline"
-                  >
+                <div className="flex gap-2 items-center">
+                  <button type="button" onClick={selectAll} className="text-sm text-primary font-medium hover:underline">
                     Marcar todos
                   </button>
                   <button
                     type="button"
                     onClick={clearAll}
-                    className="text-sm text-slate-600 font-medium hover:underline"
+                    className="text-sm font-medium hover:underline"
+                    style={{ color: 'var(--color-text-muted)' }}
                   >
                     Desmarcar todos
                   </button>
@@ -249,7 +236,7 @@ export function RolePermissionsPage() {
                       type="button"
                       onClick={handleSave}
                       disabled={updateMutation.isPending}
-                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 text-sm font-medium"
+                      className="btn-primary text-sm disabled:opacity-50"
                     >
                       {updateMutation.isPending ? 'Guardando...' : 'Guardar cambios'}
                     </button>
@@ -258,26 +245,35 @@ export function RolePermissionsPage() {
               </div>
               <div className="space-y-4 max-h-[400px] overflow-y-auto">
                 {(Object.entries(groupedByResource) as [string, Permission[]][]).map(([resource, perms]) => (
-                  <div key={resource} className="border border-slate-200 rounded-lg p-3">
-                    <p className="text-sm font-bold text-slate-700 mb-2 capitalize">{resource}</p>
-                    <div className="flex flex-wrap gap-3">
-                      {perms.map((p: Permission) => (
-                        <label key={p.id} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.has(p.id)}
-                            onChange={() => togglePermission(p.id)}
-                            className="rounded border-slate-300 text-primary focus:ring-primary"
-                          />
-                          <span className="text-sm text-slate-700">{p.action}</span>
-                        </label>
-                      ))}
+                  <div key={resource} className="rounded-lg p-3" style={{ border: '1px solid var(--color-border)' }}>
+                    <p className="text-sm font-bold mb-2 capitalize" style={{ color: 'var(--color-text-soft)' }}>{resource}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {perms.map((p: Permission) => {
+                        const checked = selectedIds.has(p.id);
+                        return (
+                          <label
+                            key={p.id}
+                            className={`badge ${checked ? 'badge-amber' : 'badge-slate'} gap-1.5 cursor-pointer`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => togglePermission(p.id)}
+                              className="sr-only"
+                            />
+                            <span className="material-icons" style={{ fontSize: 14 }}>
+                              {checked ? 'check_circle' : 'radio_button_unchecked'}
+                            </span>
+                            {p.action}
+                          </label>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
               </div>
               {allPermissions.length === 0 && (
-                <p className="text-slate-500 text-sm">No hay permisos definidos en el sistema.</p>
+                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>No hay permisos definidos en el sistema.</p>
               )}
             </>
           )}
