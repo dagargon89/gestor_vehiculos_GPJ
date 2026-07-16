@@ -50,7 +50,7 @@ export function Login() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
-        <span className="font-mono-data font-bold" style={{ color: '#6384ff' }}>Cargando...</span>
+        <span className="font-mono-data font-bold" style={{ color: 'var(--color-primary)' }}>Cargando...</span>
       </div>
     );
   }

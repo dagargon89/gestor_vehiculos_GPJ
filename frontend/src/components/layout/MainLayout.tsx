@@ -312,7 +312,7 @@ export function MainLayout() {
                           onClick={() => markAllAsReadMutation.mutate()}
                           disabled={markAllAsReadMutation.isPending}
                           className="text-xs font-medium px-2 py-1 rounded-md transition-colors disabled:opacity-50"
-                          style={{ color: '#6366f1', background: 'rgba(99,102,241,0.08)' }}
+                          style={{ color: 'var(--color-primary)', background: 'rgba(245,165,36,0.08)' }}
                         >
                           {markAllAsReadMutation.isPending ? 'Marcando…' : 'Marcar todas como leídas'}
                         </button>
@@ -333,7 +333,7 @@ export function MainLayout() {
                             }}
                             className="w-full text-left px-4 py-3 transition-colors"
                             style={{
-                              background: !n.read ? 'rgba(99,102,241,0.06)' : 'transparent',
+                              background: !n.read ? 'rgba(245,165,36,0.06)' : 'transparent',
                               borderBottom: '1px solid var(--color-border)',
                             }}
                           >
@@ -365,7 +365,7 @@ export function MainLayout() {
                   Hola, {userName} ({roleName})
                 </span>
                 {userData?.photoUrl ? (
-                  <img src={userData.photoUrl} alt="" className="w-8 h-8 rounded-full object-cover" style={{ border: '2px solid rgba(99,132,255,0.4)' }} />
+                  <img src={userData.photoUrl} alt="" className="w-8 h-8 rounded-full object-cover" style={{ border: '2px solid rgba(245,165,36,0.4)' }} />
                 ) : (
                   <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>
                     <span className="material-icons text-white" style={{ fontSize: 18 }}>person</span>
@@ -384,14 +384,14 @@ export function MainLayout() {
                   </div>
                   <div className="py-1">
                     <button type="button" onClick={handleGoToMyRequests} className={menuItemBase} style={{ color: 'var(--color-text-soft)' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.06)')}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,165,36,0.06)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
                       <span className="material-icons text-lg" style={{ color: 'var(--color-text-muted)' }}>assignment</span>
                       Mis solicitudes
                     </button>
                     <button type="button" onClick={handleGoToProfile} className={menuItemBase} style={{ color: 'var(--color-text-soft)' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.06)')}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,165,36,0.06)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
                       <span className="material-icons text-lg" style={{ color: 'var(--color-text-muted)' }}>person_outline</span>
@@ -507,8 +507,8 @@ export function MainLayout() {
                     `flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isActive ? '' : ''}`
                   }
                   style={({ isActive }) => ({
-                    color: isActive ? '#6366f1' : 'var(--color-text-soft)',
-                    background: isActive ? 'rgba(99,102,241,0.08)' : 'transparent',
+                    color: isActive ? 'var(--color-primary)' : 'var(--color-text-soft)',
+                    background: isActive ? 'rgba(245,165,36,0.08)' : 'transparent',
                   })}
                 >
                   <span className="material-icons text-xl" style={{ color: 'var(--color-text-muted)' }}>dashboard</span>
@@ -522,8 +522,8 @@ export function MainLayout() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors"
                   style={({ isActive }) => ({
-                    color: isActive ? '#6366f1' : 'var(--color-text-soft)',
-                    background: isActive ? 'rgba(99,102,241,0.08)' : 'transparent',
+                    color: isActive ? 'var(--color-primary)' : 'var(--color-text-soft)',
+                    background: isActive ? 'rgba(245,165,36,0.08)' : 'transparent',
                   })}
                 >
                   <span className="material-icons text-xl" style={{ color: 'var(--color-text-muted)' }}>home</span>
@@ -536,8 +536,8 @@ export function MainLayout() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors"
                   style={({ isActive }) => ({
-                    color: isActive ? '#6366f1' : 'var(--color-text-soft)',
-                    background: isActive ? 'rgba(99,102,241,0.08)' : 'transparent',
+                    color: isActive ? 'var(--color-primary)' : 'var(--color-text-soft)',
+                    background: isActive ? 'rgba(245,165,36,0.08)' : 'transparent',
                   })}
                 >
                   <span className="material-icons text-xl" style={{ color: 'var(--color-text-muted)' }}>directions_car</span>
@@ -559,8 +559,8 @@ export function MainLayout() {
                           onClick={() => { setMobileMenuOpen(false); navigate(to); }}
                           className="flex items-center gap-3 w-full px-4 py-3 text-left text-sm font-medium transition-colors"
                           style={{
-                            color: location.pathname === to ? '#6366f1' : 'var(--color-text-soft)',
-                            background: location.pathname === to ? 'rgba(99,102,241,0.08)' : 'transparent',
+                            color: location.pathname === to ? 'var(--color-primary)' : 'var(--color-text-soft)',
+                            background: location.pathname === to ? 'rgba(245,165,36,0.08)' : 'transparent',
                           }}
                         >
                           <span className="material-icons text-xl" style={{ color: 'var(--color-text-muted)' }}>{icon}</span>

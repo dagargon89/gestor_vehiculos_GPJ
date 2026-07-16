@@ -99,7 +99,7 @@ export function SearchSelect({
     border: '1px solid var(--color-border)',
     borderRadius: 10,
     fontSize: 13,
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Barlow', sans-serif",
     cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? 0.6 : 1,
     transition: 'border-color 0.2s, box-shadow 0.2s',

@@ -268,7 +268,7 @@ export function Dashboard() {
                       background: 'transparent',
                     }}
                     onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = 'rgba(99,132,255,0.08)')
+                      (e.currentTarget.style.background = 'rgba(245,165,36,0.08)')
                     }
                     onMouseLeave={(e) =>
                       (e.currentTarget.style.background = 'transparent')
@@ -406,7 +406,7 @@ export function Dashboard() {
 
         <Link to="/costs" className="stat-card" style={{ textDecoration: 'none', background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
           <div className="flex items-center justify-between mb-3">
-            <div className="stat-card__icon" style={{ background: 'rgba(99,132,255,0.12)', color: '#6384ff' }}>
+            <div className="stat-card__icon" style={{ background: 'rgba(245,165,36,0.12)', color: '#f5a524' }}>
               <span className="material-icons" style={{ fontSize: 20 }}>payments</span>
             </div>
             <span className="stat-card__value" style={{ fontSize: totalCostsInRange > 999999 ? 18 : undefined }}>
@@ -470,8 +470,8 @@ export function Dashboard() {
                 >
                   <defs>
                     <linearGradient id="colorReservas" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6384ff" stopOpacity={0.25} />
-                      <stop offset="95%" stopColor="#6384ff" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#f5a524" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#f5a524" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -506,11 +506,11 @@ export function Dashboard() {
                   <Area
                     type="monotone"
                     dataKey="reservas"
-                    stroke="#6384ff"
+                    stroke="#f5a524"
                     strokeWidth={2}
                     fill="url(#colorReservas)"
-                    dot={dateRange === 'last7' ? { r: 4, fill: '#6384ff', strokeWidth: 0 } : false}
-                    activeDot={{ r: 5, fill: '#6384ff' }}
+                    dot={dateRange === 'last7' ? { r: 4, fill: '#f5a524', strokeWidth: 0 } : false}
+                    activeDot={{ r: 5, fill: '#f5a524' }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -648,8 +648,8 @@ export function Dashboard() {
                     <div
                       className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
                       style={{
-                        background: 'rgba(99,132,255,0.12)',
-                        color: '#818cf8',
+                        background: 'rgba(245,165,36,0.12)',
+                        color: '#fbbf24',
                       }}
                     >
                       <span className="material-icons" style={{ fontSize: 18 }}>
@@ -666,7 +666,7 @@ export function Dashboard() {
                             Reserva{' '}
                             <span
                               className="font-mono-data font-semibold"
-                              style={{ color: '#818cf8' }}
+                              style={{ color: '#fbbf24' }}
                             >
                               {r.vehicle?.plate ?? '—'}
                             </span>

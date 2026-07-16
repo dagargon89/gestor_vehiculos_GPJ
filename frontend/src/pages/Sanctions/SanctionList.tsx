@@ -83,10 +83,10 @@ function SanctionFormModal({
             <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
           )}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Usuario *</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Usuario *</label>
             {esConductor ? (
-              <div className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 font-medium flex items-center gap-2">
-                <span className="material-icons text-slate-400 text-base">person</span>
+              <div className="input-field w-full flex items-center gap-2 opacity-60">
+                <span className="material-icons text-base" style={{ color: 'var(--color-text-muted)' }}>person</span>
                 {userData?.displayName || userData?.email || 'Usuario actual'}
               </div>
             ) : (
@@ -101,46 +101,46 @@ function SanctionFormModal({
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Motivo *</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Motivo *</label>
             <textarea
               rows={3}
               required
               value={form.reason}
               onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              className="input-field w-full"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Fecha efectiva *</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Fecha efectiva *</label>
             <input
               type="date"
               required
               value={form.effectiveDate}
               onChange={(e) => setForm((f) => ({ ...f, effectiveDate: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              className="input-field w-full"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Fecha fin (opcional)</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Fecha fin (opcional)</label>
             <input
               type="date"
               value={form.endDate}
               onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              className="input-field w-full"
             />
           </div>
           <div className="flex gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50"
+              className="btn-ghost flex-1"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
+              className="btn-primary flex-1 disabled:opacity-50"
             >
               {submitting ? 'Guardando...' : sanction ? 'Guardar cambios' : 'Crear sanción'}
             </button>

@@ -532,7 +532,7 @@ export function ReservationsList() {
     PAGE_SIZE_OPTIONS,
   } = useDataTable<Reservation>(filteredReservations, {
     pageSize: 25,
-    searchFields: (r) => [getVehicleLabel(r), getUserLabel(r), r.eventName ?? '', r.destination ?? ''],
+    searchFields: (r) => [getFolio(r), getVehicleLabel(r), getUserLabel(r), r.eventName ?? '', r.destination ?? ''],
   });
 
   const exportHeaders = ['Folio', 'Vehículo', 'Solicitante', 'Destino', 'Salida', 'Estado'];

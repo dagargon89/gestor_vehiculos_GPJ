@@ -97,7 +97,7 @@ function CostFormModal({
             <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
           )}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Vehículo *</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Vehículo *</label>
             <SearchSelect
               options={vehicles.map((v) => ({
                 value: v.id,
@@ -111,7 +111,7 @@ function CostFormModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>
               Categoría *
             </label>
             <SearchSelect
@@ -125,7 +125,7 @@ function CostFormModal({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>
                 Monto (MXN) *
               </label>
               <input
@@ -135,28 +135,28 @@ function CostFormModal({
                 required
                 value={form.amount}
                 onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                className="input-field w-full"
                 placeholder="0.00"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Fecha *</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Fecha *</label>
               <input
                 type="date"
                 required
                 value={form.date}
                 onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                className="input-field w-full"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Descripción</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-soft)' }}>Descripción</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               rows={3}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary resize-none"
+              className="input-field w-full resize-none"
               placeholder="Detalles adicionales..."
             />
           </div>
@@ -164,14 +164,14 @@ function CostFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 font-medium text-sm"
+              className="btn-ghost flex-1 text-sm"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium text-sm disabled:opacity-50"
+              className="btn-primary flex-1 text-sm disabled:opacity-50"
             >
               {submitting ? 'Guardando...' : cost ? 'Actualizar' : 'Registrar'}
             </button>

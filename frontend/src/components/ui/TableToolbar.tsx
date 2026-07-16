@@ -51,7 +51,7 @@ export function TableToolbar({
     background: 'var(--color-bg-soft)',
     color: 'var(--color-text-soft)',
     fontSize: 13,
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Barlow', sans-serif",
     fontWeight: 500,
     cursor: 'pointer',
     transition: 'background 0.15s',
