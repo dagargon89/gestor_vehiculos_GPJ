@@ -7,6 +7,7 @@ import { DataTable } from '../../components/ui/DataTable';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportTable';
 import { SearchSelect } from '../../components/ui/SearchSelect';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
+import { Modal } from '../../components/ui/Modal';
 
 type AuditLog = {
   id: string;
@@ -40,23 +41,16 @@ const RESOURCE_OPTIONS = [
 ];
 
 function actionBadge(action: string) {
-  const map: Record<string, { label: string; color: string; bg: string }> = {
-    create:  { label: 'Crear',    color: '#16a34a', bg: 'rgba(22,163,74,0.1)' },
-    update:  { label: 'Editar',   color: '#2563eb', bg: 'rgba(37,99,235,0.1)' },
-    delete:  { label: 'Eliminar', color: '#dc2626', bg: 'rgba(220,38,38,0.1)' },
-    login:   { label: 'Login',    color: '#7c3aed', bg: 'rgba(124,58,237,0.1)' },
-    approve: { label: 'Aprobar',  color: '#0891b2', bg: 'rgba(8,145,178,0.1)' },
-    reject:  { label: 'Rechazar', color: '#d97706', bg: 'rgba(217,119,6,0.1)' },
+  const map: Record<string, { label: string; variant: string }> = {
+    create:  { label: 'Crear',    variant: 'badge-green' },
+    update:  { label: 'Editar',   variant: 'badge-blue' },
+    delete:  { label: 'Eliminar', variant: 'badge-red' },
+    login:   { label: 'Login',    variant: 'badge-purple' },
+    approve: { label: 'Aprobar',  variant: 'badge-green' },
+    reject:  { label: 'Rechazar', variant: 'badge-amber' },
   };
-  const s = map[action] ?? { label: action, color: '#64748b', bg: 'rgba(100,116,139,0.1)' };
-  return (
-    <span
-      className="px-2.5 py-1 rounded-full text-xs font-bold"
-      style={{ color: s.color, background: s.bg }}
-    >
-      {s.label}
-    </span>
-  );
+  const s = map[action] ?? { label: action, variant: 'badge-slate' };
+  return <span className={`badge ${s.variant}`}>{s.label}</span>;
 }
 
 function resourceLabel(resource?: string) {
@@ -66,63 +60,49 @@ function resourceLabel(resource?: string) {
 
 function MetadataModal({ log, onClose }: { log: AuditLog; onClose: () => void }) {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-lg max-h-[80vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+    <Modal title="Detalle del registro" subtitle={log.id} onClose={onClose}>
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <h3 className="text-base font-bold text-slate-900">Detalle del registro</h3>
-            <p className="text-xs text-slate-500 mt-0.5 font-mono-data">{log.id}</p>
+            <p className="text-xs font-semibold uppercase" style={{ color: 'var(--color-text-muted)' }}>Acción</p>
+            <div className="mt-1">{actionBadge(log.action)}</div>
           </div>
-          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600">
-            <span className="material-icons">close</span>
-          </button>
-        </div>
-        <div className="p-6 space-y-3">
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase">Acción</p>
-              <div className="mt-1">{actionBadge(log.action)}</div>
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase">Recurso</p>
-              <p className="mt-1 font-medium text-slate-800">{resourceLabel(log.resource)}</p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase">ID Recurso</p>
-              <p className="mt-1 font-mono-data text-xs text-slate-600 break-all">
-                {log.resourceId ?? '—'}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase">Usuario ID</p>
-              <p className="mt-1 font-mono-data text-xs text-slate-600 break-all">
-                {log.userId ?? '—'}
-              </p>
-            </div>
-            <div className="col-span-2">
-              <p className="text-xs font-semibold text-slate-500 uppercase">Fecha</p>
-              <p className="mt-1 font-mono-data text-sm text-slate-800">
-                {new Date(log.createdAt).toLocaleString('es-MX')}
-              </p>
-            </div>
+          <div>
+            <p className="text-xs font-semibold uppercase" style={{ color: 'var(--color-text-muted)' }}>Recurso</p>
+            <p className="mt-1 font-medium" style={{ color: 'var(--color-text)' }}>{resourceLabel(log.resource)}</p>
           </div>
-          {log.metadata && Object.keys(log.metadata).length > 0 && (
-            <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Metadata</p>
-              <pre className="bg-slate-50 rounded-lg p-3 text-xs overflow-auto max-h-60 text-slate-700 font-mono-data">
-                {JSON.stringify(log.metadata, null, 2)}
-              </pre>
-            </div>
-          )}
+          <div>
+            <p className="text-xs font-semibold uppercase" style={{ color: 'var(--color-text-muted)' }}>ID Recurso</p>
+            <p className="mt-1 font-mono-data text-xs break-all" style={{ color: 'var(--color-text-soft)' }}>
+              {log.resourceId ?? '—'}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase" style={{ color: 'var(--color-text-muted)' }}>Usuario ID</p>
+            <p className="mt-1 font-mono-data text-xs break-all" style={{ color: 'var(--color-text-soft)' }}>
+              {log.userId ?? '—'}
+            </p>
+          </div>
+          <div className="col-span-2">
+            <p className="text-xs font-semibold uppercase" style={{ color: 'var(--color-text-muted)' }}>Fecha</p>
+            <p className="mt-1 font-mono-data text-sm" style={{ color: 'var(--color-text)' }}>
+              {new Date(log.createdAt).toLocaleString('es-MX')}
+            </p>
+          </div>
         </div>
+        {log.metadata && Object.keys(log.metadata).length > 0 && (
+          <div>
+            <p className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--color-text-muted)' }}>Metadata</p>
+            <pre
+              className="rounded-lg p-3 text-xs overflow-auto max-h-60 font-mono-data"
+              style={{ background: 'var(--color-table-head-bg)', color: 'var(--color-text-soft)' }}
+            >
+              {JSON.stringify(log.metadata, null, 2)}
+            </pre>
+          </div>
+        )}
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -223,15 +203,18 @@ export function AuditLogsPage() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+      <div
+        className="rounded-[16px] shadow-sm overflow-hidden"
+        style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
+      >
         {/* Filtros */}
-        <div className="px-4 py-3 border-b border-slate-200 flex flex-wrap gap-3 items-center">
+        <div className="px-4 py-3 flex flex-wrap gap-3 items-center" style={{ borderBottom: '1px solid var(--color-border)' }}>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por acción, recurso, usuario..."
-            className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary w-64"
+            className="input-field w-64"
           />
           <SearchSelect
             options={[{ value: '', label: 'Todas las acciones' }, ...ACTION_OPTIONS]}
@@ -281,17 +264,36 @@ export function AuditLogsPage() {
               key: 'createdAt',
               header: 'Fecha',
               sortAccessor: (l) => l.createdAt,
-              cellClassName: 'text-sm font-mono-data text-slate-600',
-              cellStyle: { whiteSpace: 'nowrap' },
+              cellClassName: 'text-sm font-mono-data',
+              cellStyle: { whiteSpace: 'nowrap', color: 'var(--color-text-soft)' },
               render: (l) =>
                 new Date(l.createdAt).toLocaleString('es-MX', {
                   day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
                 }),
             },
             { key: 'action', header: 'Acción', sortAccessor: (l) => l.action, render: (l) => actionBadge(l.action) },
-            { key: 'resource', header: 'Recurso', sortAccessor: (l) => resourceLabel(l.resource), cellClassName: 'text-sm text-slate-700', render: (l) => resourceLabel(l.resource) },
-            { key: 'resourceId', header: 'ID Recurso', cellClassName: 'text-xs font-mono-data text-slate-500 max-w-[140px] truncate', render: (l) => l.resourceId ?? '—' },
-            { key: 'userId', header: 'Usuario', cellClassName: 'text-xs font-mono-data text-slate-500 max-w-[140px] truncate', render: (l) => l.userId ?? '—' },
+            {
+              key: 'resource',
+              header: 'Recurso',
+              sortAccessor: (l) => resourceLabel(l.resource),
+              cellClassName: 'text-sm font-mono-data',
+              cellStyle: { color: 'var(--color-primary)' },
+              render: (l) => resourceLabel(l.resource),
+            },
+            {
+              key: 'resourceId',
+              header: 'ID Recurso',
+              cellClassName: 'text-xs font-mono-data max-w-[140px] truncate',
+              cellStyle: { color: 'var(--color-text-muted)' },
+              render: (l) => l.resourceId ?? '—',
+            },
+            {
+              key: 'userId',
+              header: 'Usuario',
+              cellClassName: 'text-xs font-mono-data max-w-[140px] truncate',
+              cellStyle: { color: 'var(--color-text-muted)' },
+              render: (l) => l.userId ?? '—',
+            },
             {
               key: 'actions',
               header: 'Detalle',
