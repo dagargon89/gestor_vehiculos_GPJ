@@ -12,6 +12,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { isConductor } from '../../config/routePermissions';
 import { QueryErrorState } from '../../components/ui/QueryErrorState';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { Modal } from '../../components/ui/Modal';
 
 type User = { id: string; displayName?: string; email?: string };
 
@@ -76,17 +77,8 @@ function SanctionFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-[16px] shadow-xl border border-slate-200 w-full max-w-lg max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-bold text-slate-900">
-            {sanction ? 'Editar sanción' : 'Nueva sanción'}
-          </h3>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <Modal title={sanction ? 'Editar sanción' : 'Nueva sanción'} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
           )}
@@ -153,9 +145,8 @@ function SanctionFormModal({
               {submitting ? 'Guardando...' : sanction ? 'Guardar cambios' : 'Crear sanción'}
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -263,7 +254,18 @@ export function SanctionList() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap justify-between items-center gap-4">
-        <h2 className="text-2xl font-bold text-slate-900">Sanciones</h2>
+        <h2
+          className="text-2xl font-bold"
+          style={{
+            color: 'var(--color-text)',
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontWeight: 600,
+            letterSpacing: '0.6px',
+            textTransform: 'uppercase',
+          }}
+        >
+          Sanciones
+        </h2>
         <div className="flex items-center gap-3">
           <SearchSelect
             options={[{ value: '', label: 'Todos los usuarios' }, ...users.map((u: User) => ({ value: u.id, label: u.displayName || u.email || u.id }))]}
@@ -284,7 +286,10 @@ export function SanctionList() {
       </div>
 
       {view === 'table' && (
-        <div className="bg-white rounded-[16px] shadow-sm border border-slate-200 overflow-hidden">
+        <div
+          className="rounded-[16px] shadow-sm overflow-hidden"
+          style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
+        >
           <div className="px-4 pt-4">
             <input
               type="text"
@@ -312,8 +317,20 @@ export function SanctionList() {
             columns={[
               { key: 'user', header: 'Usuario', sortAccessor: (s) => getUserLabel(s), cellClassName: 'font-medium', render: (s) => getUserLabel(s) },
               { key: 'reason', header: 'Motivo', cellClassName: 'max-w-[280px] truncate', render: (s) => s.reason },
-              { key: 'effectiveDate', header: 'Fecha efectiva', sortAccessor: (s) => s.effectiveDate, render: (s) => formatDate(s.effectiveDate) },
-              { key: 'endDate', header: 'Fecha fin', sortAccessor: (s) => s.endDate ?? '', render: (s) => (s.endDate ? formatDate(s.endDate) : '—') },
+              { key: 'effectiveDate', header: 'Fecha efectiva', sortAccessor: (s) => s.effectiveDate, cellClassName: 'font-mono-data text-sm', render: (s) => formatDate(s.effectiveDate) },
+              { key: 'endDate', header: 'Fecha fin', sortAccessor: (s) => s.endDate ?? '', cellClassName: 'font-mono-data text-sm', render: (s) => (s.endDate ? formatDate(s.endDate) : '—') },
+              {
+                key: 'estado',
+                header: 'Estado',
+                render: (s) => {
+                  const vigente = !s.endDate || new Date(s.endDate) >= new Date();
+                  return (
+                    <span className={`badge ${vigente ? 'badge-red' : 'badge-slate'}`}>
+                      {vigente ? 'Vigente' : 'Vencida'}
+                    </span>
+                  );
+                },
+              },
               {
                 key: 'actions',
                 header: 'Acciones',
@@ -339,21 +356,28 @@ export function SanctionList() {
       {view === 'cards' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {sanctionList.length === 0 ? (
-            <div className="col-span-full bg-white rounded-[16px] shadow-sm border border-slate-200 px-6 py-12 text-center text-slate-500">
+            <div
+              className="col-span-full rounded-[16px] shadow-sm px-6 py-12 text-center"
+              style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+            >
               No hay sanciones registradas.
             </div>
           ) : (
             sanctionList.map((s: Sanction) => (
-              <div key={s.id} className="bg-white rounded-[16px] shadow-sm border border-slate-200 p-5 flex flex-col">
-                <div className="font-medium text-slate-900">
+              <div
+                key={s.id}
+                className="rounded-[16px] shadow-sm p-5 flex flex-col"
+                style={{ background: 'var(--color-bg-soft)', border: '1px solid var(--color-border)' }}
+              >
+                <div className="font-medium" style={{ color: 'var(--color-text)' }}>
                   {getUserLabel(s)}
                 </div>
-                <p className="text-slate-600 text-sm mt-1 line-clamp-3">{s.reason}</p>
-                <div className="text-slate-500 text-sm mt-2">
+                <p className="text-sm mt-1 line-clamp-3" style={{ color: 'var(--color-text-soft)' }}>{s.reason}</p>
+                <div className="text-sm mt-2" style={{ color: 'var(--color-text-muted)' }}>
                   Efectiva: {formatDate(s.effectiveDate)}
                   {s.endDate && ` — Fin: ${formatDate(s.endDate)}`}
                 </div>
-                <div className="mt-4 pt-4 border-t border-slate-100 flex gap-3">
+                <div className="mt-4 pt-4 flex gap-3" style={{ borderTop: '1px solid var(--color-border)' }}>
                   <button type="button" onClick={() => openEdit(s)} className="text-primary font-medium hover:underline text-sm">Editar</button>
                   <button type="button" onClick={() => handleDelete(s)} className="text-red-600 font-medium hover:underline text-sm">Eliminar</button>
                 </div>
